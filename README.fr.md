@@ -6,8 +6,11 @@
 
 Si ce projet vous est utile, vous pouvez soutenir son développement 🙏
 
-## ⚡ En résumé
+<a href="https://www.buymeacoffee.com/adrien40"><img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" width="160"></a>
 
+---
+
+## ⚡ En résumé
 * 🚿 **Carte Lovelace animée et ludique** pour le suivi de la consommation d'eau de douche.
 * 🐠 **Niveau d'eau dynamique**, banc de poissons, escargots et Ancistrus en vue ventrale.
 * 🌡️ **Prise en compte de la température de l'eau** avec alertes visuelles (ébullition, seuils critiques).
@@ -119,3 +122,29 @@ fish_speed_multiplier: 1.2
 algae_enabled: true
 algae_delay_hours: 12
 fullscreen: false
+
+## 🐛 Dépannage
+
+### Erreur `Custom element doesn't exist: shower-aquarium-card`
+* Vérifie que la ressource est bien déclarée dans **Paramètres** > **Tableaux de bord** > **Ressources** avec l'URL `/local/shower-aquarium-card.js` en type **Module JavaScript**.
+* Pense à forcer le rechargement du cache (`Ctrl` + `F5`).
+
+### L'aquarium ne prend pas toute la hauteur sur tablette
+* Active l'option **Mode plein écran** (`fullscreen: true`) dans l'éditeur de carte pour supprimer les marges et adapter automatiquement le ratio à ton écran.
+
+---
+
+## 🤝 Contributions et Support
+
+Pour tout bug ou suggestion d'amélioration, ouvre une issue sur ce dépôt.
+
+---
+
+### ⚖️ Licence
+Projet sous licence **GPLv3**.
+
+---
+
+**Développé avec ❤️ par @Adrien40**
+
+<a href="https://www.buymeacoffee.com/adrien40"><img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" width="180"></a>
