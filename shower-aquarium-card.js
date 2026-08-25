@@ -21,7 +21,10 @@ const TRANSLATIONS = {
     field_survival_volume: "Survival volume for animals",
     field_temp_boil: "Boiling temperature threshold (°C)",
     field_temp_deadly: "Deadly temperature threshold (°C)",
-    field_algae_enabled: "Enable 24h dirty algae accumulation",
+    field_algae_enabled: "Enable dirty algae accumulation",
+    field_algae_delay: "Algae accumulation delay (hours)",
+    field_debug_algae_hours: "Algae age",
+    field_fish_speed: "Fish speed",
     field_fullscreen: "Fullscreen mode",
     helper_fullscreen: "Tablet, Nest Hub...",
     field_aspect_ratio_width: "Ratio - Width (e.g. 1024, 16, 4)",
@@ -45,7 +48,10 @@ const TRANSLATIONS = {
     field_survival_volume: "Volume de survie des animaux",
     field_temp_boil: "Seuil d'ébullition (°C)",
     field_temp_deadly: "Seuil mortel de température (°C)",
-    field_algae_enabled: "Activer l'accumulation d'algues après 24h sans douche",
+    field_algae_enabled: "Activer l'accumulation d'algues",
+    field_algae_delay: "Délai d'apparition des algues (heures)",
+    field_debug_algae_hours: "Âge des algues",
+    field_fish_speed: "Vitesse des poissons",
     field_fullscreen: "Mode plein écran",
     helper_fullscreen: "Tablette, Nest Hub...",
     field_aspect_ratio_width: "Ratio - Largeur (ex : 1024, 16, 4)",
@@ -213,6 +219,42 @@ const CARD_EDITOR_SCHEMA = [
     selector: { boolean: {} },
   },
   {
+    name: "algae_delay_hours",
+    default: 12,
+    selector: {
+      number: {
+        min: 1,
+        max: 48,
+        unit_of_measurement: "h",
+        mode: "box",
+      },
+    },
+  },
+  {
+    name: "debug_algae_hours",
+    default: 0,
+    selector: {
+      number: {
+        min: 0,
+        max: 48,
+        unit_of_measurement: "h",
+        mode: "slider",
+      },
+    },
+  },
+  {
+    name: "fish_speed_multiplier",
+    default: 1.2,
+    selector: {
+      number: {
+        min: 0.2,
+        max: 3.0,
+        step: 0.1,
+        mode: "slider",
+      },
+    },
+  },
+  {
     name: "fullscreen",
     default: false,
     selector: { boolean: {} },
@@ -268,6 +310,9 @@ class AquariumShowerCardEditor extends LitElement {
       temp_boiling_threshold: dict.field_temp_boil,
       temp_deadly_threshold: dict.field_temp_deadly,
       algae_enabled: dict.field_algae_enabled,
+      algae_delay_hours: dict.field_algae_delay,
+      debug_algae_hours: dict.field_debug_algae_hours,
+      fish_speed_multiplier: dict.field_fish_speed,
       fullscreen: dict.field_fullscreen,
       aspect_ratio_width: dict.field_aspect_ratio_width,
       aspect_ratio_height: dict.field_aspect_ratio_height,
@@ -358,6 +403,7 @@ class AquariumShowerCard extends LitElement {
       temp_boiling_threshold: 40,
       temp_deadly_threshold: 45,
       algae_enabled: true,
+      algae_delay_hours: 12,
       fullscreen: false,
     };
   }
@@ -374,29 +420,29 @@ class AquariumShowerCard extends LitElement {
     this._cachedHoursSinceLastShower = 0;
     this._fishes = this._generateDefaultFishes(4, "freshwater");
     this._snails = [
-      { x: 340, y: 560, vx: 0.14, vy: 0, dir: 1, type: "bottom", color: "#854d0e" },
-      { x: 26, y: 340, vx: 0, vy: 0.12, dir: 1, type: "glass_left", color: "#a16207" },
-      { x: 998, y: 220, vx: 0, vy: -0.10, dir: -1, type: "glass_right", color: "#78350f" },
+      { x: 340, y: 590, vx: 0.08, vy: 0, dir: 1, type: "bottom", color: "#854d0e" },
+      { x: 18, y: 340, vx: 0, vy: 0.07, dir: 1, type: "glass_left", color: "#a16207" },
+      { x: 1006, y: 220, vx: 0, vy: -0.06, dir: -1, type: "glass_right", color: "#78350f" },
     ];
     this._ancistrus = {
-      x: 500,
-      y: 550,
-      vx: 0.35,
+      x: 80,
+      y: 350,
+      vy: 0.12,
       dir: 1,
       deathProgress: 0,
     };
     this._bubbles = [
-      { x: 180, y: 530, vy: 1.2, r: 4.5 },
-      { x: 210, y: 550, vy: 1.5, r: 3.5 },
-      { x: 512, y: 540, vy: 1.1, r: 5.0 },
-      { x: 820, y: 550, vy: 1.3, r: 4.0 },
-      { x: 845, y: 520, vy: 1.6, r: 3.0 },
+      { x: 180, y: 560, vy: 0.9, r: 4.5 },
+      { x: 210, y: 580, vy: 1.1, r: 3.5 },
+      { x: 512, y: 570, vy: 0.8, r: 5.0 },
+      { x: 820, y: 580, vy: 1.0, r: 4.0 },
+      { x: 845, y: 550, vy: 1.2, r: 3.0 },
     ];
     this._boilingBubbles = Array.from({ length: 24 }, () => ({
-      x: 30 + Math.random() * 960,
-      y: 60 + Math.random() * 480,
-      vy: 3.8 + Math.random() * 4.5,
-      vx: (Math.random() - 0.5) * 1.8,
+      x: 10 + Math.random() * 1004,
+      y: 30 + Math.random() * 540,
+      vy: 2.5 + Math.random() * 3.5,
+      vx: (Math.random() - 0.5) * 1.5,
       r: 4 + Math.random() * 8,
     }));
   }
@@ -581,8 +627,8 @@ class AquariumShowerCard extends LitElement {
       phase: index * 0.9,
       x: 120 + (index * 760) / Math.max(1, n - 1),
       y: 160 + (index % 3) * 90,
-      vx: 1.8 - (sizePresets[index % sizePresets.length] - 1.2) * 0.5 + (index % 2) * 0.2,
-      vy: 0.6 * (index % 2 === 0 ? 1 : -1),
+      vx: 1.38 - (sizePresets[index % sizePresets.length] - 1.2) * 0.2,
+      vy: 0.45 * (index % 2 === 0 ? 1 : -1),
       dir: index % 2 === 0 ? 1 : -1,
       deathProgress: 0,
     }));
@@ -603,6 +649,9 @@ class AquariumShowerCard extends LitElement {
       temp_boiling_threshold: 40,
       temp_deadly_threshold: 45,
       algae_enabled: true,
+      algae_delay_hours: 12,
+      debug_algae_hours: 0,
+      fish_speed_multiplier: 1.2,
       fullscreen: false,
       ...config,
     };
@@ -625,8 +674,8 @@ class AquariumShowerCard extends LitElement {
         phase: index * 0.9,
         x: 140 + index * 150,
         y: 180 + (index % 2) * 90,
-        vx: 1.6 + (index % 3) * 0.4,
-        vy: 0.7 * (index % 2 === 0 ? 1 : -1),
+        vx: 1.3 + (index % 3) * 0.15,
+        vy: 0.45 * (index % 2 === 0 ? 1 : -1),
         dir: index % 2 === 0 ? 1 : -1,
         deathProgress: 0,
       }));
@@ -678,7 +727,7 @@ class AquariumShowerCard extends LitElement {
     const deltaMs = timestamp - this._lastTimestamp;
     const delta = Math.min(deltaMs / 16.66, 2.0);
     this._lastTimestamp = timestamp;
-    this._animTime = timestamp * 0.005;
+    this._animTime = timestamp * 0.0035;
 
     const currentVolume = this._cachedConsumedVolume;
     const targetBudget = this._cachedTargetBudget;
@@ -692,8 +741,9 @@ class AquariumShowerCard extends LitElement {
     const remainingVolumeInTank = Math.max(0, totalVolume - currentVolume);
     const waterRatio = remainingVolumeInTank / totalVolume;
 
-    const tankTop = 15;
-    const tankBottom = 565;
+    const isFullscreen = Boolean(this._config.fullscreen);
+    const tankTop = isFullscreen ? 0 : 15;
+    const tankBottom = isFullscreen ? 600 : 565;
     const tankHeight = tankBottom - tankTop;
     const waterSurfaceY = tankBottom - waterRatio * tankHeight;
 
@@ -702,8 +752,9 @@ class AquariumShowerCard extends LitElement {
     const isDead = isHeatDead || isWaterDead;
 
     const isBoiling = currentTemp >= boilTemp && currentTemp > 0;
+    const userSpeed = Number(this._config.fish_speed_multiplier) || 1.2;
     const isStressed = (currentVolume > targetBudget || isBoiling) && !isDead;
-    const speedMultiplier = isStressed ? 2.2 : 1.0;
+    const speedMultiplier = (isStressed ? 2.0 : 1.0) * userSpeed;
 
     const deathStep = (deltaMs || 16.66) / 10000;
 
@@ -784,14 +835,18 @@ class AquariumShowerCard extends LitElement {
         stateChanged = true;
       } else {
         this._ancistrus.deathProgress = 0;
-        this._ancistrus.x += this._ancistrus.vx * this._ancistrus.dir * delta;
-        if (this._ancistrus.x < 140) {
-          this._ancistrus.x = 140;
+        const minVY = Math.max(tankTop + 60, waterSurfaceY + 50);
+        const maxVY = tankBottom - 60;
+        
+        this._ancistrus.y += this._ancistrus.vy * this._ancistrus.dir * Math.min(userSpeed, 1.5) * delta;
+        if (this._ancistrus.y < minVY) {
+          this._ancistrus.y = minVY;
           this._ancistrus.dir = 1;
-        } else if (this._ancistrus.x > 880) {
-          this._ancistrus.x = 880;
+        } else if (this._ancistrus.y > maxVY) {
+          this._ancistrus.y = maxVY;
           this._ancistrus.dir = -1;
         }
+        this._ancistrus.x = 65;
         stateChanged = true;
       }
     }
@@ -812,7 +867,7 @@ class AquariumShowerCard extends LitElement {
         b.x += b.vx * delta;
         if (b.y < waterSurfaceY) {
           b.y = tankBottom - 15;
-          b.x = 30 + Math.random() * 960;
+          b.x = 10 + Math.random() * 1004;
         }
         stateChanged = true;
       });
@@ -823,14 +878,16 @@ class AquariumShowerCard extends LitElement {
     }
   }
 
-  _renderThemeDecoration(themeKey) {
+  _renderThemeDecoration(themeKey, isFullscreen) {
+    const bottomY = isFullscreen ? 600 : 565;
+
     if (themeKey === "saltwater") {
       return svg`
         <g id="reef-decor">
-          <path d="M 60 565 Q 40 400, 95 340 Q 120 290, 85 230 Q 135 300, 120 370 Q 150 430, 115 565 Z" fill="#f43f5e" opacity="0.95" />
-          <path d="M 115 565 Q 150 410, 190 360 Q 215 320, 190 270 Q 230 330, 205 410 Q 180 460, 155 565 Z" fill="#fb7185" opacity="0.9" />
+          <path d="M 60 ${bottomY} Q 40 ${bottomY - 165}, 95 ${bottomY - 225} Q 120 ${bottomY - 275}, 85 ${bottomY - 335} Q 135 ${bottomY - 265}, 120 ${bottomY - 195} Q 150 ${bottomY - 135}, 115 ${bottomY} Z" fill="#f43f5e" opacity="0.95" />
+          <path d="M 115 ${bottomY} Q 150 ${bottomY - 155}, 190 ${bottomY - 205} Q 215 ${bottomY - 245}, 190 ${bottomY - 295} Q 230 ${bottomY - 235}, 205 ${bottomY - 155} Q 180 ${bottomY - 105}, 155 ${bottomY} Z" fill="#fb7185" opacity="0.9" />
           
-          <g transform="translate(830, 565)">
+          <g transform="translate(830, ${bottomY})">
             <path d="M -80 0 Q -110 -90, -85 -160 Q -55 -90, -55 0 Z" fill="#c084fc" opacity="0.85" />
             <path d="M -55 0 Q -70 -120, -35 -185 Q -15 -120, -25 0 Z" fill="#a855f7" opacity="0.9" />
             <path d="M -25 0 Q -20 -135, 10 -205 Q 30 -130, 0 0 Z" fill="#d8b4fe" opacity="0.85" />
@@ -839,7 +896,7 @@ class AquariumShowerCard extends LitElement {
             <circle cx="0" cy="-20" r="60" fill="#7e22ce" opacity="0.75" />
           </g>
 
-          <g transform="translate(190, 495)">
+          <g transform="translate(190, ${bottomY - 70})">
             <path
               d="M 0,-42 C 6,-42 12,-18 16,-12 C 22,-8 44,-10 44,-4 C 44,2 26,10 22,16 C 18,22 28,42 22,46 C 16,50 8,30 0,26 C -8,30 -16,50 -22,46 C -28,42 -18,22 -22,16 C -26,10 -44,2 -44,-4 C -44,-10 -22,-8 -16,-12 C -12,-18 -6,-42 0,-42 Z"
               fill="#1d4ed8"
@@ -850,7 +907,7 @@ class AquariumShowerCard extends LitElement {
             <circle cx="0" cy="0" r="5" fill="#60a5fa" />
           </g>
 
-          <g transform="translate(260, 540) scale(1.45)">
+          <g transform="translate(260, ${bottomY - 25}) scale(1.45)">
             <path d="M 14,-8 Q 38,-35, 70,-45" stroke="#ffffff" stroke-width="1.4" fill="none" />
             <path d="M 14,-5 Q 45,-20, 75,-24" stroke="#ffffff" stroke-width="1.4" fill="none" />
             <path d="M 14,-2 Q 45,-3, 72, 3" stroke="#ffffff" stroke-width="1.4" fill="none" />
@@ -870,40 +927,40 @@ class AquariumShowerCard extends LitElement {
     if (themeKey === "coldwater") {
       return svg`
         <g id="coldwater-decor">
-          <ellipse cx="140" cy="540" rx="70" ry="26" fill="#475569" />
-          <ellipse cx="250" cy="548" rx="50" ry="20" fill="#64748b" />
-          <ellipse cx="860" cy="545" rx="75" ry="28" fill="#334155" />
-          <ellipse cx="760" cy="550" rx="46" ry="18" fill="#64748b" />
-          <path d="M 110 540 Q 85 370, 125 270 Q 155 380, 135 540 Z" fill="#0d9488" opacity="0.9" />
-          <path d="M 145 540 Q 180 390, 150 300 Q 125 410, 155 540 Z" fill="#14b8a6" opacity="0.75" />
+          <ellipse cx="140" cy="${bottomY - 25}" rx="70" ry="26" fill="#475569" />
+          <ellipse cx="250" cy="${bottomY - 17}" rx="50" ry="20" fill="#64748b" />
+          <ellipse cx="860" cy="${bottomY - 20}" rx="75" ry="28" fill="#334155" />
+          <ellipse cx="760" cy="${bottomY - 15}" rx="46" ry="18" fill="#64748b" />
+          <path d="M 110 ${bottomY - 25} Q 85 ${bottomY - 195}, 125 ${bottomY - 295} Q 155 ${bottomY - 185}, 135 ${bottomY - 25} Z" fill="#0d9488" opacity="0.9" />
+          <path d="M 145 ${bottomY - 25} Q 180 ${bottomY - 175}, 150 ${bottomY - 265} Q 125 ${bottomY - 155}, 155 ${bottomY - 25} Z" fill="#14b8a6" opacity="0.75" />
         </g>
       `;
     }
 
     return svg`
       <g id="freshwater-plants">
-        <path d="M 45 565 Q 65 490, 115 505 Q 155 480, 200 515 Q 240 495, 285 565 Z" fill="#15803d" />
-        <path d="M 75 565 Q 95 505, 135 510 Q 170 490, 210 525 Q 250 515, 270 565 Z" fill="#22c55e" opacity="0.85" />
-        <circle cx="110" cy="510" r="11" fill="#4ade80" opacity="0.7" />
-        <circle cx="170" cy="502" r="12" fill="#4ade80" opacity="0.7" />
-        <circle cx="225" cy="520" r="10" fill="#86efac" opacity="0.6" />
+        <path d="M 45 ${bottomY} Q 65 ${bottomY - 75}, 115 ${bottomY - 60} Q 155 ${bottomY - 85}, 200 ${bottomY - 50} Q 240 ${bottomY - 70}, 285 ${bottomY} Z" fill="#15803d" />
+        <path d="M 75 ${bottomY} Q 95 ${bottomY - 60}, 135 ${bottomY - 55} Q 170 ${bottomY - 75}, 210 ${bottomY - 40} Q 250 ${bottomY - 50}, 270 ${bottomY} Z" fill="#22c55e" opacity="0.85" />
+        <circle cx="110" cy="${bottomY - 55}" r="11" fill="#4ade80" opacity="0.7" />
+        <circle cx="170" cy="${bottomY - 63}" r="12" fill="#4ade80" opacity="0.7" />
+        <circle cx="225" cy="${bottomY - 45}" r="10" fill="#86efac" opacity="0.6" />
 
-        <path d="M 120 565 Q 140 460, 160 410 Q 165 360, 145 300" stroke="#14532d" stroke-width="8" fill="none" stroke-linecap="round" />
-        <path d="M 145 300 Q 105 260, 85 285 C 70 315, 110 345, 145 300 Z" fill="#166534" />
-        <path d="M 145 300 Q 185 250, 215 270 C 230 295, 190 335, 145 300 Z" fill="#15803d" />
-        <path d="M 155 350 Q 105 335, 80 360 C 65 390, 115 410, 155 350 Z" fill="#166534" />
-        <path d="M 160 390 Q 210 360, 240 390 C 248 415, 200 435, 160 390 Z" fill="#15803d" />
-        <path d="M 140 440 Q 90 440, 70 465 C 65 490, 110 495, 140 440 Z" fill="#14532d" />
+        <path d="M 120 ${bottomY} Q 140 ${bottomY - 105}, 160 ${bottomY - 155} Q 165 ${bottomY - 205}, 145 ${bottomY - 265}" stroke="#14532d" stroke-width="8" fill="none" stroke-linecap="round" />
+        <path d="M 145 ${bottomY - 265} Q 105 ${bottomY - 305}, 85 ${bottomY - 280} C 70 ${bottomY - 250}, 110 ${bottomY - 220}, 145 ${bottomY - 265} Z" fill="#166534" />
+        <path d="M 145 ${bottomY - 265} Q 185 ${bottomY - 315}, 215 ${bottomY - 295} C 230 ${bottomY - 270}, 190 ${bottomY - 230}, 145 ${bottomY - 265} Z" fill="#15803d" />
+        <path d="M 155 ${bottomY - 215} Q 105 ${bottomY - 230}, 80 ${bottomY - 205} C 65 ${bottomY - 175}, 115 ${bottomY - 155}, 155 ${bottomY - 215} Z" fill="#166534" />
+        <path d="M 160 ${bottomY - 175} Q 210 ${bottomY - 205}, 240 ${bottomY - 175} C 248 ${bottomY - 150}, 200 ${bottomY - 130}, 160 ${bottomY - 175} Z" fill="#15803d" />
+        <path d="M 140 ${bottomY - 125} Q 90 ${bottomY - 125}, 70 ${bottomY - 100} C 65 ${bottomY - 75}, 110 ${bottomY - 70}, 140 ${bottomY - 125} Z" fill="#14532d" />
 
-        <g transform="translate(225, 525) scale(1.3)">
+        <g transform="translate(225, ${bottomY - 40}) scale(1.3)">
           <ellipse cx="0" cy="0" rx="11" ry="5" fill="#ef4444" />
           <path d="M -10,0 Q -17,-4, -20,0 Q -17,4, -10,0 Z" fill="#dc2626" />
           <line x1="10" y1="-2" x2="22" y2="-10" stroke="#fca5a5" stroke-width="1" />
         </g>
 
-        <path d="M 880 565 Q 920 370, 870 210 Q 845 370, 860 565 Z" fill="#16a34a" opacity="0.9" />
-        <path d="M 920 565 Q 960 350, 930 190 Q 895 360, 900 565 Z" fill="#22c55e" opacity="0.8" />
-        <path d="M 845 565 Q 810 390, 845 290 Q 870 400, 865 565 Z" fill="#15803d" opacity="0.85" />
+        <path d="M 880 ${bottomY} Q 920 ${bottomY - 195}, 870 ${bottomY - 355} Q 845 ${bottomY - 195}, 860 ${bottomY} Z" fill="#16a34a" opacity="0.9" />
+        <path d="M 920 ${bottomY} Q 960 ${bottomY - 215}, 930 ${bottomY - 375} Q 895 ${bottomY - 205}, 900 ${bottomY} Z" fill="#22c55e" opacity="0.8" />
+        <path d="M 845 ${bottomY} Q 810 ${bottomY - 175}, 845 ${bottomY - 275} Q 870 ${bottomY - 165}, 865 ${bottomY} Z" fill="#15803d" opacity="0.85" />
       </g>
     `;
   }
@@ -917,10 +974,10 @@ class AquariumShowerCard extends LitElement {
 
     const tailWag = isDead
       ? 0
-      : Math.sin(this._animTime * (3.5 * fish.vx) + fish.phase) * 16;
+      : Math.sin(this._animTime * (3.5 * fish.vx) + fish.phase) * 14;
     const finWag = isDead
       ? 0
-      : Math.sin(this._animTime * (4.5 * fish.vx) + fish.phase) * 12;
+      : Math.sin(this._animTime * (4.5 * fish.vx) + fish.phase) * 10;
 
     let bodySvg = svg``;
 
@@ -1007,7 +1064,7 @@ class AquariumShowerCard extends LitElement {
           <path d="M 0,3 L -17,3" stroke="#ef4444" stroke-width="3.5" stroke-linecap="round" />
           ${isDead
             ? svg`<line x1="12" y1="-4" x2="17" y2="0" stroke="#ffffff" stroke-width="1.5" />`
-            : svg`<circle cx="14" cy="-2" r="2.2" fill="#38bdf8" /><circle cx="15" cy="-2" r="1.1" fill="#0f172a" />`}
+            : svg`<circle cx="14" cy="-2" r="2.2" fill="#38bdf8" /><circle cx="15" cy="-2" r="0.9" fill="#0f172a" />`}
         `;
       } else {
         bodySvg = svg`
@@ -1051,41 +1108,55 @@ class AquariumShowerCard extends LitElement {
   _renderAncistrus(isDead) {
     if (!this._ancistrus) return svg``;
     const anc = this._ancistrus;
-    const isFlipped = anc.dir === -1;
     const p = anc.deathProgress || 0;
     const bodyOpacity = (1.0 - p).toFixed(2);
     const skeletonOpacity = p.toFixed(2);
 
     return svg`
-      <g transform="translate(${anc.x}, ${anc.y}) scale(${isFlipped ? -1.8 : 1.8}, 1.8)">
+      <g transform="translate(${anc.x}, ${anc.y}) scale(1.6, 1.6)">
         <g opacity="${bodyOpacity}">
-          <polygon points="-30,0 -46,-10 -42,0 -46,10" fill="#1e242b" />
-          <ellipse cx="-6" cy="0" rx="28" ry="11" fill="#333f48" />
-          <path d="M 6,-12 Q 22,-14, 26,0 Q 22,14, 6,12 Z" fill="#1e242b" />
-          <path d="M 24 -8 Q 30 -10, 28 -4 Q 32 0, 28 4 Q 30 10, 24 8" stroke="#64748b" stroke-width="1.8" fill="none" stroke-linecap="round" />
-          <path d="M 20 -10 Q 26 -12, 24 -7 M 20 10 Q 26 12, 24 7" stroke="#64748b" stroke-width="1.5" fill="none" stroke-linecap="round" />
-          <polygon points="-12,-11 2,-26 8,-11" fill="#1e242b" opacity="0.9" />
-          <line x1="-4" y1="-11" x2="2" y2="-24" stroke="#475569" stroke-width="1.2" />
-          <ellipse cx="6" cy="9" rx="10" ry="4" fill="#1e242b" opacity="0.8" />
-          <circle cx="-16" cy="-3" r="1.4" fill="#cbd5e1" />
-          <circle cx="-8" cy="4" r="1.6" fill="#cbd5e1" />
-          <circle cx="2" cy="-4" r="1.4" fill="#cbd5e1" />
-          <circle cx="10" cy="3" r="1.6" fill="#cbd5e1" />
+          <!-- Ventral View: Sucker mouth at top with surrounding tentacle crown -->
+          <!-- Crown of tentacles around snout -->
+          <path d="M -10,-24 Q -14,-32 -8,-28 Q -4,-35 0,-28 Q 4,-35 8,-28 Q 14,-32 10,-24 Z" fill="#151b22" stroke="#facc15" stroke-width="0.5" />
+          
+          <!-- Large round sucker mouth -->
+          <ellipse cx="0" cy="-22" rx="9" ry="7.5" fill="#293542" stroke="#facc15" stroke-width="1.0" />
+          <ellipse cx="0" cy="-22" rx="5" ry="4" fill="#111827" />
+          <ellipse cx="0" cy="-22" rx="2" ry="1.5" fill="#facc15" />
+
+          <!-- Broad armored head and body -->
+          <path d="M -16,-16 C -20,-10 -22,0 -16,8 C -14,14 -12,22 -8,32 L 8,32 C 12,22 14,14 16,8 C 22,0 20,-10 16,-16 Z" fill="#182026" stroke="#0a0f14" stroke-width="0.8" />
+          
+          <!-- Spread Pectoral fins against glass -->
+          <path d="M -16,-4 L -32,-12 Q -26,-2 -16,4 Z" fill="#182026" stroke="#293542" stroke-width="0.6" />
+          <path d="M 16,-4 L 32,-12 Q 26,-2 16,4 Z" fill="#182026" stroke="#293542" stroke-width="0.6" />
+
+          <!-- Pelvic fins -->
+          <path d="M -10,14 L -22,24 Q -16,18 -8,18 Z" fill="#151b22" stroke="#293542" stroke-width="0.5" />
+          <path d="M 10,14 L 22,24 Q 16,18 8,18 Z" fill="#151b22" stroke="#293542" stroke-width="0.5" />
+
+          <!-- Tapering tail -->
+          <path d="M -8,32 Q -4,45 -2,55 L 2,55 Q 4,45 8,32 Z" fill="#151b22" />
+          <path d="M -2,55 Q 0,62 2,55" stroke="#ffffff" stroke-width="1.2" fill="none" />
+
+          <!-- Armor texture / starlight dots -->
+          <circle cx="-6" cy="-4" r="0.8" fill="#ffffff" />
+          <circle cx="6" cy="-4" r="0.8" fill="#ffffff" />
+          <circle cx="-4" cy="4" r="0.8" fill="#ffffff" />
+          <circle cx="4" cy="4" r="0.8" fill="#ffffff" />
+          <circle cx="-3" cy="12" r="0.8" fill="#ffffff" />
+          <circle cx="3" cy="12" r="0.8" fill="#ffffff" />
+
           ${isDead
-            ? svg`<line x1="14" y1="-6" x2="19" y2="-1" stroke="#ffffff" stroke-width="1.8" />`
-            : svg`<circle cx="16" cy="-4" r="2.6" fill="#facc15" /><circle cx="17" cy="-4" r="1.3" fill="#0f172a" />`}
+            ? svg`<line x1="-4" y1="0" x2="4" y2="8" stroke="#ffffff" stroke-width="1.5" />`
+            : svg``}
         </g>
 
         ${p > 0
           ? svg`
               <g opacity="${skeletonOpacity}">
-                <line x1="-28" y1="0" x2="16" y2="0" stroke="#f1f5f9" stroke-width="3" />
-                <path d="M 14 -10 C 28 -10 28 10 14 10 Z" fill="#f1f5f9" />
-                <line x1="5" y1="-12" x2="2" y2="12" stroke="#f1f5f9" stroke-width="2" />
-                <line x1="-5" y1="-10" x2="-8" y2="10" stroke="#f1f5f9" stroke-width="2" />
-                <line x1="-15" y1="-8" x2="-18" y2="8" stroke="#f1f5f9" stroke-width="1.6" />
-                <line x1="-28" y1="0" x2="-44" y2="-10" stroke="#f1f5f9" stroke-width="2" />
-                <line x1="-28" y1="0" x2="-44" y2="10" stroke="#f1f5f9" stroke-width="2" />
+                <line x1="0" y1="-20" x2="0" y2="40" stroke="#f1f5f9" stroke-width="2.5" />
+                <circle cx="0" cy="0" r="4" fill="#f1f5f9" />
               </g>
             `
           : ""}
@@ -1093,23 +1164,24 @@ class AquariumShowerCard extends LitElement {
     `;
   }
 
-  _renderAlgae(hours) {
-    if (!this._config.algae_enabled || hours < 24) {
+  _renderAlgae(hours, isFullscreen) {
+    const delay = Number(this._config.algae_delay_hours) || 12;
+    const debugHours = Number(this._config.debug_algae_hours) || 0;
+    const effectiveHours = debugHours > 0 ? debugHours : hours;
+
+    if (!this._config.algae_enabled || effectiveHours < delay) {
       return svg``;
     }
 
-    const intensity = Math.min(1.0, (hours - 24) / 48);
-    const baseOpacity = (0.25 + intensity * 0.55).toFixed(2);
+    const intensity = Math.min(1.0, (effectiveHours - delay) / 36);
+    // 10x denser/darker at 48h
+    const baseOpacity = (0.2 + intensity * 0.78).toFixed(2);
+    const topY = isFullscreen ? 0 : 14;
+    const bottomY = isFullscreen ? 600 : 565;
 
     return svg`
       <g id="algae-layer" opacity="${baseOpacity}">
-        <path d="M 12 15 Q 120 50, 85 170 Q 30 130, 12 15 Z" fill="#365314" />
-        <path d="M 1012 15 Q 910 60, 940 180 Q 995 120, 1012 15 Z" fill="#365314" />
-        <path d="M 12 420 Q 140 370, 105 545 A 18 18 0 0 1 12 545 Z" fill="#283618" />
-        <path d="M 1012 420 Q 880 360, 920 545 A 18 18 0 0 0 1012 545 Z" fill="#283618" />
-        <ellipse cx="300" cy="180" rx="100" ry="45" fill="#4d7c0f" opacity="0.4" />
-        <ellipse cx="740" cy="220" rx="130" ry="55" fill="#3f6212" opacity="0.35" />
-        <ellipse cx="512" cy="420" rx="160" ry="35" fill="#365314" opacity="0.5" />
+        <rect x="0" y="${topY}" width="1024" height="${bottomY - topY}" fill="url(#algaeDots)" />
       </g>
     `;
   }
@@ -1132,8 +1204,9 @@ class AquariumShowerCard extends LitElement {
     const displayedRemaining = Math.max(0, targetBudget - currentVolume);
     const waterRatio = Math.max(0, Math.min(1, remainingVolumeInTank / totalVolume));
 
-    const tankTop = 15;
-    const tankBottom = 565;
+    const isFullscreen = Boolean(this._config.fullscreen);
+    const tankTop = isFullscreen ? 0 : 15;
+    const tankBottom = isFullscreen ? 600 : 565;
     const tankHeight = tankBottom - tankTop;
     const waterSurfaceY = tankBottom - waterRatio * tankHeight;
 
@@ -1160,14 +1233,12 @@ class AquariumShowerCard extends LitElement {
       : theme.waterBottom;
 
     const hasTitle = Boolean(this._config.title && this._config.title.trim().length > 0);
-    const isFullscreen = Boolean(this._config.fullscreen);
 
     const rWidth = Number(this._config.aspect_ratio_width) || 1024;
     const rHeight = Number(this._config.aspect_ratio_height) || 600;
 
-    const aspectRatioAttr = isFullscreen
-      ? "none"
-      : "xMidYMid meet";
+    const debugHours = Number(this._config.debug_algae_hours) || 0;
+    const effectiveAlgaeHours = debugHours > 0 ? debugHours : this._cachedHoursSinceLastShower;
 
     return html`
       <ha-card>
@@ -1182,8 +1253,10 @@ class AquariumShowerCard extends LitElement {
         <div class="aquarium-container">
           <svg
             viewBox="0 0 1024 600"
-            preserveAspectRatio="${aspectRatioAttr}"
-            style="${isFullscreen ? 'width: 100%; height: 100%;' : `aspect-ratio: ${rWidth} / ${rHeight};`}"
+            preserveAspectRatio="${isFullscreen ? "none" : "xMidYMid meet"}"
+            style="${isFullscreen
+              ? "width: 100%; height: 100%;"
+              : `aspect-ratio: ${rWidth} / ${rHeight};`}"
           >
             <defs>
               <linearGradient id="glassGrad" x1="0%" y1="0%" x2="100%" y2="0%">
@@ -1206,33 +1279,40 @@ class AquariumShowerCard extends LitElement {
                 />
               </linearGradient>
 
+              <!-- Dense Dot Algae Pattern -->
+              <pattern id="algaeDots" x="0" y="0" width="12" height="12" patternUnits="userSpaceOnUse">
+                <circle cx="2.5" cy="3" r="1.4" fill="#2d4a1d" opacity="0.95" />
+                <circle cx="8.5" cy="6" r="1.8" fill="#1e3312" opacity="0.98" />
+                <circle cx="5" cy="10" r="1.3" fill="#365314" opacity="0.9" />
+                <circle cx="10" cy="11" r="1.5" fill="#1b2e10" opacity="0.95" />
+              </pattern>
+
               <clipPath id="innerTankClip">
-                <rect x="12" y="14" width="1000" height="551" rx="18" ry="18" />
+                ${isFullscreen
+                  ? svg`<rect x="0" y="0" width="1024" height="600" />`
+                  : svg`<rect x="12" y="14" width="1000" height="551" rx="18" ry="18" />`}
               </clipPath>
             </defs>
 
-            <!-- Clipped Aquarium Elements -->
+            <!-- Clipped Aquarium Scene -->
             <g clip-path="url(#innerTankClip)">
-              <!-- Aquarium Background -->
+              <!-- Background -->
               <rect
-                x="12"
-                y="14"
-                width="1000"
-                height="551"
+                x="${isFullscreen ? 0 : 12}"
+                y="${isFullscreen ? 0 : 14}"
+                width="${isFullscreen ? 1024 : 1000}"
+                height="${isFullscreen ? 600 : 551}"
                 fill="${theme.background}"
               />
 
               <!-- Sand Floor -->
               <path
-                d="M 12 505 Q 280 480, 512 510 T 1012 505 L 1012 565 L 12 565 Z"
+                d="M ${isFullscreen ? 0 : 12} ${tankBottom - 60} Q 280 ${tankBottom - 85}, 512 ${tankBottom - 55} T ${isFullscreen ? 1024 : 1012} ${tankBottom - 60} L ${isFullscreen ? 1024 : 1012} ${tankBottom} L ${isFullscreen ? 0 : 12} ${tankBottom} Z"
                 fill="${theme.sandColor}"
               />
 
-              <!-- Theme Decorations (Flora & Reefs) -->
-              ${this._renderThemeDecoration(themeKey)}
-
-              <!-- Ancistrus Bottom-dweller (Freshwater only) -->
-              ${themeKey === "freshwater" ? this._renderAncistrus(isDead) : ""}
+              <!-- Flora & Reef Decorations -->
+              ${this._renderThemeDecoration(themeKey, isFullscreen)}
 
               <!-- Snails on Sand and Glass -->
               <g>
@@ -1265,16 +1345,16 @@ class AquariumShowerCard extends LitElement {
                 ? svg`
                     <g>
                       <rect
-                        x="12"
+                        x="${isFullscreen ? 0 : 12}"
                         y="${waterSurfaceY}"
-                        width="1000"
-                        height="${565 - waterSurfaceY}"
+                        width="${isFullscreen ? 1024 : 1000}"
+                        height="${tankBottom - waterSurfaceY}"
                         fill="url(#waterGrad)"
                       />
                       <line
-                        x1="12"
+                        x1="${isFullscreen ? 0 : 12}"
                         y1="${waterSurfaceY}"
-                        x2="1012"
+                        x2="${isFullscreen ? 1024 : 1012}"
                         y2="${waterSurfaceY}"
                         stroke="#ffffff"
                         stroke-width="3"
@@ -1326,7 +1406,7 @@ class AquariumShowerCard extends LitElement {
                   `
                 : ""}
 
-              <!-- Large Multi-sized Fishes -->
+              <!-- Living & Decaying Fishes (Balanced Natural Speed) -->
               <g>
                 ${(this._fishes || []).map((fish) => {
                   const rotation = isDead ? 180 : 0;
@@ -1338,33 +1418,38 @@ class AquariumShowerCard extends LitElement {
                 })}
               </g>
 
-              <!-- 24-hour Dirty Algae Glass Layer -->
-              ${this._renderAlgae(this._cachedHoursSinceLastShower)}
+              <!-- Ancistrus hoplogenys (Ventral view crawling vertically on left glass) -->
+              ${themeKey === "freshwater" ? this._renderAncistrus(isDead) : ""}
+
+              <!-- Textured Micro-Dot Algae Veil across the entire front glass (In front of Ancistrus) -->
+              ${this._renderAlgae(effectiveAlgaeHours, isFullscreen)}
             </g>
 
-            <!-- Outer Glass Border -->
-            <rect
-              x="12"
-              y="14"
-              width="1000"
-              height="551"
-              rx="18"
-              ry="18"
-              fill="url(#glassGrad)"
-              stroke="#94a3b8"
-              stroke-width="3"
-            />
-
-            <!-- Stand Base -->
-            <rect
-              x="4"
-              y="565"
-              width="1016"
-              height="14"
-              rx="4"
-              ry="4"
-              fill="#1e293b"
-            />
+            <!-- Outer Glass Border and Stand (Only in widget card mode, hidden in Fullscreen) -->
+            ${!isFullscreen
+              ? svg`
+                  <rect
+                    x="12"
+                    y="14"
+                    width="1000"
+                    height="551"
+                    rx="18"
+                    ry="18"
+                    fill="url(#glassGrad)"
+                    stroke="#94a3b8"
+                    stroke-width="3"
+                  />
+                  <rect
+                    x="4"
+                    y="565"
+                    width="1016"
+                    height="14"
+                    rx="4"
+                    ry="4"
+                    fill="#1e293b"
+                  />
+                `
+              : ""}
           </svg>
         </div>
 
@@ -1425,6 +1510,7 @@ class AquariumShowerCard extends LitElement {
 customElements.define("shower-aquarium-card", AquariumShowerCard);
 
 window.customCards = window.customCards || [];
+window.customNames = window.customNames || [];
 window.customCards.push({
   type: "shower-aquarium-card",
   name: "Shower Aquarium Card",
