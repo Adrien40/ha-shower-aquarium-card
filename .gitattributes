@@ -1,0 +1,18 @@
+# Set default behavior to automatically handle line endings and force LF on checkout
+* text=auto eol=lf
+
+# Explicitly declare text files
+*.js text eol=lf
+*.json text eol=lf
+*.md text eol=lf
+*.yaml text eol=lf
+*.yml text eol=lf
+*.css text eol=lf
+*.html text eol=lf
+
+# Denote all binary files that should not be modified by Git
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
