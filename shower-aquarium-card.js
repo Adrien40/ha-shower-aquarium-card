@@ -18,10 +18,10 @@ class AquariumShowerCard extends LitElement {
     this._animationFrameId = null;
     this._lastTimestamp = 0;
     this._fishes = [
-      { name: "Adrien", color: "#3b82f6", x: 80, y: 140, vx: 0.8, vy: 0.3, dir: 1 },
-      { name: "Magali", color: "#ec4899", x: 220, y: 160, vx: 0.7, vy: -0.4, dir: -1 },
-      { name: "Nolan", color: "#10b981", x: 130, y: 180, vx: 1.1, vy: 0.5, dir: 1 },
-      { name: "Lucas", color: "#f59e0b", x: 270, y: 130, vx: 0.9, vy: -0.3, dir: -1 },
+      { name: "Fish 1", color: "#3b82f6", x: 80, y: 140, vx: 0.8, vy: 0.3, dir: 1 },
+      { name: "Fish 2", color: "#ec4899", x: 220, y: 160, vx: 0.7, vy: -0.4, dir: -1 },
+      { name: "Fish 3", color: "#10b981", x: 130, y: 180, vx: 1.1, vy: 0.5, dir: 1 },
+      { name: "Fish 4", color: "#f59e0b", x: 270, y: 130, vx: 0.9, vy: -0.3, dir: -1 },
     ];
   }
 
@@ -119,7 +119,7 @@ class AquariumShowerCard extends LitElement {
       throw new Error("Please define a valid entity.");
     }
     this._config = {
-      title: "Aquarium Douche",
+      title: "Shower Aquarium",
       target_budget: 35,
       survival_volume: 10,
       ...config,
@@ -266,17 +266,17 @@ class AquariumShowerCard extends LitElement {
     const isCritical = currentVolume > targetBudget && !isDead;
     const isWarning = currentVolume > targetBudget * 0.7 && !isCritical && !isDead;
 
-    let statusText = "Tout va bien";
+    let statusText = "All good";
     let badgeClass = "badge-good";
 
     if (isDead) {
-      statusText = "Aquarium à sec";
+      statusText = "Empty tank";
       badgeClass = "badge-critical";
     } else if (isCritical) {
-      statusText = "Zone de survie";
+      statusText = "Survival zone";
       badgeClass = "badge-critical";
     } else if (isWarning) {
-      statusText = "Attention au débit";
+      statusText = "Watch usage";
       badgeClass = "badge-warning";
     }
 
@@ -471,19 +471,19 @@ class AquariumShowerCard extends LitElement {
             <div class="metric-value">
               ${currentVolume.toFixed(1)} <span class="metric-unit">L</span>
             </div>
-            <div class="metric-label">Consommé</div>
+            <div class="metric-label">Consumed</div>
           </div>
           <div class="metric-box">
             <div class="metric-value">
               ${remainingVolume.toFixed(1)} <span class="metric-unit">L</span>
             </div>
-            <div class="metric-label">Restant</div>
+            <div class="metric-label">Remaining</div>
           </div>
           <div class="metric-box">
             <div class="metric-value">
               ${targetBudget} <span class="metric-unit">L</span>
             </div>
-            <div class="metric-label">Objectif</div>
+            <div class="metric-label">Target</div>
           </div>
         </div>
       </ha-card>
