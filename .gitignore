@@ -1,6 +1,17 @@
+# OS generated files
 .DS_Store
 Thumbs.db
 *.log
+
+# IDE & Editors
 .vscode/
 .idea/
+*.swp
+*.swo
+
+# Node / JS (si tu utilises npm/build plus tard)
 node_modules/
+package-lock.json
+yarn.lock
+dist/
+.npm/
