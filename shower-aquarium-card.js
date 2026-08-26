@@ -1,9 +1,4 @@
-import {
-  LitElement,
-  html,
-  css,
-  svg,
-} from "https://unpkg.com/lit-element@2.4.0/lit-element.js?module";
+import { LitElement, html, css, svg } from "./lit-element-bundle.min.js";
 
 const TRANSLATIONS = {
   en: {
