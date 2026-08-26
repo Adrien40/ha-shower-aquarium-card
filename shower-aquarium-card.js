@@ -464,6 +464,12 @@ class AquariumShowerCard extends LitElement {
     return TRANSLATIONS[lang]?.[key] || TRANSLATIONS.en[key] || key;
   }
 
+  _getCanvasHeight() {
+    const rWidth = Number(this._config.aspect_ratio_width) || 1024;
+    const rHeight = Number(this._config.aspect_ratio_height) || 600;
+    return Math.max(400, Math.min(2048, Math.round(1024 * (rHeight / rWidth))));
+  }
+
   _updateCachedMetrics() {
     if (!this._hass || !this._config) return;
 
@@ -644,7 +650,7 @@ class AquariumShowerCard extends LitElement {
 
     const isFullscreen = Boolean(this._config.fullscreen);
     const tankTop = isFullscreen ? 0 : 15;
-    const tankBottom = isFullscreen ? 600 : 565;
+    const tankBottom = isFullscreen ? 600 : this._getCanvasHeight() - 35;
     const tankHeight = tankBottom - tankTop;
     const waterSurfaceY = tankBottom - waterRatio * tankHeight;
 
@@ -779,7 +785,7 @@ class AquariumShowerCard extends LitElement {
   }
 
   _renderThemeDecoration(themeKey, isFullscreen) {
-    const bottomY = isFullscreen ? 600 : 565;
+    const bottomY = isFullscreen ? 600 : this._getCanvasHeight() - 35;
 
     if (themeKey === "saltwater") {
       return svg`
@@ -1044,7 +1050,7 @@ class AquariumShowerCard extends LitElement {
     const intensity = Math.min(1.0, (effectiveHours - delay) / 36);
     const baseOpacity = (0.2 + intensity * 0.78).toFixed(2);
     const topY = isFullscreen ? 0 : 14;
-    const bottomY = isFullscreen ? 600 : 565;
+    const bottomY = isFullscreen ? 600 : this._getCanvasHeight() - 35;
 
     return svg`
       <g id="algae-layer" opacity="${baseOpacity}">
@@ -1070,8 +1076,10 @@ class AquariumShowerCard extends LitElement {
     const waterRatio = Math.max(0, Math.min(1, remainingVolumeInTank / totalVolume));
 
     const isFullscreen = Boolean(this._config.fullscreen);
+    const canvasH = this._getCanvasHeight();
+    const canvasBottom = canvasH - 35;
     const tankTop = isFullscreen ? 0 : 15;
-    const tankBottom = isFullscreen ? 600 : 565;
+    const tankBottom = isFullscreen ? 600 : canvasBottom;
     const tankHeight = tankBottom - tankTop;
     const waterSurfaceY = tankBottom - waterRatio * tankHeight;
 
@@ -1112,7 +1120,7 @@ class AquariumShowerCard extends LitElement {
 
         <div class="aquarium-container">
           <svg
-            viewBox="0 0 1024 600"
+            viewBox="0 0 1024 ${isFullscreen ? 600 : canvasH}"
             preserveAspectRatio="${isFullscreen ? "none" : "xMidYMid meet"}"
             style="${isFullscreen
               ? "width: 100%; height: 100%;"
@@ -1141,7 +1149,7 @@ class AquariumShowerCard extends LitElement {
               <clipPath id="innerTankClip">
                 ${isFullscreen
                   ? svg`<rect x="0" y="0" width="1024" height="600" />`
-                  : svg`<rect x="12" y="14" width="1000" height="551" rx="18" ry="18" />`}
+                  : svg`<rect x="12" y="14" width="1000" height="${canvasBottom - 14}" rx="18" ry="18" />`}
               </clipPath>
             </defs>
 
@@ -1150,7 +1158,7 @@ class AquariumShowerCard extends LitElement {
                 x="${isFullscreen ? 0 : 12}"
                 y="${isFullscreen ? 0 : 14}"
                 width="${isFullscreen ? 1024 : 1000}"
-                height="${isFullscreen ? 600 : 551}"
+                height="${isFullscreen ? 600 : canvasBottom - 14}"
                 fill="${theme.background}"
               />
 
@@ -1245,8 +1253,8 @@ class AquariumShowerCard extends LitElement {
 
             ${!isFullscreen
               ? svg`
-                  <rect x="12" y="14" width="1000" height="551" rx="18" ry="18" fill="url(#glassGrad)" stroke="#94a3b8" stroke-width="3" />
-                  <rect x="4" y="565" width="1016" height="14" rx="4" ry="4" fill="#1e293b" />
+                  <rect x="12" y="14" width="1000" height="${canvasBottom - 14}" rx="18" ry="18" fill="url(#glassGrad)" stroke="#94a3b8" stroke-width="3" />
+                  <rect x="4" y="${canvasBottom}" width="1016" height="14" rx="4" ry="4" fill="#1e293b" />
                 `
               : ""}
           </svg>
