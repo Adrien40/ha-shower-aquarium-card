@@ -2,7 +2,7 @@ import { LitElement, html, css, svg } from "./lit-element-bundle.min.js";
 
 // Shower Aquarium Card
 // Version tracked via Git tags / GitHub Releases (see CARD_VERSION below and the repo's Releases page)
-const CARD_VERSION = "0.1.0";
+const CARD_VERSION = "0.1.1";
 
 const TRANSLATIONS = {
   en: {
@@ -273,6 +273,7 @@ class AquariumShowerCard extends LitElement {
       _fishes: { type: Array },
       _snails: { type: Array },
       _ancistrus: { type: Object },
+      _shrimp: { type: Object },
       _bubbles: { type: Array },
       _boilingBubbles: { type: Array },
     };
@@ -332,8 +333,19 @@ class AquariumShowerCard extends LitElement {
     this._ancistrus = {
       x: 65,
       y: 350,
-      vy: 0.12,
+      targetY: 350,
+      state: "idle",
+      idleUntil: 0,
       dir: 1,
+      deathProgress: 0,
+    };
+    this._shrimp = {
+      x: 760,
+      y: 0,
+      targetX: 760,
+      state: "idle",
+      idleUntil: 0,
+      dir: -1,
       deathProgress: 0,
     };
     this._bubbles = [
@@ -526,7 +538,8 @@ class AquariumShowerCard extends LitElement {
   _assignSpecies(index, themeKey) {
     if (themeKey === "saltwater") {
       if (index < 2) return 0; // clownfish, capped at 2 (territorial around the anemone)
-      return 1 + ((index - 2) % 2); // tang / generic reef fish, alternating
+      if (index === 2) return 1; // tang, capped at 1
+      return 2; // remaining fish are generic reef fish, varied colors
     }
     if (themeKey === "coldwater") {
       return index % 3; // fantail / comet / lionhead
@@ -770,15 +783,56 @@ class AquariumShowerCard extends LitElement {
         const minVY = Math.max(tankTop + 60, waterSurfaceY + 50);
         const maxVY = tankBottom - 60;
 
-        this._ancistrus.y += this._ancistrus.vy * this._ancistrus.dir * Math.min(userSpeed, 1.5) * delta;
-        if (this._ancistrus.y < minVY) {
-          this._ancistrus.y = minVY;
-          this._ancistrus.dir = 1;
-        } else if (this._ancistrus.y > maxVY) {
-          this._ancistrus.y = maxVY;
-          this._ancistrus.dir = -1;
+        if (!this._ancistrus.idleUntil) {
+          this._ancistrus.idleUntil = timestamp + 3000 + Math.random() * 4000;
         }
+
+        if (this._ancistrus.state === "moving") {
+          const dy = this._ancistrus.targetY - this._ancistrus.y;
+          const step = Math.sign(dy) * Math.min(Math.abs(dy), 0.5 * userSpeed * delta);
+          this._ancistrus.y += step;
+          if (Math.abs(this._ancistrus.targetY - this._ancistrus.y) < 1.5) {
+            this._ancistrus.state = "idle";
+            this._ancistrus.idleUntil = timestamp + 4000 + Math.random() * 5000;
+          }
+        } else if (timestamp >= this._ancistrus.idleUntil) {
+          this._ancistrus.state = "moving";
+          this._ancistrus.targetY = minVY + Math.random() * (maxVY - minVY);
+        }
+
         this._ancistrus.x = 65;
+        stateChanged = true;
+      }
+    }
+
+    if (this._shrimp) {
+      if (isDead) {
+        this._shrimp.deathProgress = Math.min(1.0, (this._shrimp.deathProgress || 0) + deathStep);
+        stateChanged = true;
+      } else {
+        this._shrimp.deathProgress = 0;
+        this._shrimp.y = tankBottom - 25;
+        const minSX = 680;
+        const maxSX = 860;
+
+        if (!this._shrimp.idleUntil) {
+          this._shrimp.idleUntil = timestamp + 3500 + Math.random() * 4500;
+        }
+
+        if (this._shrimp.state === "moving") {
+          const dx = this._shrimp.targetX - this._shrimp.x;
+          this._shrimp.dir = dx < 0 ? -1 : 1;
+          const step = Math.sign(dx) * Math.min(Math.abs(dx), 0.4 * userSpeed * delta);
+          this._shrimp.x += step;
+          if (Math.abs(this._shrimp.targetX - this._shrimp.x) < 1.5) {
+            this._shrimp.state = "idle";
+            this._shrimp.idleUntil = timestamp + 5000 + Math.random() * 6000;
+          }
+        } else if (timestamp >= this._shrimp.idleUntil) {
+          this._shrimp.state = "moving";
+          this._shrimp.targetX = minSX + Math.random() * (maxSX - minSX);
+        }
+
         stateChanged = true;
       }
     }
@@ -1100,40 +1154,44 @@ class AquariumShowerCard extends LitElement {
     } else if (themeKey === "coldwater") {
       if (fish.species === 0) {
         bodySvg = svg`
-          <g transform="translate(-16, 0) rotate(${tailWag * 1.1})">
-            <path d="M -2,-2 C -12,-10 -26,-12 -36,-8 C -30,-4 -27,0 -28,4 C -34,6 -41,9 -44,15 C -35,15 -28,13 -23,10 C -25,17 -27,25 -24,31 C -18,26 -14,20 -11,14 C -8,19 -3,23 4,23 C 1,15 -3,7 -2,-2 Z" fill="${fish.color}" opacity="0.85" />
-            <path d="M -1,3 C -10,0 -22,0 -32,4 C -25,7 -21,10 -20,15 C -26,20 -32,26 -34,34 C -26,31 -20,26 -15,21 C -14,27 -12,34 -6,39 C -3,31 -2,23 -2,15 C 3,20 8,23 15,23 C 8,17 1,10 -1,3 Z" fill="${fish.color}" opacity="0.95" />
+          <g transform="translate(-14, 0) rotate(${tailWag * 1.1})">
+            <path d="M -1,-3 C -10,-12 -24,-15 -35,-11 C -28,-6 -25,-1 -26,4 C -33,6 -40,10 -43,17 C -33,17 -26,14 -21,10 C -23,18 -25,27 -21,34 C -14,28 -10,21 -7,15 C -4,21 2,25 10,25 C 6,16 1,8 -1,-3 Z" fill="${fish.color}" opacity="0.88" />
+            <path d="M 0,4 C -9,1 -21,1 -31,6 C -23,9 -19,13 -18,18 C -25,23 -31,30 -33,38 C -24,35 -18,29 -12,24 C -11,31 -8,39 -1,44 C 3,35 3,26 2,17 C 8,22 14,25 22,25 C 14,19 6,11 0,4 Z" fill="${fish.color}" opacity="0.98" />
           </g>
-          <ellipse cx="8" cy="0" rx="20" ry="16" fill="${fish.color}" />
-          <ellipse cx="8" cy="-4" rx="17" ry="9" fill="#ffffff" opacity="0.35" />
+          <circle cx="10" cy="0" r="19" fill="${fish.color}" />
+          <ellipse cx="6" cy="-6" rx="12" ry="7" fill="#ffffff" opacity="0.4" />
+          <path d="M 2,-16 Q 8,-24 16,-21 Q 10,-16 8,-11 Z" fill="${fish.color}" opacity="0.85" />
           ${isDead
-            ? svg`<line x1="20" y1="-6" x2="26" y2="0" stroke="#ffffff" stroke-width="2" />`
-            : svg`<circle cx="22" cy="-3" r="3.4" fill="#ffffff" /><circle cx="23" cy="-3" r="1.7" fill="#0f172a" />`}
+            ? svg`<line x1="18" y1="-5" x2="24" y2="1" stroke="#ffffff" stroke-width="2" />`
+            : svg`<circle cx="21" cy="-2" r="3.6" fill="#ffffff" /><circle cx="22.2" cy="-2" r="1.8" fill="#0f172a" />`}
         `;
       } else if (fish.species === 1) {
         bodySvg = svg`
-          <g transform="translate(-18, 0) rotate(${tailWag})">
-            <path d="M 0,0 L -44,-18 L -28,-1 Z" fill="${fish.color}" opacity="0.9" />
-            <path d="M 0,0 L -44,18 L -28,1 Z" fill="${fish.color}" opacity="0.8" />
+          <g transform="translate(-16, 0) rotate(${tailWag})">
+            <path d="M 0,0 L -48,-19 L -30,-1 Z" fill="${fish.color}" opacity="0.92" />
+            <path d="M 0,0 L -48,19 L -30,1 Z" fill="${fish.color}" opacity="0.8" />
+            <path d="M -22,-9 L -34,-11 L -24,-2 Z" fill="${fish.color}" opacity="0.7" />
           </g>
-          <ellipse cx="6" cy="0" rx="19" ry="10" fill="${fish.color}" />
-          <path d="M -2,-10 Q 4,-18 12,-15 Q 6,-11 4,-6 Z" fill="${fish.color}" opacity="0.85" />
+          <path d="M -14,0 C -14,-11 -6,-19 8,-19 C 20,-19 27,-11 27,0 C 27,10 20,17 8,17 C -6,17 -14,10 -14,0 Z" fill="${fish.color}" />
+          <ellipse cx="4" cy="-6" rx="12" ry="6" fill="#ffffff" opacity="0.35" />
+          <path d="M -2,-19 Q 4,-27 13,-24 Q 7,-19 5,-14 Z" fill="${fish.color}" opacity="0.85" />
           ${isDead
-            ? svg`<line x1="18" y1="-4" x2="23" y2="0" stroke="#ffffff" stroke-width="1.6" />`
-            : svg`<circle cx="19" cy="-2" r="2.6" fill="#ffffff" /><circle cx="20" cy="-2" r="1.3" fill="#0f172a" />`}
+            ? svg`<line x1="17" y1="-6" x2="23" y2="0" stroke="#ffffff" stroke-width="1.8" />`
+            : svg`<circle cx="20" cy="-3" r="3" fill="#ffffff" /><circle cx="21" cy="-3" r="1.5" fill="#0f172a" />`}
         `;
       } else {
         bodySvg = svg`
-          <g transform="translate(-16,0) rotate(${tailWag * 0.8})">
-            <path d="M 0,0 C -8,-10 -20,-10 -26,-2 C -20,2 -20,2 -26,6 C -20,12 -8,10 0,0 Z" fill="${fish.color}" opacity="0.85" />
+          <g transform="translate(-14,0) rotate(${tailWag * 0.8})">
+            <path d="M 0,0 C -9,-12 -23,-12 -30,-2 C -22,2 -22,2 -30,6 C -23,14 -9,12 0,0 Z" fill="${fish.color}" opacity="0.88" />
           </g>
-          <ellipse cx="2" cy="2" rx="21" ry="18" fill="${fish.color}" />
-          <circle cx="14" cy="-6" r="7" fill="${fish.color}" opacity="0.9" />
-          <circle cx="18" cy="0" r="5" fill="${fish.color}" opacity="0.8" />
-          <circle cx="12" cy="4" r="4" fill="${fish.color}" opacity="0.7" />
+          <circle cx="4" cy="2" r="22" fill="${fish.color}" />
+          <ellipse cx="0" cy="-4" rx="14" ry="8" fill="#ffffff" opacity="0.35" />
+          <circle cx="16" cy="-8" r="8.5" fill="${fish.color}" opacity="0.95" />
+          <circle cx="22" cy="0" r="6.5" fill="${fish.color}" opacity="0.85" />
+          <circle cx="15" cy="7" r="5.5" fill="${fish.color}" opacity="0.75" />
           ${isDead
-            ? svg`<line x1="10" y1="-2" x2="15" y2="2" stroke="#ffffff" stroke-width="1.6" />`
-            : svg`<circle cx="16" cy="-1" r="2.4" fill="#ffffff" /><circle cx="17" cy="-1" r="1.2" fill="#0f172a" />`}
+            ? svg`<line x1="16" y1="-3" x2="22" y2="1" stroke="#ffffff" stroke-width="1.8" />`
+            : svg`<circle cx="20" cy="-1" r="3" fill="#ffffff" /><circle cx="21.2" cy="-1" r="1.5" fill="#0f172a" />`}
         `;
       }
     } else {
@@ -1206,41 +1264,83 @@ class AquariumShowerCard extends LitElement {
     const p = anc.deathProgress || 0;
     const bodyOpacity = (1.0 - p).toFixed(2);
     const skeletonOpacity = p.toFixed(2);
+    const mouthPulse = isDead ? 1 : (1 + Math.sin(this._animTime * 5) * 0.14).toFixed(3);
 
     return svg`
       <g transform="translate(${anc.x}, ${anc.y}) scale(1.6, 1.6)">
         <g opacity="${bodyOpacity}">
-          <path d="M -48,4 C -50,-8 -42,-20 -26,-26 C -8,-33 22,-32 34,-22 C 43,-14 45,-2 40,8 C 32,18 14,22 -6,21 C -26,20 -44,15 -48,4 Z" fill="#374151" stroke="#111827" stroke-width="1.4" />
-          <path d="M -46,7 C -30,15 8,17 38,8" stroke="#4b5563" stroke-width="2.2" fill="none" opacity="0.55" />
-          <path d="M -4,-27 C 0,-44 12,-49 22,-43 C 15,-37 10,-30 8,-23 Z" fill="#1f2937" />
-          <path d="M -14,-25 C -13,-34 -7,-38 -1,-36 C -4,-31 -6,-27 -7,-23 Z" fill="#1f2937" opacity="0.9" />
-          <path d="M 32,-4 L 56,-15 L 47,4 L 56,20 L 32,12 Z" fill="#374151" stroke="#111827" stroke-width="1.2" />
-          <path d="M -48,4 C -53,-1 -53,-9 -47,-15 C -41,-20 -31,-19 -27,-13 C -31,-7 -31,1 -27,7 C -35,9 -44,8 -48,4 Z" fill="#2d3541" />
-          <ellipse cx="-44" cy="2" rx="6.5" ry="5" fill="#0f172a" stroke="#4b5563" stroke-width="0.8" />
-          <path d="M -46,9 Q -50,15 -48,19" stroke="#1f2937" stroke-width="1.6" fill="none" stroke-linecap="round" />
-          <path d="M -40,11 Q -42,17 -39,21" stroke="#1f2937" stroke-width="1.6" fill="none" stroke-linecap="round" />
+          <path d="M 0,-30 C 14,-30 24,-20 26,-6 C 28,8 24,20 14,27 C 6,32 -6,32 -14,27 C -24,20 -28,8 -26,-6 C -24,-20 -14,-30 0,-30 Z" fill="#4b5563" stroke="#1f2937" stroke-width="1.4" />
+          <circle cx="-10" cy="-14" r="2.2" fill="#374151" opacity="0.7" />
+          <circle cx="8" cy="-16" r="1.8" fill="#374151" opacity="0.7" />
+          <circle cx="-14" cy="0" r="1.9" fill="#374151" opacity="0.6" />
+          <circle cx="12" cy="2" r="2.1" fill="#374151" opacity="0.6" />
+          <circle cx="-4" cy="14" r="1.7" fill="#374151" opacity="0.6" />
+          <circle cx="10" cy="16" r="1.6" fill="#374151" opacity="0.5" />
+          <circle cx="-16" cy="12" r="1.5" fill="#374151" opacity="0.5" />
+          <path d="M -26,-4 C -34,-8 -40,-4 -42,4 C -38,8 -30,8 -24,4 Z" fill="#374151" stroke="#1f2937" stroke-width="1" />
+          <path d="M 26,-4 C 34,-8 40,-4 42,4 C 38,8 30,8 24,4 Z" fill="#374151" stroke="#1f2937" stroke-width="1" />
           ${isDead
-            ? svg`<line x1="-35" y1="-15" x2="-29" y2="-9" stroke="#ffffff" stroke-width="1.4" />`
-            : svg`<circle cx="-33" cy="-13" r="2.4" fill="#111827" /><circle cx="-32.3" cy="-13.6" r="0.8" fill="#e5e7eb" />`}
-          <path d="M -16,8 L -30,20 Q -20,18 -8,14 Z" fill="#1f2937" opacity="0.85" />
-          <circle cx="-6" cy="-9" r="2.1" fill="#111827" opacity="0.5" />
-          <circle cx="6" cy="-15" r="1.7" fill="#111827" opacity="0.5" />
-          <circle cx="-16" cy="-19" r="1.5" fill="#111827" opacity="0.5" />
-          <circle cx="14" cy="-5" r="1.9" fill="#111827" opacity="0.5" />
-          <circle cx="-4" cy="3" r="1.6" fill="#111827" opacity="0.4" />
-          <circle cx="20" cy="2" r="1.5" fill="#111827" opacity="0.4" />
+            ? svg`<line x1="-11" y1="-19" x2="-7" y2="-17" stroke="#ffffff" stroke-width="1.2" /><line x1="7" y1="-19" x2="11" y2="-17" stroke="#ffffff" stroke-width="1.2" />`
+            : svg`
+                <circle cx="-9" cy="-18" r="2.6" fill="#0f172a" stroke="#facc15" stroke-width="0.6" />
+                <circle cx="9" cy="-18" r="2.6" fill="#0f172a" stroke="#facc15" stroke-width="0.6" />
+                <circle cx="-8.3" cy="-18.7" r="0.8" fill="#fef9c3" />
+                <circle cx="9.7" cy="-18.7" r="0.8" fill="#fef9c3" />
+              `}
+          <path d="M -6,26 Q -10,32 -7,36" stroke="#1f2937" stroke-width="1.4" fill="none" stroke-linecap="round" />
+          <path d="M 6,26 Q 10,32 7,36" stroke="#1f2937" stroke-width="1.4" fill="none" stroke-linecap="round" />
+          <g transform="translate(0,20) scale(${mouthPulse},${mouthPulse}) translate(0,-20)">
+            <circle cx="0" cy="20" r="9" fill="#1f2937" stroke="#111827" stroke-width="1" />
+            <circle cx="0" cy="20" r="6.4" fill="#374151" />
+            <circle cx="0" cy="20" r="3.8" fill="#111827" />
+            <circle cx="0" cy="20" r="9" fill="none" stroke="#6b7280" stroke-width="0.6" opacity="0.6" />
+          </g>
         </g>
         ${p > 0
           ? svg`
               <g opacity="${skeletonOpacity}">
-                <line x1="-40" y1="-2" x2="40" y2="4" stroke="#f1f5f9" stroke-width="2.5" stroke-linecap="round" />
-                <circle cx="-40" cy="-2" r="5" fill="#f1f5f9" />
-                <line x1="-24" y1="-10" x2="-24" y2="10" stroke="#f1f5f9" stroke-width="1.6" />
-                <line x1="-8" y1="-12" x2="-8" y2="12" stroke="#f1f5f9" stroke-width="1.6" />
-                <line x1="10" y1="-10" x2="10" y2="10" stroke="#f1f5f9" stroke-width="1.6" />
+                <ellipse cx="0" cy="0" rx="20" ry="24" fill="none" stroke="#f1f5f9" stroke-width="2" />
+                <circle cx="0" cy="0" r="4" fill="#f1f5f9" />
               </g>
             `
           : ""}
+      </g>
+    `;
+  }
+
+  _renderShrimp(isDead) {
+    if (!this._shrimp) return svg``;
+    const s = this._shrimp;
+    const p = s.deathProgress || 0;
+    const bodyOpacity = (1.0 - p).toFixed(2);
+    const flip = s.dir === -1 ? -1 : 1;
+
+    return svg`
+      <g transform="translate(${s.x}, ${s.y}) scale(${flip * 1.5}, 1.5)" opacity="${bodyOpacity}">
+        <path d="M -6,10 L -8,16" stroke="#450a0a" stroke-width="1" stroke-linecap="round" opacity="0.7" />
+        <path d="M 0,12 L -1,18" stroke="#450a0a" stroke-width="1" stroke-linecap="round" opacity="0.7" />
+        <path d="M 6,13 L 6,19" stroke="#450a0a" stroke-width="1" stroke-linecap="round" opacity="0.7" />
+        <path d="M 12,12 L 13,18" stroke="#450a0a" stroke-width="1" stroke-linecap="round" opacity="0.7" />
+        <path d="M 20,14 L 32,6 L 34,14 L 32,23 L 20,18 Z" fill="#dc2626" stroke="#7f1d1d" stroke-width="0.7" />
+        <path d="M -30,-10 C -20,-16 -6,-16 4,-10 C 12,-6 16,-2 20,6 C 23,11 23,15 19,16 C 8,17 -2,15 -10,10 C -18,5 -24,-2 -30,-10 Z" fill="#b91c1c" stroke="#7f1d1d" stroke-width="0.9" />
+        <path d="M -28,-9 C -18,-13 -4,-13 4,-8 C 10,-5 14,-1 17,5" stroke="#ef4444" stroke-width="2" fill="none" stroke-linecap="round" opacity="0.6" />
+        <circle cx="-22" cy="-8" r="1.5" fill="#fef2f2" />
+        <circle cx="-14" cy="-11" r="1.4" fill="#fef2f2" />
+        <circle cx="-6" cy="-10" r="1.5" fill="#fef2f2" />
+        <circle cx="1" cy="-7" r="1.3" fill="#fef2f2" />
+        <circle cx="-18" cy="-2" r="1.3" fill="#fef2f2" />
+        <circle cx="-9" cy="-2" r="1.4" fill="#fef2f2" />
+        <circle cx="0" cy="0" r="1.3" fill="#fef2f2" />
+        <circle cx="7" cy="2" r="1.3" fill="#fef2f2" />
+        <circle cx="-14" cy="5" r="1.2" fill="#fef2f2" />
+        <circle cx="-5" cy="7" r="1.2" fill="#fef2f2" />
+        <circle cx="13" cy="8" r="1.1" fill="#fef2f2" />
+        <path d="M -30,-9 Q -40,-10 -46,-4 Q -40,0 -32,-4 Z" fill="#dc2626" stroke="#7f1d1d" stroke-width="0.7" />
+        <path d="M -30,-11 Q -60,-24 -88,-30" stroke="#fef9c3" stroke-width="1.1" fill="none" stroke-linecap="round" />
+        <path d="M -28,-8 Q -54,-12 -80,-10" stroke="#fef9c3" stroke-width="1" fill="none" stroke-linecap="round" opacity="0.85" />
+        ${isDead
+          ? svg`<line x1="-29" y1="-15" x2="-25" y2="-11" stroke="#ffffff" stroke-width="1" />`
+          : svg`<circle cx="-27" cy="-13" r="1.9" fill="#0f172a" /><circle cx="-27.6" cy="-13.6" r="0.6" fill="#f1f5f9" />`}
       </g>
     `;
   }
@@ -1451,6 +1551,7 @@ class AquariumShowerCard extends LitElement {
               </g>
 
               ${themeKey === "freshwater" ? this._renderAncistrus(isDead) : ""}
+              ${themeKey === "saltwater" ? this._renderShrimp(isDead) : ""}
               ${this._renderAlgae(effectiveAlgaeHours, isFullscreen)}
             </g>
 
