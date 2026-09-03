@@ -1,6 +1,6 @@
 import { LitElement, html, css, svg } from "./lit-element-bundle.min.js";
 
-const CARD_VERSION = "0.2.1";
+const CARD_VERSION = "0.2.2";
 
 const TRANSLATIONS = {
   en: {
@@ -330,7 +330,7 @@ class AquariumShowerCard extends LitElement {
       { x: 1006, y: 220, vx: 0, vy: -0.06, dir: -1, type: "glass_right", color: "#78350f" },
     ];
     this._ancistrus = {
-      x: 65,
+      x: 70,
       y: 340,
       targetY: 340,
       state: "idle",
@@ -790,12 +790,12 @@ class AquariumShowerCard extends LitElement {
     if (this._ancistrus) {
       if (isDead) {
         this._ancistrus.deathProgress = Math.min(1.0, (this._ancistrus.deathProgress || 0) + deathStep);
-        this._ancistrus.y = Math.min(tankBottom - 25, this._ancistrus.y + 1.2 * delta);
+        this._ancistrus.y = Math.min(tankBottom - 35, this._ancistrus.y + 1.2 * delta);
         stateChanged = true;
       } else {
         this._ancistrus.deathProgress = 0;
-        const minVY = Math.max(tankTop + 50, waterSurfaceY + 60);
-        const maxVY = tankBottom - 95;
+        const minVY = Math.max(tankTop + 60, waterSurfaceY + 70);
+        const maxVY = tankBottom - 120;
 
         if (!this._ancistrus.idleUntil) {
           this._ancistrus.idleUntil = timestamp + 2500 + Math.random() * 4000;
@@ -1226,7 +1226,7 @@ class AquariumShowerCard extends LitElement {
     const spineColor = "#475569";
 
     return svg`
-      <g transform="translate(${anc.x}, ${anc.y}) scale(0.9, 0.9)">
+      <g transform="translate(${anc.x}, ${anc.y}) scale(1.35, 1.35)">
         <g opacity="${bodyOpacity}">
           <!-- Left Pectoral Fin with spine ray -->
           <path d="M -12,6 C -24,10 -30,18 -26,26 C -20,26 -14,20 -9,14 Z" fill="${finColor}" stroke="${borderColor}" stroke-width="0.8" />
@@ -1241,7 +1241,7 @@ class AquariumShowerCard extends LitElement {
           <path d="M 7,30 C 15,36 15,44 7,42 Z" fill="${finColor}" stroke="${borderColor}" stroke-width="0.6" />
 
           <!-- Streamlined Body (Model 5 base) -->
-          <path d="M -12,0 C -15,16 -14,34 -9,52 L -3,74 L 3,74 L 9,52 C 14,34 15,16 12,0 C 9,-8 -9,-8 -12,0 Z" fill="${bodyColor}" stroke="${borderColor}" stroke-width="1.1" />
+          <path d="M -12,0 C -15,16 -14,34 -9,52 L -3,74 L 3,74 L 9,52 C 15,34 16,16 12,0 C 9,-8 -9,-8 -12,0 Z" fill="${bodyColor}" stroke="${borderColor}" stroke-width="1.1" />
 
           <!-- White micro-dots on body -->
           <circle cx="0" cy="20" r="1.0" fill="#ffffff" opacity="0.9" />
@@ -1345,7 +1345,7 @@ class AquariumShowerCard extends LitElement {
     const r = 68;
     const circ = 2 * Math.PI * r;
     const strokeW = 7;
-    const cy = 96;
+    const cy = 115;
 
     // Left Gauge: Temperature
     const tempCx = 88;
