@@ -1,6 +1,6 @@
 import { LitElement, html, css, svg } from "./lit-element-bundle.min.js";
 
-const CARD_VERSION = "0.2.0";
+const CARD_VERSION = "0.2.1";
 
 const TRANSLATIONS = {
   en: {
@@ -1220,22 +1220,28 @@ class AquariumShowerCard extends LitElement {
     const bodyOpacity = (1.0 - p).toFixed(2);
     const mouthPulse = isDead ? 1 : (1 + Math.sin(this._animTime * 1.6) * 0.07).toFixed(3);
 
+    const finColor = "#182026";
+    const bodyColor = "#1e293b";
+    const borderColor = "#0a0f14";
+    const spineColor = "#475569";
+
     return svg`
       <g transform="translate(${anc.x}, ${anc.y}) scale(0.9, 0.9)">
         <g opacity="${bodyOpacity}">
-          <!-- Pectoral fins (from Ancistrus 2) -->
-          <path d="M -12,6 C -24,10 -30,18 -26,26 C -20,26 -14,20 -9,14 Z" fill="#182026" stroke="#0a0f14" stroke-width="0.8" />
-          <path d="M 12,6 C 24,10 30,18 26,26 C 20,26 14,20 9,14 Z" fill="#182026" stroke="#0a0f14" stroke-width="0.8" />
-          <path d="M -26,26 C -20,26 -14,20 -9,14" stroke="#ffffff" stroke-width="1.1" fill="none" opacity="0.85" />
-          <path d="M 26,26 C 20,26 14,20 9,14" stroke="#ffffff" stroke-width="1.1" fill="none" opacity="0.85" />
+          <!-- Left Pectoral Fin with spine ray -->
+          <path d="M -12,6 C -24,10 -30,18 -26,26 C -20,26 -14,20 -9,14 Z" fill="${finColor}" stroke="${borderColor}" stroke-width="0.8" />
+          <line x1="-12" y1="8" x2="-24" y2="24" stroke="${spineColor}" stroke-width="1.4" stroke-linecap="round" />
 
-          <!-- Pelvic fins (from Ancistrus 2) -->
-          <path d="M -7,30 C -15,36 -15,44 -7,42 Z" fill="#182026" stroke="#0a0f14" stroke-width="0.6" />
-          <path d="M 7,30 C 15,36 15,44 7,42 Z" fill="#182026" stroke="#0a0f14" stroke-width="0.6" />
+          <!-- Right Pectoral Fin with spine ray -->
+          <path d="M 12,6 C 24,10 30,18 26,26 C 20,26 14,20 9,14 Z" fill="${finColor}" stroke="${borderColor}" stroke-width="0.8" />
+          <line x1="12" y1="8" x2="24" y2="24" stroke="${spineColor}" stroke-width="1.4" stroke-linecap="round" />
 
-          <!-- Streamlined body (from Ancistrus 5 shape, dark color from 1) -->
-          <path d="M -12,0 C -15,16 -14,34 -9,52 L -3,74 L 3,74 L 9,52 C 15,34 16,16 12,0 C 9,-8 -9,-8 -12,0 Z" fill="#1e293b" stroke="#0a0f14" stroke-width="1.1" />
-          <path d="M -4,74 L 0,79 L 4,74" stroke="#ffffff" stroke-width="1.1" fill="none" opacity="0.85" />
+          <!-- Pelvic Fins -->
+          <path d="M -7,30 C -15,36 -15,44 -7,42 Z" fill="${finColor}" stroke="${borderColor}" stroke-width="0.6" />
+          <path d="M 7,30 C 15,36 15,44 7,42 Z" fill="${finColor}" stroke="${borderColor}" stroke-width="0.6" />
+
+          <!-- Streamlined Body (Model 5 base) -->
+          <path d="M -12,0 C -15,16 -14,34 -9,52 L -3,74 L 3,74 L 9,52 C 14,34 15,16 12,0 C 9,-8 -9,-8 -12,0 Z" fill="${bodyColor}" stroke="${borderColor}" stroke-width="1.1" />
 
           <!-- White micro-dots on body -->
           <circle cx="0" cy="20" r="1.0" fill="#ffffff" opacity="0.9" />
@@ -1245,16 +1251,18 @@ class AquariumShowerCard extends LitElement {
           <circle cx="-3" cy="54" r="0.7" fill="#ffffff" opacity="0.7" />
           <circle cx="3" cy="54" r="0.7" fill="#ffffff" opacity="0.7" />
 
-          <!-- Snout bristles / poils (from Ancistrus 1) -->
-          <path d="M -11,-4 Q -16,-15 -11,-18 Q -7,-14 -5,-4" stroke="#0f172a" stroke-width="1.3" fill="none" stroke-linecap="round" />
-          <path d="M -6,-6 Q -8,-20 -3,-19 Q -1,-15 -2,-6" stroke="#0f172a" stroke-width="1.3" fill="none" stroke-linecap="round" />
-          <path d="M 0,-7 Q 0,-22 3,-22 Q 4,-16 2,-7" stroke="#0f172a" stroke-width="1.3" fill="none" stroke-linecap="round" />
-          <path d="M 6,-6 Q 8,-20 3,-19 Q 1,-15 2,-6" stroke="#0f172a" stroke-width="1.3" fill="none" stroke-linecap="round" />
-          <path d="M 11,-4 Q 16,-15 11,-18 Q 7,-14 5,-4" stroke="#0f172a" stroke-width="1.3" fill="none" stroke-linecap="round" />
+          <!-- Straight brush bristles / tentacles on snout (Model 5) -->
+          <line x1="-10" y1="-5" x2="-14" y2="-17" stroke="${borderColor}" stroke-width="1.4" stroke-linecap="round" />
+          <line x1="-7" y1="-6" x2="-9" y2="-21" stroke="${borderColor}" stroke-width="1.4" stroke-linecap="round" />
+          <line x1="-3" y1="-7" x2="-4" y2="-24" stroke="${borderColor}" stroke-width="1.4" stroke-linecap="round" />
+          <line x1="0" y1="-8" x2="0" y2="-25" stroke="${borderColor}" stroke-width="1.4" stroke-linecap="round" />
+          <line x1="3" y1="-7" x2="4" y2="-24" stroke="${borderColor}" stroke-width="1.4" stroke-linecap="round" />
+          <line x1="7" y1="-6" x2="9" y2="-21" stroke="${borderColor}" stroke-width="1.4" stroke-linecap="round" />
+          <line x1="10" y1="-5" x2="14" y2="-17" stroke="${borderColor}" stroke-width="1.4" stroke-linecap="round" />
 
-          <!-- Recessed sucker mouth inside body -->
+          <!-- Recessed Sucker Mouth inside body -->
           <g transform="translate(0, 3) scale(${mouthPulse}, ${mouthPulse})">
-            <ellipse cx="0" cy="0" rx="7.4" ry="5.6" fill="#334155" stroke="#0a0f14" stroke-width="0.9" />
+            <ellipse cx="0" cy="0" rx="7.4" ry="5.6" fill="#334155" stroke="${borderColor}" stroke-width="0.9" />
             <ellipse cx="0" cy="0" rx="4.8" ry="3.6" fill="#0f172a" />
             <ellipse cx="0" cy="0" rx="2.2" ry="1.5" fill="#475569" />
           </g>
@@ -1331,41 +1339,33 @@ class AquariumShowerCard extends LitElement {
     `;
   }
 
-  _renderStatusPanel(currentTemp, currentVolume, displayedRemaining, isFullscreen, targetBudget, isWarning, isCritical, isBoiling, isHeatDead) {
+  _renderStatusPanel(currentTemp, currentVolume, isFullscreen, targetBudget, isWarning, isCritical, isBoiling, isHeatDead) {
     if (!isFullscreen) return svg``;
 
     const r = 68;
     const circ = 2 * Math.PI * r;
     const strokeW = 7;
+    const cy = 96;
 
-    // Style 1 (Left - Temp): Shadow filter behind pure white text, shifted closer to edge
-    const tempCx = 82;
-    const tempCy = 82;
+    // Left Gauge: Temperature
+    const tempCx = 88;
     const showTemp = currentTemp > 0;
     const tempFraction = Math.max(0, Math.min(1, currentTemp / 45));
     const tempColor = isHeatDead ? "#ef4444" : isBoiling ? "#f59e0b" : "#facc15";
     const tempArc = (tempFraction * circ).toFixed(1);
 
-    // Style 2 (Center - Test / Remaining): Dynamic text color matching status ring
-    const midCx = 512;
-    const midCy = 82;
-    const remFraction = Math.max(0, Math.min(1, displayedRemaining / Math.max(1, targetBudget)));
-    const remColor = isCritical ? "#ef4444" : isWarning ? "#f59e0b" : "#38bdf8";
-    const remArc = (remFraction * circ).toFixed(1);
-
-    // Style 3 (Right - Volume): Smoked glass dark disc backdrop with crisp white text
-    const volCx = 942;
-    const volCy = 82;
+    // Right Gauge: Consumed Volume
+    const volCx = 936;
     const volFraction = Math.max(0, Math.min(1, currentVolume / Math.max(1, targetBudget)));
     const volColor = isCritical ? "#ef4444" : isWarning ? "#f59e0b" : "#38bdf8";
     const volArc = (volFraction * circ).toFixed(1);
 
     return svg`
-      <!-- Style 1: Left Gauge (Temperature) - Halo d'ombre portée sombre sur texte blanc -->
+      <!-- Left Gauge: Temperature -->
       ${showTemp
         ? svg`
-            <g transform="translate(${tempCx}, ${tempCy})">
-              <circle r="${r}" fill="none" />
+            <g transform="translate(${tempCx}, ${cy})">
+              <circle r="${r}" fill="#0f172a" opacity="0.18" />
               <circle r="${r}" fill="none" stroke="#ffffff" stroke-width="${strokeW}" opacity="0.25" />
               <circle
                 r="${r}"
@@ -1376,32 +1376,15 @@ class AquariumShowerCard extends LitElement {
                 stroke-dasharray="${tempArc} ${circ.toFixed(1)}"
                 transform="rotate(-90)"
               />
-              <text y="8" font-family="system-ui, sans-serif" font-size="44" font-weight="800" fill="#ffffff" filter="url(#hudShadow)" text-anchor="middle">${currentTemp.toFixed(1)}°</text>
-              <text y="28" font-family="system-ui, sans-serif" font-size="12" font-weight="700" fill="#ffffff" filter="url(#hudShadow)" opacity="0.9" text-anchor="middle" letter-spacing="1.2">TEMP</text>
+              <text y="8" font-family="system-ui, sans-serif" font-size="44" font-weight="800" fill="#ffffff" text-anchor="middle">${currentTemp.toFixed(1)}°</text>
+              <text y="28" font-family="system-ui, sans-serif" font-size="12" font-weight="700" fill="#ffffff" opacity="0.9" text-anchor="middle" letter-spacing="1.2">TEMP</text>
             </g>
           `
         : ""}
 
-      <!-- Style 2: Center Gauge (Test - Volume Restant) - Couleur dynamique assortie à la jauge -->
-      <g transform="translate(${midCx}, ${midCy})">
-        <circle r="${r}" fill="none" />
-        <circle r="${r}" fill="none" stroke="#ffffff" stroke-width="${strokeW}" opacity="0.25" />
-        <circle
-          r="${r}"
-          fill="none"
-          stroke="${remColor}"
-          stroke-width="${strokeW}"
-          stroke-linecap="round"
-          stroke-dasharray="${remArc} ${circ.toFixed(1)}"
-          transform="rotate(-90)"
-        />
-        <text y="8" font-family="system-ui, sans-serif" font-size="44" font-weight="800" fill="${remColor}" stroke="#0f172a" stroke-width="1.2" paint-order="stroke fill" text-anchor="middle">${displayedRemaining.toFixed(1)}</text>
-        <text y="28" font-family="system-ui, sans-serif" font-size="12" font-weight="700" fill="${remColor}" stroke="#0f172a" stroke-width="0.8" paint-order="stroke fill" text-anchor="middle" letter-spacing="1.2">RESTANT</text>
-      </g>
-
-      <!-- Style 3: Right Gauge (Volume Consommé) - Disque fumé sombre d'arrière-plan + texte blanc -->
-      <g transform="translate(${volCx}, ${volCy})">
-        <circle r="${r}" fill="#0f172a" opacity="0.4" />
+      <!-- Right Gauge: Consumed Volume -->
+      <g transform="translate(${volCx}, ${cy})">
+        <circle r="${r}" fill="#0f172a" opacity="0.18" />
         <circle r="${r}" fill="none" stroke="#ffffff" stroke-width="${strokeW}" opacity="0.25" />
         <circle
           r="${r}"
@@ -1507,10 +1490,6 @@ class AquariumShowerCard extends LitElement {
               : `aspect-ratio: ${rWidth} / ${rHeight};`}"
           >
             <defs>
-              <filter id="hudShadow" x="-30%" y="-30%" width="160%" height="160%">
-                <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#000000" flood-opacity="0.9" />
-              </filter>
-
               <linearGradient id="glassGrad" x1="0%" y1="0%" x2="100%" y2="0%">
                 <stop offset="0%" stop-color="#ffffff" stop-opacity="0.18" />
                 <stop offset="10%" stop-color="#ffffff" stop-opacity="0.02" />
@@ -1647,7 +1626,6 @@ class AquariumShowerCard extends LitElement {
               ${this._renderStatusPanel(
                 currentTemp,
                 currentVolume,
-                displayedRemaining,
                 isFullscreen,
                 targetBudget,
                 isWarning,
