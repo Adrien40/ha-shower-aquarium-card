@@ -1,8 +1,11 @@
-import { LitElement, html, css, svg } from "./lit-element-bundle.min.js";
+import {
+  LitElement,
+  html,
+  css,
+  svg,
+} from "https://unpkg.com/lit-element@2.4.0/lit-element.js?module";
 
-// Shower Aquarium Card
-// Version tracked via Git tags / GitHub Releases (see CARD_VERSION below and the repo's Releases page)
-const CARD_VERSION = "0.1.6";
+const CARD_VERSION = "0.1.7";
 
 const TRANSLATIONS = {
   en: {
@@ -272,7 +275,7 @@ class AquariumShowerCard extends LitElement {
       _config: { type: Object },
       _fishes: { type: Array },
       _snails: { type: Array },
-      _ancistrus: { type: Object },
+      _ancistrusList: { type: Array },
       _shrimp: { type: Object },
       _crab: { type: Object },
       _bubbles: { type: Array },
@@ -331,28 +334,25 @@ class AquariumShowerCard extends LitElement {
       { x: 18, y: 340, vx: 0, vy: 0.07, dir: 1, type: "glass_left", color: "#a16207" },
       { x: 1006, y: 220, vx: 0, vy: -0.06, dir: -1, type: "glass_right", color: "#78350f" },
     ];
-    this._ancistrus = {
-      x: 65,
-      y: 350,
-      targetY: 350,
-      state: "idle",
-      idleUntil: 0,
-      dir: 1,
-      deathProgress: 0,
-    };
+    this._ancistrusList = [
+      { id: 1, x: 100, y: 340, targetY: 340, state: "idle", idleUntil: 0, deathProgress: 0 },
+      { id: 2, x: 280, y: 320, targetY: 320, state: "idle", idleUntil: 0, deathProgress: 0 },
+      { id: 3, x: 500, y: 350, targetY: 350, state: "idle", idleUntil: 0, deathProgress: 0 },
+      { id: 4, x: 720, y: 330, targetY: 330, state: "idle", idleUntil: 0, deathProgress: 0 },
+    ];
     this._shrimp = {
-      x: 760,
-      y: 0,
-      targetX: 760,
+      x: 840,
+      y: 550,
+      targetX: 840,
       state: "idle",
       idleUntil: 0,
       dir: -1,
       deathProgress: 0,
     };
     this._crab = {
-      x: 700,
-      y: 0,
-      targetX: 700,
+      x: 350,
+      y: 555,
+      targetX: 350,
       state: "idle",
       idleUntil: 0,
       dir: 1,
@@ -547,13 +547,13 @@ class AquariumShowerCard extends LitElement {
 
   _assignSpecies(index, themeKey) {
     if (themeKey === "saltwater") {
-      if (index < 2) return 0; // clownfish, capped at 2 (territorial around the anemone)
-      if (index === 2) return 1; // tang, capped at 1
-      if (index === 3) return 3; // butterflyfish, capped at 1
-      return 2; // remaining fish are generic reef fish, varied colors
+      if (index < 2) return 0;
+      if (index === 2) return 1;
+      if (index === 3) return 3;
+      return 2;
     }
     if (themeKey === "coldwater") {
-      return index % 3; // fantail / comet / lionhead
+      return index % 3;
     }
     return index % 4;
   }
@@ -789,36 +789,36 @@ class AquariumShowerCard extends LitElement {
       });
     }
 
-    if (this._ancistrus) {
-      if (isDead) {
-        this._ancistrus.deathProgress = Math.min(1.0, (this._ancistrus.deathProgress || 0) + deathStep);
-        this._ancistrus.y = Math.min(tankBottom - 18, this._ancistrus.y + 1.2 * delta);
-        stateChanged = true;
-      } else {
-        this._ancistrus.deathProgress = 0;
-        const minVY = Math.max(tankTop + 40, waterSurfaceY + 50);
-        const maxVY = tankBottom - 85;
+    if (this._ancistrusList && this._ancistrusList.length > 0) {
+      this._ancistrusList.forEach((anc) => {
+        if (isDead) {
+          anc.deathProgress = Math.min(1.0, (anc.deathProgress || 0) + deathStep);
+          anc.y = Math.min(tankBottom - 25, anc.y + 1.2 * delta);
+          stateChanged = true;
+        } else {
+          anc.deathProgress = 0;
+          const minVY = Math.max(tankTop + 50, waterSurfaceY + 60);
+          const maxVY = tankBottom - 95;
 
-        if (!this._ancistrus.idleUntil) {
-          this._ancistrus.idleUntil = timestamp + 3000 + Math.random() * 4000;
-        }
-
-        if (this._ancistrus.state === "moving") {
-          const dy = this._ancistrus.targetY - this._ancistrus.y;
-          const step = Math.sign(dy) * Math.min(Math.abs(dy), 0.5 * userSpeed * delta);
-          this._ancistrus.y += step;
-          if (Math.abs(this._ancistrus.targetY - this._ancistrus.y) < 1.5) {
-            this._ancistrus.state = "idle";
-            this._ancistrus.idleUntil = timestamp + 4000 + Math.random() * 5000;
+          if (!anc.idleUntil) {
+            anc.idleUntil = timestamp + 2500 + Math.random() * 4000;
           }
-        } else if (timestamp >= this._ancistrus.idleUntil) {
-          this._ancistrus.state = "moving";
-          this._ancistrus.targetY = minVY + Math.random() * (maxVY - minVY);
-        }
 
-        this._ancistrus.x = 65;
-        stateChanged = true;
-      }
+          if (anc.state === "moving") {
+            const dy = anc.targetY - anc.y;
+            const step = Math.sign(dy) * Math.min(Math.abs(dy), 0.5 * userSpeed * delta);
+            anc.y += step;
+            if (Math.abs(anc.targetY - anc.y) < 1.5) {
+              anc.state = "idle";
+              anc.idleUntil = timestamp + 3500 + Math.random() * 5000;
+            }
+          } else if (timestamp >= anc.idleUntil) {
+            anc.state = "moving";
+            anc.targetY = minVY + Math.random() * (maxVY - minVY);
+          }
+          stateChanged = true;
+        }
+      });
     }
 
     if (this._shrimp) {
@@ -828,8 +828,8 @@ class AquariumShowerCard extends LitElement {
       } else {
         this._shrimp.deathProgress = 0;
         this._shrimp.y = tankBottom - 25;
-        const minSX = 760;
-        const maxSX = 900;
+        const minSX = 740;
+        const maxSX = 940;
 
         if (!this._shrimp.idleUntil) {
           this._shrimp.idleUntil = timestamp + 1200 + Math.random() * 2000;
@@ -860,8 +860,8 @@ class AquariumShowerCard extends LitElement {
       } else {
         this._crab.deathProgress = 0;
         this._crab.y = tankBottom - 20;
-        const minCX = 580;
-        const maxCX = 690;
+        const minCX = 240;
+        const maxCX = 460;
 
         if (!this._crab.idleUntil) {
           this._crab.idleUntil = timestamp + 2000 + Math.random() * 3000;
@@ -995,98 +995,10 @@ class AquariumShowerCard extends LitElement {
           <g id="live-rock" transform="translate(750, ${bottomY})">
             <path d="M -25.5,-18.0 Q -25.5,-18.0 -30.2,-12.4 Q -34.9,-6.8 -43.4,-1.7 Q -52.0,3.3 -60.8,-1.6 Q -69.6,-6.4 -74.3,-12.2 Q -79.0,-18.0 -75.4,-24.5 Q -71.7,-30.9 -61.9,-32.5 Q -52.0,-34.1 -40.9,-33.3 Q -29.8,-32.6 -27.6,-25.3 Z" fill="#8b6a9c" />
             <path d="M 60.3,-38.0 Q 60.3,-38.0 57.1,-25.7 Q 53.9,-13.4 42.9,-0.9 Q 31.9,11.5 11.6,8.1 Q -8.7,4.7 -24.7,0.1 Q -40.8,-4.6 -51.6,-14.8 Q -62.4,-25.0 -55.7,-36.6 Q -49.0,-48.2 -44.9,-59.8 Q -40.9,-71.5 -25.2,-78.1 Q -9.5,-84.7 10.3,-84.7 Q 30.0,-84.6 35.1,-70.5 Q 40.3,-56.4 50.3,-47.2 Z" fill="#6d5280" />
-            <circle cx="-46.1" cy="-27.7" r="3.4" fill="#5f4a72" opacity="0.7" />
-            <circle cx="-16.3" cy="-53.1" r="2.6" fill="#e879a8" opacity="0.9" />
-            <circle cx="23.1" cy="-58.6" r="2.7" fill="#9d7bab" opacity="0.71" />
-            <circle cx="35.6" cy="-34.2" r="2.1" fill="#7e5a8c" opacity="0.84" />
-            <circle cx="-41.6" cy="-17.6" r="4.3" fill="#7e5a8c" opacity="0.59" />
-            <circle cx="10.6" cy="-41.0" r="2.9" fill="#c084bc" opacity="0.67" />
-            <circle cx="-17.2" cy="-42.3" r="3.8" fill="#5f4a72" opacity="0.53" />
-            <circle cx="-27.4" cy="-10.7" r="4.1" fill="#7e5a8c" opacity="0.55" />
-            <circle cx="-2.6" cy="-43.4" r="3.2" fill="#c084bc" opacity="0.57" />
-            <circle cx="-28.6" cy="-44.3" r="2.4" fill="#9d7bab" opacity="0.67" />
-            <circle cx="-21.0" cy="-27.3" r="4.8" fill="#7e5a8c" opacity="0.61" />
-            <circle cx="46.9" cy="-42.9" r="2.7" fill="#7e5a8c" opacity="0.58" />
-            <circle cx="-39.4" cy="-20.5" r="3.7" fill="#7e5a8c" opacity="0.52" />
-            <circle cx="18.4" cy="-24.3" r="1.8" fill="#e879a8" opacity="0.63" />
-            <circle cx="-3.7" cy="-31.0" r="2.1" fill="#e879a8" opacity="0.75" />
-            <circle cx="26.8" cy="-36.5" r="3.7" fill="#9d7bab" opacity="0.88" />
-            <circle cx="-36.5" cy="-35.9" r="4.4" fill="#9d7bab" opacity="0.75" />
-            <circle cx="-7.5" cy="-27.4" r="3.6" fill="#9d7bab" opacity="0.56" />
-            <circle cx="-24.6" cy="-52.7" r="3.9" fill="#c084bc" opacity="0.85" />
-            <circle cx="-23.4" cy="-48.1" r="2.1" fill="#7e5a8c" opacity="0.7" />
-            <circle cx="-1.5" cy="-12.7" r="3.0" fill="#c084bc" opacity="0.83" />
-            <circle cx="-19.2" cy="-45.5" r="2.3" fill="#7e5a8c" opacity="0.55" />
-            <circle cx="-40.2" cy="-35.0" r="3.6" fill="#7e5a8c" opacity="0.61" />
-            <circle cx="16.5" cy="-43.4" r="1.8" fill="#5f4a72" opacity="0.66" />
-            <circle cx="0.1" cy="-31.5" r="2.6" fill="#e879a8" opacity="0.73" />
-            <circle cx="18.0" cy="-26.9" r="4.5" fill="#5f4a72" opacity="0.76" />
-            <circle cx="-13.4" cy="-57.7" r="2.2" fill="#7e5a8c" opacity="0.87" />
-            <circle cx="-26.0" cy="-35.6" r="2.7" fill="#7e5a8c" opacity="0.51" />
-            <circle cx="-21.2" cy="-51.9" r="4.0" fill="#5f4a72" opacity="0.55" />
-            <circle cx="27.8" cy="-30.3" r="2.9" fill="#7e5a8c" opacity="0.86" />
-            <circle cx="-3.5" cy="-62.3" r="4.2" fill="#5f4a72" opacity="0.64" />
-            <circle cx="-20.7" cy="-65.3" r="4.4" fill="#c084bc" opacity="0.88" />
-            <circle cx="32.6" cy="-34.4" r="1.8" fill="#c084bc" opacity="0.65" />
-            <circle cx="12.7" cy="-37.4" r="2.1" fill="#7e5a8c" opacity="0.9" />
-            <circle cx="32.1" cy="-55.1" r="3.0" fill="#e879a8" opacity="0.68" />
-            <circle cx="-34.2" cy="-33.4" r="3.4" fill="#e879a8" opacity="0.51" />
-            <circle cx="-25.9" cy="-48.9" r="2.5" fill="#7e5a8c" opacity="0.7" />
-            <circle cx="-40.0" cy="-57.9" r="2.6" fill="#7e5a8c" opacity="0.65" />
-            <circle cx="23.9" cy="-20.9" r="3.4" fill="#5f4a72" opacity="0.76" />
-            <circle cx="-48.5" cy="-27.5" r="2.8" fill="#5f4a72" opacity="0.58" />
             <path d="M 77.8,-68.0 Q 77.8,-68.0 72.3,-56.4 Q 66.8,-44.7 60.1,-28.3 Q 53.4,-11.9 39.7,-16.8 Q 25.9,-21.6 23.7,-38.9 Q 21.5,-56.1 11.9,-72.6 Q 2.4,-89.2 12.7,-105.2 Q 23.0,-121.2 37.9,-120.4 Q 52.8,-119.6 64.2,-110.3 Q 75.5,-101.0 76.6,-84.5 Z" fill="#7a5d8f" />
-            <circle cx="20.8" cy="-55.6" r="4.5" fill="#9d7bab" opacity="0.65" />
-            <circle cx="33.7" cy="-75.5" r="2.2" fill="#c084bc" opacity="0.64" />
-            <circle cx="51.2" cy="-72.2" r="2.0" fill="#5f4a72" opacity="0.83" />
-            <circle cx="60.0" cy="-55.2" r="4.6" fill="#c084bc" opacity="0.65" />
-            <circle cx="22.2" cy="-71.2" r="3.9" fill="#e879a8" opacity="0.68" />
-            <circle cx="51.6" cy="-65.0" r="4.4" fill="#7e5a8c" opacity="0.77" />
-            <circle cx="43.0" cy="-52.1" r="3.7" fill="#e879a8" opacity="0.51" />
-            <circle cx="57.8" cy="-53.5" r="1.9" fill="#5f4a72" opacity="0.59" />
-            <circle cx="50.2" cy="-62.5" r="3.7" fill="#c084bc" opacity="0.54" />
-            <circle cx="23.4" cy="-73.4" r="2.9" fill="#7e5a8c" opacity="0.77" />
-            <circle cx="51.8" cy="-49.2" r="2.3" fill="#7e5a8c" opacity="0.8" />
-            <circle cx="39.8" cy="-69.5" r="2.5" fill="#5f4a72" opacity="0.72" />
-            <circle cx="64.2" cy="-74.7" r="4.8" fill="#9d7bab" opacity="0.66" />
-            <circle cx="53.9" cy="-99.4" r="2.1" fill="#c084bc" opacity="0.55" />
-            <circle cx="24.2" cy="-61.0" r="4.5" fill="#c084bc" opacity="0.72" />
-            <circle cx="34.9" cy="-84.9" r="4.3" fill="#5f4a72" opacity="0.69" />
-            <circle cx="39.6" cy="-77.6" r="4.0" fill="#7e5a8c" opacity="0.59" />
-            <circle cx="72.4" cy="-88.4" r="4.7" fill="#e879a8" opacity="0.89" />
-            <circle cx="57.5" cy="-73.6" r="4.0" fill="#7e5a8c" opacity="0.64" />
-            <circle cx="61.3" cy="-58.7" r="3.5" fill="#5f4a72" opacity="0.69" />
-            <circle cx="73.4" cy="-62.7" r="2.0" fill="#7e5a8c" opacity="0.57" />
-            <circle cx="32.1" cy="-43.0" r="2.2" fill="#9d7bab" opacity="0.9" />
-            <circle cx="62.0" cy="-80.3" r="3.8" fill="#c084bc" opacity="0.88" />
-            <circle cx="14.3" cy="-66.4" r="2.1" fill="#9d7bab" opacity="0.68" />
-            <circle cx="19.5" cy="-78.9" r="3.5" fill="#9d7bab" opacity="0.71" />
-            <circle cx="57.6" cy="-86.6" r="2.7" fill="#c084bc" opacity="0.88" />
           </g>
           <g id="live-rock-2" transform="translate(420, ${bottomY})">
             <path d="M 41.8,-26.0 Q 41.8,-26.0 37.1,-16.4 Q 32.4,-6.8 19.8,-2.1 Q 7.2,2.6 -3.0,-3.6 Q -13.2,-9.9 -23.4,-13.6 Q -33.5,-17.4 -32.1,-25.6 Q -30.6,-33.9 -24.0,-40.5 Q -17.3,-47.1 -6.3,-46.0 Q 4.7,-44.9 13.2,-41.9 Q 21.7,-38.9 31.8,-32.4 Z" fill="#6d5280" />
-            <circle cx="-10.2" cy="-23.9" r="2.8" fill="#7e5a8c" opacity="0.54" />
-            <circle cx="18.0" cy="-27.2" r="1.7" fill="#c084bc" opacity="0.64" />
-            <circle cx="23.9" cy="-20.9" r="3.1" fill="#9d7bab" opacity="0.75" />
-            <circle cx="14.4" cy="-27.5" r="3.6" fill="#5f4a72" opacity="0.89" />
-            <circle cx="-6.0" cy="-9.0" r="3.1" fill="#c084bc" opacity="0.57" />
-            <circle cx="-25.7" cy="-24.5" r="3.4" fill="#9d7bab" opacity="0.57" />
-            <circle cx="5.9" cy="-19.1" r="3.7" fill="#9d7bab" opacity="0.73" />
-            <circle cx="14.1" cy="-21.5" r="3.1" fill="#e879a8" opacity="0.61" />
-            <circle cx="-6.7" cy="-28.4" r="3.9" fill="#e879a8" opacity="0.62" />
-            <circle cx="3.4" cy="-36.8" r="2.3" fill="#7e5a8c" opacity="0.75" />
-            <circle cx="19.0" cy="-16.0" r="2.9" fill="#5f4a72" opacity="0.72" />
-            <circle cx="18.0" cy="-31.7" r="4.1" fill="#9d7bab" opacity="0.68" />
-            <circle cx="21.1" cy="-23.4" r="2.6" fill="#9d7bab" opacity="0.82" />
-            <circle cx="-11.8" cy="-41.9" r="3.7" fill="#7e5a8c" opacity="0.72" />
-            <circle cx="24.6" cy="-27.0" r="2.5" fill="#c084bc" opacity="0.7" />
-            <circle cx="11.7" cy="-24.4" r="3.0" fill="#c084bc" opacity="0.88" />
-            <circle cx="1.7" cy="-21.7" r="3.0" fill="#9d7bab" opacity="0.78" />
-            <circle cx="-10.6" cy="-28.3" r="1.9" fill="#9d7bab" opacity="0.86" />
-            <circle cx="-13.2" cy="-23.3" r="3.9" fill="#9d7bab" opacity="0.86" />
-            <circle cx="-6.1" cy="-34.3" r="3.4" fill="#9d7bab" opacity="0.72" />
-            <circle cx="-11.5" cy="-22.7" r="3.8" fill="#e879a8" opacity="0.72" />
-            <circle cx="3.7" cy="-30.0" r="3.2" fill="#5f4a72" opacity="0.89" />
           </g>
           <g id="anemone" transform="translate(260, ${bottomY - 17}) scale(1.4, 1.4)">
             ${this._renderAnemoneTentacles()}
@@ -1105,14 +1017,8 @@ class AquariumShowerCard extends LitElement {
           <ellipse cx="250" cy="${bottomY - 17}" rx="50" ry="20" fill="#64748b" />
           <ellipse cx="860" cy="${bottomY - 20}" rx="75" ry="28" fill="#334155" />
           <ellipse cx="760" cy="${bottomY - 15}" rx="46" ry="18" fill="#64748b" />
-          <ellipse cx="300" cy="${bottomY - 10}" rx="26" ry="10" fill="#94a3b8" opacity="0.85" />
-          <ellipse cx="600" cy="${bottomY - 8}" rx="22" ry="9" fill="#94a3b8" opacity="0.8" />
-          <ellipse cx="660" cy="${bottomY - 14}" rx="34" ry="14" fill="#475569" opacity="0.9" />
           <path d="M 110 ${bottomY - 25} Q 85 ${bottomY - 195}, 125 ${bottomY - 295} Q 155 ${bottomY - 185}, 135 ${bottomY - 25} Z" fill="#0d9488" opacity="0.9" />
           <path d="M 145 ${bottomY - 25} Q 180 ${bottomY - 175}, 150 ${bottomY - 265} Q 125 ${bottomY - 155}, 155 ${bottomY - 25} Z" fill="#14b8a6" opacity="0.75" />
-          <path d="M 620 ${bottomY - 14} Q 610 ${bottomY - 110}, 640 ${bottomY - 170} Q 660 ${bottomY - 100}, 645 ${bottomY - 14} Z" fill="#0d9488" opacity="0.85" />
-          <path d="M 655 ${bottomY - 14} Q 680 ${bottomY - 90}, 660 ${bottomY - 150} Q 635 ${bottomY - 85}, 650 ${bottomY - 14} Z" fill="#14b8a6" opacity="0.7" />
-          <path d="M 780 ${bottomY - 15} Q 800 ${bottomY - 60}, 830 ${bottomY - 55} Q 850 ${bottomY - 50}, 845 ${bottomY - 30} Q 815 ${bottomY - 35}, 795 ${bottomY - 20} Z" fill="#78716c" opacity="0.9" />
         </g>
       `;
     }
@@ -1130,11 +1036,6 @@ class AquariumShowerCard extends LitElement {
         <path d="M 155 ${bottomY - 215} Q 105 ${bottomY - 230}, 80 ${bottomY - 205} C 65 ${bottomY - 175}, 115 ${bottomY - 155}, 155 ${bottomY - 215} Z" fill="#166534" />
         <path d="M 160 ${bottomY - 175} Q 210 ${bottomY - 205}, 240 ${bottomY - 175} C 248 ${bottomY - 150}, 200 ${bottomY - 130}, 160 ${bottomY - 175} Z" fill="#15803d" />
         <path d="M 140 ${bottomY - 125} Q 90 ${bottomY - 125}, 70 ${bottomY - 100} C 65 ${bottomY - 75}, 110 ${bottomY - 70}, 140 ${bottomY - 125} Z" fill="#14532d" />
-        <g transform="translate(225, ${bottomY - 40}) scale(1.3)">
-          <ellipse cx="0" cy="0" rx="11" ry="5" fill="#ef4444" />
-          <path d="M -10,0 Q -17,-4, -20,0 Q -17,4, -10,0 Z" fill="#dc2626" />
-          <line x1="10" y1="-2" x2="22" y2="-10" stroke="#fca5a5" stroke-width="1" />
-        </g>
         <path d="M 880 ${bottomY} Q 920 ${bottomY - 195}, 870 ${bottomY - 355} Q 845 ${bottomY - 195}, 860 ${bottomY} Z" fill="#16a34a" opacity="0.9" />
         <path d="M 920 ${bottomY} Q 960 ${bottomY - 215}, 930 ${bottomY - 375} Q 895 ${bottomY - 205}, 900 ${bottomY} Z" fill="#22c55e" opacity="0.8" />
         <path d="M 845 ${bottomY} Q 810 ${bottomY - 175}, 845 ${bottomY - 275} Q 870 ${bottomY - 165}, 865 ${bottomY} Z" fill="#15803d" opacity="0.85" />
@@ -1183,7 +1084,6 @@ class AquariumShowerCard extends LitElement {
           </g>
           <path d="M 0,-20 C 14,-20 24,-10 25,0 C 24,10 14,20 0,20 C -16,19 -26,10 -26,0 C -26,-10 -16,-19 0,-20 Z" fill="url(#tangBodyGrad)" />
           <path d="M -19,-10 C -5,-17 9,-15 14,-5 C 10,1 7,9 11,15 C 1,16 -11,12 -18,3 C -21,-1 -21,-6 -19,-10 Z" fill="#0f172a" opacity="0.88" />
-          <path d="M -3,-19 Q 3,-24 9,-21 Q 5,-17 3,-13 Z" fill="#1e3a8a" opacity="0.7" />
           <circle cx="19" cy="2" r="1.5" fill="#facc15" opacity="0.8" />
           ${isDead
             ? svg`<line x1="15" y1="-8" x2="21" y2="-4" stroke="#ffffff" stroke-width="1.8" />`
@@ -1199,10 +1099,7 @@ class AquariumShowerCard extends LitElement {
           <path d="M -6,-19 L 0,19" stroke="#ea580c" stroke-width="1.3" opacity="0.55" />
           <path d="M 2,-19 L 7,19" stroke="#ea580c" stroke-width="1.3" opacity="0.55" />
           <path d="M 10,-17 L 14,16" stroke="#ea580c" stroke-width="1.3" opacity="0.5" />
-          <path d="M -6,-19 Q 4,-25 12,-20 Q 6,-16 2,-12 Z" fill="#f97316" opacity="0.9" stroke="#c2410c" stroke-width="0.6" />
-          <path d="M -4,18 Q 4,25 12,20 Q 6,15 2,11 Z" fill="#f97316" opacity="0.9" stroke="#c2410c" stroke-width="0.6" />
           <path d="M 18,-3 Q 26,-1 27,0 Q 26,1 18,3 Z" fill="#fbbf24" />
-          <path d="M 10,-16 L 16,-15 L 15,16 L 9,16 Z" fill="#1f2937" opacity="0.85" />
           <circle cx="-15" cy="0" r="3" fill="#1f2937" opacity="0.8" />
           <circle cx="-15" cy="0" r="1.6" fill="#fbbf24" opacity="0.9" />
           ${isDead
@@ -1217,8 +1114,6 @@ class AquariumShowerCard extends LitElement {
           <polygon points="2,-28 -8,-10 8,-10" fill="${fish.color}" opacity="0.9" />
           <polygon points="0,28 -6,10 6,10" fill="${fish.color}" opacity="0.9" />
           <ellipse cx="0" cy="0" rx="24" ry="19" fill="${fish.color}" />
-          <path d="M -6,-14 L -6,14" stroke="#ffffff" stroke-width="3.5" />
-          <path d="M 6,-16 L 6,16" stroke="#ffffff" stroke-width="3.5" />
           ${isDead
             ? svg`<line x1="13" y1="-7" x2="19" y2="-1" stroke="#ffffff" stroke-width="2" />`
             : svg`<circle cx="15" cy="-5" r="3.2" fill="#ffffff" /><circle cx="16" cy="-5" r="1.5" fill="#0f172a" />`}
@@ -1229,11 +1124,9 @@ class AquariumShowerCard extends LitElement {
         bodySvg = svg`
           <g transform="translate(-14, 0) rotate(${tailWag * 1.1})">
             <path d="M -1,-3 C -10,-12 -24,-15 -35,-11 C -28,-6 -25,-1 -26,4 C -33,6 -40,10 -43,17 C -33,17 -26,14 -21,10 C -23,18 -25,27 -21,34 C -14,28 -10,21 -7,15 C -4,21 2,25 10,25 C 6,16 1,8 -1,-3 Z" fill="${fish.color}" opacity="0.88" />
-            <path d="M 0,4 C -9,1 -21,1 -31,6 C -23,9 -19,13 -18,18 C -25,23 -31,30 -33,38 C -24,35 -18,29 -12,24 C -11,31 -8,39 -1,44 C 3,35 3,26 2,17 C 8,22 14,25 22,25 C 14,19 6,11 0,4 Z" fill="${fish.color}" opacity="0.98" />
           </g>
           <circle cx="10" cy="0" r="19" fill="${fish.color}" />
           <ellipse cx="6" cy="-6" rx="12" ry="7" fill="#ffffff" opacity="0.4" />
-          <path d="M 2,-16 Q 8,-24 16,-21 Q 10,-16 8,-11 Z" fill="${fish.color}" opacity="0.85" />
           ${isDead
             ? svg`<line x1="18" y1="-5" x2="24" y2="1" stroke="#ffffff" stroke-width="2" />`
             : svg`<circle cx="21" cy="-2" r="3.6" fill="#ffffff" /><circle cx="22.2" cy="-2" r="1.8" fill="#0f172a" />`}
@@ -1243,11 +1136,8 @@ class AquariumShowerCard extends LitElement {
           <g transform="translate(-16, 0) rotate(${tailWag})">
             <path d="M 0,0 L -48,-19 L -30,-1 Z" fill="${fish.color}" opacity="0.92" />
             <path d="M 0,0 L -48,19 L -30,1 Z" fill="${fish.color}" opacity="0.8" />
-            <path d="M -22,-9 L -34,-11 L -24,-2 Z" fill="${fish.color}" opacity="0.7" />
           </g>
           <path d="M -14,0 C -14,-11 -6,-19 8,-19 C 20,-19 27,-11 27,0 C 27,10 20,17 8,17 C -6,17 -14,10 -14,0 Z" fill="${fish.color}" />
-          <ellipse cx="4" cy="-6" rx="12" ry="6" fill="#ffffff" opacity="0.35" />
-          <path d="M -2,-19 Q 4,-27 13,-24 Q 7,-19 5,-14 Z" fill="${fish.color}" opacity="0.85" />
           ${isDead
             ? svg`<line x1="17" y1="-6" x2="23" y2="0" stroke="#ffffff" stroke-width="1.8" />`
             : svg`<circle cx="20" cy="-3" r="3" fill="#ffffff" /><circle cx="21" cy="-3" r="1.5" fill="#0f172a" />`}
@@ -1258,10 +1148,6 @@ class AquariumShowerCard extends LitElement {
             <path d="M 0,0 C -9,-12 -23,-12 -30,-2 C -22,2 -22,2 -30,6 C -23,14 -9,12 0,0 Z" fill="${fish.color}" opacity="0.88" />
           </g>
           <circle cx="4" cy="2" r="22" fill="${fish.color}" />
-          <ellipse cx="0" cy="-4" rx="14" ry="8" fill="#ffffff" opacity="0.35" />
-          <circle cx="16" cy="-8" r="8.5" fill="${fish.color}" opacity="0.95" />
-          <circle cx="22" cy="0" r="6.5" fill="${fish.color}" opacity="0.85" />
-          <circle cx="15" cy="7" r="5.5" fill="${fish.color}" opacity="0.75" />
           ${isDead
             ? svg`<line x1="16" y1="-3" x2="22" y2="1" stroke="#ffffff" stroke-width="1.8" />`
             : svg`<circle cx="20" cy="-1" r="3" fill="#ffffff" /><circle cx="21.2" cy="-1" r="1.5" fill="#0f172a" />`}
@@ -1278,7 +1164,6 @@ class AquariumShowerCard extends LitElement {
           </g>
           <polygon points="-20,0 5,-17 24,0 5,17" fill="${fish.color}" />
           <line x1="3" y1="-17" x2="3" y2="17" stroke="#0f172a" stroke-width="3" />
-          <line x1="-10" y1="-12" x2="-10" y2="12" stroke="#0f172a" stroke-width="2.5" />
           ${isDead
             ? svg`<line x1="14" y1="-5" x2="19" y2="0" stroke="#ffffff" stroke-width="2" />`
             : svg`<circle cx="16" cy="-3" r="3.0" fill="#ef4444" /><circle cx="17" cy="-3" r="1.4" fill="#0f172a" />`}
@@ -1317,13 +1202,6 @@ class AquariumShowerCard extends LitElement {
                 <line x1="-28" y1="0" x2="16" y2="0" stroke="#f1f5f9" stroke-width="3" stroke-linecap="round" />
                 <path d="M 12 -10 C 26 -10 28 0 26 10 C 18 10 14 6 12 0 Z" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1" />
                 <circle cx="18" cy="-2" r="2.8" fill="#0f172a" />
-                <line x1="7" y1="-14" x2="3" y2="14" stroke="#f1f5f9" stroke-width="2.2" stroke-linecap="round" />
-                <line x1="-1" y1="-16" x2="-5" y2="16" stroke="#f1f5f9" stroke-width="2.2" stroke-linecap="round" />
-                <line x1="-9" y1="-13" x2="-13" y2="13" stroke="#f1f5f9" stroke-width="1.8" stroke-linecap="round" />
-                <line x1="-17" y1="-10" x2="-20" y2="10" stroke="#f1f5f9" stroke-width="1.5" stroke-linecap="round" />
-                <line x1="-28" y1="0" x2="-44" y2="-14" stroke="#f1f5f9" stroke-width="2" stroke-linecap="round" />
-                <line x1="-28" y1="0" x2="-46" y2="0" stroke="#f1f5f9" stroke-width="1.8" stroke-linecap="round" />
-                <line x1="-28" y1="0" x2="-44" y2="14" stroke="#f1f5f9" stroke-width="2" stroke-linecap="round" />
               </g>
             `
           : ""}
@@ -1331,63 +1209,165 @@ class AquariumShowerCard extends LitElement {
     `;
   }
 
-  _renderAncistrus(isDead) {
-    if (!this._ancistrus) return svg``;
-    const anc = this._ancistrus;
+  _renderAncistrusChoice(anc, isDead) {
     const p = anc.deathProgress || 0;
     const bodyOpacity = (1.0 - p).toFixed(2);
-    const skeletonOpacity = p.toFixed(2);
-    const mouthPulse = isDead ? 1 : (1 + Math.sin(this._animTime * 5) * 0.12).toFixed(3);
+    const mouthPulse = isDead ? 1 : (1 + Math.sin(this._animTime * 5 + anc.id) * 0.12).toFixed(3);
 
-    return svg`
-      <g transform="translate(${anc.x}, ${anc.y}) scale(0.99, 0.99)">
-        <g opacity="${bodyOpacity}">
-          <path d="M -6,55 C -8,63 -6,71 -2,76 L 2,76 C 6,71 8,63 6,55 Z" fill="#3f3524" stroke="#2a2417" stroke-width="0.8" />
-          <rect x="-5" y="59" width="4" height="4" fill="#5c4d33" opacity="0.7" />
-          <rect x="1" y="64" width="4" height="4" fill="#5c4d33" opacity="0.7" />
-          <rect x="-4" y="69" width="3.5" height="4" fill="#5c4d33" opacity="0.6" />
+    let shapeSvg = svg``;
 
-          <path d="M -8,34 L -22,50 L -20,56 L -6,44 Z" fill="#4b3f28" opacity="0.9" stroke="#2a2417" stroke-width="0.6" />
-          <path d="M -19,51 L -18,42 M -17,53 L -15,43 M -14,54 L -11,45" stroke="#6b5b3a" stroke-width="0.5" opacity="0.8" />
-          <path d="M 8,34 L 22,50 L 20,56 L 6,44 Z" fill="#4b3f28" opacity="0.9" stroke="#2a2417" stroke-width="0.6" />
-          <path d="M 19,51 L 18,42 M 17,53 L 15,43 M 14,54 L 11,45" stroke="#6b5b3a" stroke-width="0.5" opacity="0.8" />
+    if (anc.id === 1) {
+      // Design 1: Classic Dark Bristlenose (Starlight/Bushynose with white dots and branched crown)
+      shapeSvg = svg`
+        <g scale="1.1">
+          <!-- Large spread pectoral fins with rays -->
+          <path d="M -14,8 L -42,16 Q -48,26 -38,34 L -12,24 Z" fill="#182026" stroke="#0a0f14" stroke-width="0.8" />
+          <path d="M -40,18 L -14,11 M -36,24 L -13,15 M -32,29 L -13,19" stroke="#334155" stroke-width="0.6" />
+          <path d="M 14,8 L 42,16 Q 48,26 38,34 L 12,24 Z" fill="#182026" stroke="#0a0f14" stroke-width="0.8" />
+          <path d="M 40,18 L 14,11 M 36,24 L 13,15 M 32,29 L 13,19" stroke="#334155" stroke-width="0.6" />
 
-          <path d="M -14,8 L -38,20 L -34,28 L -12,18 Z" fill="#4b3f28" stroke="#2a2417" stroke-width="0.7" />
-          <path d="M -34,22 L -16,12 M -31,25 L -14,15 M -28,27 L -13,17" stroke="#6b5b3a" stroke-width="0.6" opacity="0.85" />
-          <path d="M 14,8 L 38,20 L 34,28 L 12,18 Z" fill="#4b3f28" stroke="#2a2417" stroke-width="0.7" />
-          <path d="M 34,22 L 16,12 M 31,25 L 14,15 M 28,27 L 13,17" stroke="#6b5b3a" stroke-width="0.6" opacity="0.85" />
+          <!-- Pelvic fins -->
+          <path d="M -9,34 L -24,46 L -19,53 L -7,44 Z" fill="#182026" stroke="#0a0f14" stroke-width="0.6" />
+          <path d="M 9,34 L 24,46 L 19,53 L 7,44 Z" fill="#182026" stroke="#0a0f14" stroke-width="0.6" />
 
-          <path d="M -13,40 C -17,24 -16,5 -10,-10 C -5,-20 5,-20 10,-10 C 16,5 17,24 13,40 C 12,46 9,51 6,55 L -6,55 C -9,51 -12,46 -13,40 Z" fill="#4a3f28" stroke="#2a2417" stroke-width="1" />
-          <ellipse cx="-4" cy="8" rx="2" ry="1.6" fill="#2a2417" opacity="0.5" />
-          <ellipse cx="5" cy="-2" rx="2.2" ry="1.7" fill="#2a2417" opacity="0.5" />
-          <ellipse cx="-2" cy="-10" rx="1.8" ry="1.4" fill="#2a2417" opacity="0.5" />
-          <ellipse cx="6" cy="16" rx="2" ry="1.6" fill="#2a2417" opacity="0.4" />
-          <ellipse cx="-6" cy="24" rx="1.9" ry="1.5" fill="#2a2417" opacity="0.4" />
-          <ellipse cx="0" cy="34" rx="2.1" ry="1.6" fill="#2a2417" opacity="0.4" />
-          <ellipse cx="-3" cy="45" rx="1.8" ry="1.4" fill="#2a2417" opacity="0.35" />
+          <!-- Body & Tail -->
+          <path d="M -14,4 C -18,18 -18,38 -12,54 L -5,78 L 5,78 L 12,54 C 18,38 18,18 14,4 C 10,-8 -10,-8 -14,4 Z" fill="#1e293b" stroke="#0f172a" stroke-width="1.2" />
+          <!-- White starlight micro-dots -->
+          <circle cx="-6" cy="14" r="0.9" fill="#ffffff" />
+          <circle cx="6" cy="14" r="0.9" fill="#ffffff" />
+          <circle cx="0" cy="24" r="0.9" fill="#ffffff" />
+          <circle cx="-5" cy="36" r="0.8" fill="#ffffff" />
+          <circle cx="5" cy="36" r="0.8" fill="#ffffff" />
+          <circle cx="-3" cy="52" r="0.8" fill="#ffffff" />
+          <circle cx="3" cy="52" r="0.8" fill="#ffffff" />
+          <circle cx="0" cy="66" r="0.8" fill="#ffffff" />
 
-          <path d="M -14,-10 C -18,-18 -14,-26 -4,-29 C 2,-31 6,-31 10,-29 C 18,-26 20,-18 15,-10 C 10,-4 -8,-4 -14,-10 Z" fill="#3f3524" stroke="#2a2417" stroke-width="1" />
+          <!-- Male Tentacle Crown on snout -->
+          <path d="M -12,-16 Q -18,-26 -12,-28 Q -8,-24 -6,-16" stroke="#0f172a" stroke-width="1.6" fill="none" stroke-linecap="round" />
+          <path d="M -8,-18 Q -10,-32 -4,-30 Q -2,-26 -3,-18" stroke="#0f172a" stroke-width="1.6" fill="none" stroke-linecap="round" />
+          <path d="M 0,-18 Q 0,-34 3,-34 Q 4,-26 2,-18" stroke="#0f172a" stroke-width="1.6" fill="none" stroke-linecap="round" />
+          <path d="M 8,-18 Q 10,-32 4,-30 Q 2,-26 3,-18" stroke="#0f172a" stroke-width="1.6" fill="none" stroke-linecap="round" />
+          <path d="M 12,-16 Q 18,-26 12,-28 Q 8,-24 6,-16" stroke="#0f172a" stroke-width="1.6" fill="none" stroke-linecap="round" />
 
-          ${isDead
-            ? svg`<line x1="-8" y1="-21" x2="-4" y2="-19" stroke="#ffffff" stroke-width="1" /><line x1="4" y1="-21" x2="8" y2="-19" stroke="#ffffff" stroke-width="1" />`
-            : svg`
-                <circle cx="-6" cy="-20" r="1.8" fill="#0f172a" stroke="#92400e" stroke-width="0.4" />
-                <circle cx="7" cy="-20" r="1.8" fill="#0f172a" stroke="#92400e" stroke-width="0.4" />
-                <circle cx="-5.6" cy="-20.5" r="0.5" fill="#fef9c3" />
-                <circle cx="7.4" cy="-20.5" r="0.5" fill="#fef9c3" />
-              `}
-
-          <g transform="translate(0.5,-16) scale(${mouthPulse},${mouthPulse}) translate(-0.5,16)">
-            <ellipse cx="0.5" cy="-16" rx="7.5" ry="6" fill="#1c1917" stroke="#0f0d0c" stroke-width="0.8" />
-            <ellipse cx="0.5" cy="-16" rx="5.2" ry="4.2" fill="#3f3524" />
-            <ellipse cx="0.5" cy="-16" rx="2.6" ry="2" fill="#1c1917" />
+          <!-- Big Suction Cup Mouth -->
+          <g transform="translate(0,-8) scale(${mouthPulse}, ${mouthPulse})">
+            <ellipse cx="0" cy="0" rx="9" ry="7" fill="#334155" stroke="#0f172a" stroke-width="1" />
+            <ellipse cx="0" cy="0" rx="6.5" ry="4.8" fill="#475569" />
+            <ellipse cx="0" cy="0" rx="3.2" ry="2.2" fill="#0f172a" />
           </g>
         </g>
+      `;
+    } else if (anc.id === 2) {
+      // Design 2: Golden / Albino Bristlenose (Honey and Amber tones with translucent fan fins)
+      shapeSvg = svg`
+        <g scale="1.1">
+          <!-- Translucent amber pectoral fins -->
+          <path d="M -13,6 C -35,10 -46,20 -38,32 C -28,34 -18,25 -11,18 Z" fill="#f59e0b" opacity="0.8" stroke="#b45309" stroke-width="0.7" />
+          <path d="M 13,6 C 35,10 46,20 38,32 C 28,34 18,25 11,18 Z" fill="#f59e0b" opacity="0.8" stroke="#b45309" stroke-width="0.7" />
+
+          <!-- Pelvics -->
+          <path d="M -8,32 C -22,42 -20,52 -10,48 Z" fill="#f59e0b" opacity="0.85" />
+          <path d="M 8,32 C 22,42 20,52 10,48 Z" fill="#f59e0b" opacity="0.85" />
+
+          <!-- Body -->
+          <path d="M -13,0 C -18,16 -16,36 -10,52 L -4,74 L 4,74 L 10,52 C 16,36 18,16 13,0 C 9,-10 -9,-10 -13,0 Z" fill="#fbbf24" stroke="#d97706" stroke-width="1.1" />
+          <ellipse cx="0" cy="24" rx="7" ry="18" fill="#fef08a" opacity="0.6" />
+
+          <!-- Soft snout bristles -->
+          <circle cx="-10" cy="-12" r="1.4" fill="#d97706" />
+          <circle cx="-6" cy="-15" r="1.5" fill="#d97706" />
+          <circle cx="0" cy="-16" r="1.6" fill="#d97706" />
+          <circle cx="6" cy="-15" r="1.5" fill="#d97706" />
+          <circle cx="10" cy="-12" r="1.4" fill="#d97706" />
+
+          <!-- Sucker mouth -->
+          <g transform="translate(0,-6) scale(${mouthPulse}, ${mouthPulse})">
+            <ellipse cx="0" cy="0" rx="8.5" ry="6.5" fill="#fde68a" stroke="#d97706" stroke-width="0.9" />
+            <ellipse cx="0" cy="0" rx="5.5" ry="4" fill="#fbbf24" />
+            <ellipse cx="0" cy="0" rx="2.5" ry="1.8" fill="#b45309" />
+          </g>
+        </g>
+      `;
+    } else if (anc.id === 3) {
+      // Design 3: Armored Wild Scute Pleco (chevron armor plates, mottled river camo)
+      shapeSvg = svg`
+        <g scale="1.1">
+          <!-- Spiny Pectorals with spine rim -->
+          <path d="M -12,4 L -44,14 L -40,24 L -11,18 Z" fill="#44403c" stroke="#1c1917" stroke-width="0.9" />
+          <line x1="-12" y1="4" x2="-44" y2="14" stroke="#e7e5e4" stroke-width="1.6" stroke-linecap="round" />
+          <path d="M 12,4 L 44,14 L 40,24 L 11,18 Z" fill="#44403c" stroke="#1c1917" stroke-width="0.9" />
+          <line x1="12" y1="4" x2="44" y2="14" stroke="#e7e5e4" stroke-width="1.6" stroke-linecap="round" />
+
+          <!-- Pelvics -->
+          <path d="M -8,32 L -20,44 L -16,49 L -6,40 Z" fill="#44403c" />
+          <path d="M 8,32 L 20,44 L 16,49 L 6,40 Z" fill="#44403c" />
+
+          <!-- Angular Armored Body with chevrons -->
+          <path d="M -15,2 C -18,18 -15,36 -11,54 L -4,78 L 4,78 L 11,54 C 15,36 18,18 15,2 C 12,-10 -12,-10 -15,2 Z" fill="#57534e" stroke="#292524" stroke-width="1.2" />
+          <!-- Armor scute chevrons -->
+          <path d="M -10,20 L 0,26 L 10,20" stroke="#292524" stroke-width="1.2" fill="none" />
+          <path d="M -8,34 L 0,40 L 8,34" stroke="#292524" stroke-width="1.2" fill="none" />
+          <path d="M -6,48 L 0,54 L 6,48" stroke="#292524" stroke-width="1.2" fill="none" />
+          <path d="M -4,62 L 0,66 L 4,62" stroke="#292524" stroke-width="1.2" fill="none" />
+
+          <!-- Rasper Sucker -->
+          <g transform="translate(0,-6) scale(${mouthPulse}, ${mouthPulse})">
+            <ellipse cx="0" cy="0" rx="9" ry="7" fill="#78716c" stroke="#292524" stroke-width="1" />
+            <path d="M -4,-1 L 4,-1" stroke="#e7e5e4" stroke-width="1.4" />
+            <ellipse cx="0" cy="2" rx="3.5" ry="2" fill="#1c1917" />
+          </g>
+        </g>
+      `;
+    } else {
+      // Design 4: Sleek Biological Silhouette with white seam fin borders
+      shapeSvg = svg`
+        <g scale="1.1">
+          <!-- Fluid bat-wing pectorals with clean white edge -->
+          <path d="M -12,4 C -28,8 -42,16 -38,28 C -30,28 -20,22 -11,16 Z" fill="#262626" stroke="#171717" stroke-width="0.8" />
+          <path d="M -38,28 C -30,28 -20,22 -11,16" stroke="#ffffff" stroke-width="1.4" fill="none" />
+          <path d="M 12,4 C 28,8 42,16 38,28 C 30,28 20,22 11,16 Z" fill="#262626" stroke="#171717" stroke-width="0.8" />
+          <path d="M 38,28 C 30,28 20,22 11,16" stroke="#ffffff" stroke-width="1.4" fill="none" />
+
+          <!-- Pelvic fins with white edge -->
+          <path d="M -7,30 C -18,38 -18,48 -8,46 Z" fill="#262626" />
+          <path d="M -18,48 C -14,48 -8,46 -8,46" stroke="#ffffff" stroke-width="1" fill="none" />
+          <path d="M 7,30 C 18,38 18,48 8,46 Z" fill="#262626" />
+          <path d="M 18,48 C 14,48 8,46 8,46" stroke="#ffffff" stroke-width="1" fill="none" />
+
+          <!-- Streamlined Body -->
+          <path d="M -13,2 C -16,18 -15,38 -9,56 L -4,78 L 4,78 L 9,56 C 15,38 16,18 13,2 C 10,-8 -10,-8 -13,2 Z" fill="#38342f" stroke="#171717" stroke-width="1.1" />
+          <!-- Caudal fin tip with white seam -->
+          <path d="M -6,78 L 0,86 L 6,78 Z" fill="#262626" />
+          <path d="M -6,78 L 0,86 L 6,78" stroke="#ffffff" stroke-width="1.5" fill="none" />
+
+          <!-- Sucker disc with golden lip fringe -->
+          <g transform="translate(0,-6) scale(${mouthPulse}, ${mouthPulse})">
+            <ellipse cx="0" cy="0" rx="8.5" ry="6.8" fill="#525252" stroke="#facc15" stroke-width="0.8" />
+            <ellipse cx="0" cy="0" rx="5.5" ry="4.2" fill="#262626" />
+            <circle cx="0" cy="0" r="1.8" fill="#facc15" />
+          </g>
+        </g>
+      `;
+    }
+
+    return svg`
+      <g transform="translate(${anc.x}, ${anc.y})">
+        <!-- Number badge bubble over head -->
+        <g transform="translate(0, -42)">
+          <circle cx="0" cy="0" r="12" fill="#0284c7" stroke="#ffffff" stroke-width="2" />
+          <text x="0" y="4.5" font-family="system-ui, sans-serif" font-size="12" font-weight="700" fill="#ffffff" text-anchor="middle">${anc.id}</text>
+        </g>
+
+        <!-- Ancistrus Body Group -->
+        <g opacity="${bodyOpacity}">
+          ${shapeSvg}
+        </g>
+
         ${p > 0
           ? svg`
-              <g opacity="${skeletonOpacity}">
-                <line x1="0" y1="-29" x2="0" y2="68" stroke="#f1f5f9" stroke-width="2.5" stroke-linecap="round" />
-                <circle cx="0" cy="-22" r="5" fill="#f1f5f9" />
+              <g opacity="${p.toFixed(2)}">
+                <line x1="0" y1="-26" x2="0" y2="70" stroke="#f1f5f9" stroke-width="2" stroke-linecap="round" />
+                <circle cx="0" cy="-16" r="4" fill="#f1f5f9" />
               </g>
             `
           : ""}
@@ -1410,18 +1390,10 @@ class AquariumShowerCard extends LitElement {
         <path d="M 12,12 L 13,18" stroke="#450a0a" stroke-width="1" stroke-linecap="round" opacity="0.7" />
         <path d="M 20,14 L 32,6 L 34,14 L 32,23 L 20,18 Z" fill="#dc2626" stroke="#7f1d1d" stroke-width="0.7" />
         <path d="M -30,-10 C -20,-16 -6,-16 4,-10 C 12,-6 16,-2 20,6 C 23,11 23,15 19,16 C 8,17 -2,15 -10,10 C -18,5 -24,-2 -30,-10 Z" fill="#b91c1c" stroke="#7f1d1d" stroke-width="0.9" />
-        <path d="M -28,-9 C -18,-13 -4,-13 4,-8 C 10,-5 14,-1 17,5" stroke="#ef4444" stroke-width="2" fill="none" stroke-linecap="round" opacity="0.6" />
         <circle cx="-22" cy="-8" r="1.5" fill="#fef2f2" />
         <circle cx="-14" cy="-11" r="1.4" fill="#fef2f2" />
         <circle cx="-6" cy="-10" r="1.5" fill="#fef2f2" />
         <circle cx="1" cy="-7" r="1.3" fill="#fef2f2" />
-        <circle cx="-18" cy="-2" r="1.3" fill="#fef2f2" />
-        <circle cx="-9" cy="-2" r="1.4" fill="#fef2f2" />
-        <circle cx="0" cy="0" r="1.3" fill="#fef2f2" />
-        <circle cx="7" cy="2" r="1.3" fill="#fef2f2" />
-        <circle cx="-14" cy="5" r="1.2" fill="#fef2f2" />
-        <circle cx="-5" cy="7" r="1.2" fill="#fef2f2" />
-        <circle cx="13" cy="8" r="1.1" fill="#fef2f2" />
         <path d="M -30,-9 Q -40,-10 -46,-4 Q -40,0 -32,-4 Z" fill="#dc2626" stroke="#7f1d1d" stroke-width="0.7" />
         <path d="M -30,-11 Q -60,-24 -88,-30" stroke="#fef9c3" stroke-width="1.1" fill="none" stroke-linecap="round" />
         <path d="M -28,-8 Q -54,-12 -80,-10" stroke="#fef9c3" stroke-width="1" fill="none" stroke-linecap="round" opacity="0.85" />
@@ -1444,29 +1416,18 @@ class AquariumShowerCard extends LitElement {
         <path d="M -14,-2 L -26,-10 L -34,-8" stroke="#7c2d12" stroke-width="2.4" fill="none" stroke-linecap="round" />
         <path d="M -15,4 L -28,4 L -36,9" stroke="#7c2d12" stroke-width="2.4" fill="none" stroke-linecap="round" />
         <path d="M -13,10 L -24,16 L -30,24" stroke="#7c2d12" stroke-width="2.4" fill="none" stroke-linecap="round" />
-        <path d="M -8,14 L -16,24 L -20,32" stroke="#7c2d12" stroke-width="2.2" fill="none" stroke-linecap="round" />
         <path d="M 14,-2 L 26,-10 L 34,-8" stroke="#7c2d12" stroke-width="2.4" fill="none" stroke-linecap="round" />
         <path d="M 15,4 L 28,4 L 36,9" stroke="#7c2d12" stroke-width="2.4" fill="none" stroke-linecap="round" />
         <path d="M 13,10 L 24,16 L 30,24" stroke="#7c2d12" stroke-width="2.4" fill="none" stroke-linecap="round" />
-        <path d="M 8,14 L 16,24 L 20,32" stroke="#7c2d12" stroke-width="2.2" fill="none" stroke-linecap="round" />
         <path d="M -12,-8 L -22,-18 Q -30,-22 -34,-16 Q -28,-12 -20,-10 Z" fill="#ea580c" stroke="#9a3412" stroke-width="1" />
         <path d="M 12,-8 L 22,-18 Q 30,-22 34,-16 Q 28,-12 20,-10 Z" fill="#ea580c" stroke="#9a3412" stroke-width="1" />
         <path d="M -20,-10 C -24,-2 -24,8 -18,14 C -10,19 10,19 18,14 C 24,8 24,-2 20,-10 C 14,-16 -14,-16 -20,-10 Z" fill="#dc2626" stroke="#ea580c" stroke-width="1.2" />
         <ellipse cx="0" cy="-2" rx="15" ry="10" fill="#f87171" opacity="0.35" />
-        <circle cx="-8" cy="0" r="1.6" fill="#7c2d12" opacity="0.4" />
-        <circle cx="6" cy="-4" r="1.4" fill="#7c2d12" opacity="0.4" />
-        <circle cx="2" cy="6" r="1.5" fill="#7c2d12" opacity="0.4" />
-        <circle cx="-4" cy="8" r="1.2" fill="#7c2d12" opacity="0.3" />
         <path d="M -6,-13 L -7,-19" stroke="#9a3412" stroke-width="1.4" stroke-linecap="round" />
         <path d="M 6,-13 L 7,-19" stroke="#9a3412" stroke-width="1.4" stroke-linecap="round" />
         ${isDead
           ? svg`<line x1="-9" y1="-21" x2="-5" y2="-19" stroke="#ffffff" stroke-width="1" /><line x1="5" y1="-21" x2="9" y2="-19" stroke="#ffffff" stroke-width="1" />`
-          : svg`
-              <circle cx="-7.2" cy="-20" r="2" fill="#0f172a" />
-              <circle cx="7.2" cy="-20" r="2" fill="#0f172a" />
-              <circle cx="-7.8" cy="-20.6" r="0.6" fill="#fecaca" />
-              <circle cx="6.6" cy="-20.6" r="0.6" fill="#fecaca" />
-            `}
+          : svg`<circle cx="-7.2" cy="-20" r="2" fill="#0f172a" /><circle cx="7.2" cy="-20" r="2" fill="#0f172a" />`}
       </g>
     `;
   }
@@ -1727,11 +1688,25 @@ class AquariumShowerCard extends LitElement {
                 })}
               </g>
 
-              ${themeKey === "freshwater" ? this._renderAncistrus(isDead) : ""}
+              ${themeKey === "freshwater"
+                ? (this._ancistrusList || []).map((anc) => this._renderAncistrusChoice(anc, isDead))
+                : ""}
               ${themeKey === "saltwater" ? this._renderShrimp(isDead) : ""}
               ${themeKey === "saltwater" ? this._renderCrab(isDead) : ""}
               ${this._renderAlgae(effectiveAlgaeHours, isFullscreen)}
-              ${this._renderStatusPanel(currentTemp, currentVolume, isFullscreen, canvasH, targetBudget, isWarning, isCritical, isBoiling, isHeatDead)}
+              ${isFullscreen
+                ? this._renderStatusPanel(
+                    currentTemp,
+                    currentVolume,
+                    isFullscreen,
+                    canvasH,
+                    targetBudget,
+                    isWarning,
+                    isCritical,
+                    isBoiling,
+                    isHeatDead
+                  )
+                : ""}
             </g>
 
             ${!isFullscreen
