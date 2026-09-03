@@ -1,6 +1,6 @@
 import { LitElement, html, css, svg } from "./lit-element-bundle.min.js";
 
-const CARD_VERSION = "0.1.8";
+const CARD_VERSION = "0.1.9";
 
 const TRANSLATIONS = {
   en: {
@@ -329,14 +329,15 @@ class AquariumShowerCard extends LitElement {
       { x: 18, y: 340, vx: 0, vy: 0.07, dir: 1, type: "glass_left", color: "#a16207" },
       { x: 1006, y: 220, vx: 0, vy: -0.06, dir: -1, type: "glass_right", color: "#78350f" },
     ];
-    this._ancistrusList = [
-      { id: 1, x: 90, y: 340, targetY: 340, state: "idle", idleUntil: 0, deathProgress: 0 },
-      { id: 2, x: 250, y: 320, targetY: 320, state: "idle", idleUntil: 0, deathProgress: 0 },
-      { id: 3, x: 410, y: 350, targetY: 350, state: "idle", idleUntil: 0, deathProgress: 0 },
-      { id: 4, x: 570, y: 330, targetY: 330, state: "idle", idleUntil: 0, deathProgress: 0 },
-      { id: 5, x: 730, y: 340, targetY: 340, state: "idle", idleUntil: 0, deathProgress: 0 },
-      { id: 6, x: 890, y: 320, targetY: 320, state: "idle", idleUntil: 0, deathProgress: 0 },
-    ];
+    this._ancistrusList = Array.from({ length: 10 }, (_, i) => ({
+      id: i + 1,
+      x: 55 + i * 100,
+      y: 315 + (i % 2) * 45,
+      targetY: 315 + (i % 2) * 45,
+      state: "idle",
+      idleUntil: 0,
+      deathProgress: 0,
+    }));
     this._shrimp = {
       x: 840,
       y: 550,
@@ -1217,190 +1218,254 @@ class AquariumShowerCard extends LitElement {
   _renderAncistrusChoice(anc, isDead) {
     const p = anc.deathProgress || 0;
     const bodyOpacity = (1.0 - p).toFixed(2);
-    const mouthPulse = isDead ? 1 : (1 + Math.sin(this._animTime * 1.8 + anc.id) * 0.08).toFixed(3);
+    const mouthPulse = isDead ? 1 : (1 + Math.sin(this._animTime * 1.6 + anc.id) * 0.07).toFixed(3);
 
-    let shapeSvg = svg``;
+    const bristlesMap = {
+      1: svg`
+        <path d="M -11,-4 Q -16,-15 -11,-18 Q -7,-14 -5,-4" stroke="#0f172a" stroke-width="1.3" fill="none" stroke-linecap="round" />
+        <path d="M -6,-6 Q -8,-20 -3,-19 Q -1,-15 -2,-6" stroke="#0f172a" stroke-width="1.3" fill="none" stroke-linecap="round" />
+        <path d="M 0,-7 Q 0,-22 3,-22 Q 4,-16 2,-7" stroke="#0f172a" stroke-width="1.3" fill="none" stroke-linecap="round" />
+        <path d="M 6,-6 Q 8,-20 3,-19 Q 1,-15 2,-6" stroke="#0f172a" stroke-width="1.3" fill="none" stroke-linecap="round" />
+        <path d="M 11,-4 Q 16,-15 11,-18 Q 7,-14 5,-4" stroke="#0f172a" stroke-width="1.3" fill="none" stroke-linecap="round" />
+      `,
+      2: svg`
+        <path d="M -9,-5 Q -14,-14 -11,-18 M -13,-14 Q -18,-18 -15,-22" stroke="#0a0a0a" stroke-width="1.2" fill="none" stroke-linecap="round" />
+        <path d="M -4,-7 Q -5,-18 -1,-22 M -4,-16 Q -7,-22 -3,-26" stroke="#0a0a0a" stroke-width="1.2" fill="none" stroke-linecap="round" />
+        <path d="M 4,-7 Q 5,-18 1,-22 M 4,-16 Q 7,-22 3,-26" stroke="#0a0a0a" stroke-width="1.2" fill="none" stroke-linecap="round" />
+        <path d="M 9,-5 Q 14,-14 11,-18 M 13,-14 Q 18,-18 15,-22" stroke="#0a0a0a" stroke-width="1.2" fill="none" stroke-linecap="round" />
+      `,
+      3: svg`
+        <path d="M -10,-5 Q -14,-16 -9,-18" stroke="#0f172a" stroke-width="1.3" fill="none" stroke-linecap="round" />
+        <circle cx="-9" cy="-18" r="0.9" fill="#ffffff" />
+        <path d="M -5,-7 Q -6,-21 -2,-21" stroke="#0f172a" stroke-width="1.3" fill="none" stroke-linecap="round" />
+        <circle cx="-2" cy="-21" r="0.9" fill="#ffffff" />
+        <path d="M 0,-8 Q 0,-23 3,-23" stroke="#0f172a" stroke-width="1.3" fill="none" stroke-linecap="round" />
+        <circle cx="3" cy="-23" r="0.9" fill="#ffffff" />
+        <path d="M 5,-7 Q 6,-21 2,-21" stroke="#0f172a" stroke-width="1.3" fill="none" stroke-linecap="round" />
+        <circle cx="2" cy="-21" r="0.9" fill="#ffffff" />
+        <path d="M 10,-5 Q 14,-16 9,-18" stroke="#0f172a" stroke-width="1.3" fill="none" stroke-linecap="round" />
+        <circle cx="9" cy="-18" r="0.9" fill="#ffffff" />
+      `,
+      4: svg`
+        <path d="M -11,-3 Q -24,-6 -26,-12" stroke="#09090b" stroke-width="1.3" fill="none" stroke-linecap="round" />
+        <path d="M -6,-6 Q -10,-19 -4,-21" stroke="#09090b" stroke-width="1.3" fill="none" stroke-linecap="round" />
+        <path d="M 0,-7 Q 0,-22 4,-22" stroke="#09090b" stroke-width="1.3" fill="none" stroke-linecap="round" />
+        <path d="M 6,-6 Q 10,-19 4,-21" stroke="#09090b" stroke-width="1.3" fill="none" stroke-linecap="round" />
+        <path d="M 11,-3 Q 24,-6 26,-12" stroke="#09090b" stroke-width="1.3" fill="none" stroke-linecap="round" />
+      `,
+      5: svg`
+        <line x1="-10" y1="-4" x2="-14" y2="-12" stroke="#000000" stroke-width="1.4" stroke-linecap="round" />
+        <line x1="-7" y1="-5" x2="-9" y2="-16" stroke="#000000" stroke-width="1.4" stroke-linecap="round" />
+        <line x1="-3" y1="-7" x2="-4" y2="-19" stroke="#000000" stroke-width="1.4" stroke-linecap="round" />
+        <line x1="0" y1="-8" x2="0" y2="-20" stroke="#000000" stroke-width="1.4" stroke-linecap="round" />
+        <line x1="3" y1="-7" x2="4" y2="-19" stroke="#000000" stroke-width="1.4" stroke-linecap="round" />
+        <line x1="7" y1="-5" x2="9" y2="-16" stroke="#000000" stroke-width="1.4" stroke-linecap="round" />
+        <line x1="10" y1="-4" x2="14" y2="-12" stroke="#000000" stroke-width="1.4" stroke-linecap="round" />
+      `,
+      6: svg`
+        <path d="M -9,-4 Q -15,-12 -11,-16 M -12,-11 Q -19,-14 -16,-19 M -10,-14 Q -12,-20 -7,-22" stroke="#0c0a09" stroke-width="1.2" fill="none" stroke-linecap="round" />
+        <path d="M 0,-7 Q 0,-18 4,-21 M 1,-14 Q -4,-18 -1,-24 M 2,-14 Q 7,-19 5,-25" stroke="#0c0a09" stroke-width="1.2" fill="none" stroke-linecap="round" />
+        <path d="M 9,-4 Q 15,-12 11,-16 M 12,-11 Q 19,-14 16,-19 M 10,-14 Q 12,-20 7,-22" stroke="#0c0a09" stroke-width="1.2" fill="none" stroke-linecap="round" />
+      `,
+      7: svg`
+        <path d="M -11,-4 Q -16,-13 -13,-17" stroke="#111827" stroke-width="1.1" fill="none" stroke-linecap="round" />
+        <path d="M -7,-6 Q -9,-17 -6,-20" stroke="#111827" stroke-width="1.1" fill="none" stroke-linecap="round" />
+        <path d="M -3,-7 Q -3,-20 0,-23" stroke="#111827" stroke-width="1.1" fill="none" stroke-linecap="round" />
+        <path d="M 3,-7 Q 3,-20 0,-23" stroke="#111827" stroke-width="1.1" fill="none" stroke-linecap="round" />
+        <path d="M 7,-6 Q 9,-17 6,-20" stroke="#111827" stroke-width="1.1" fill="none" stroke-linecap="round" />
+        <path d="M 11,-4 Q 16,-13 13,-17" stroke="#111827" stroke-width="1.1" fill="none" stroke-linecap="round" />
+      `,
+      8: svg`
+        <path d="M -10,-4 C -16,-8 -16,-17 -11,-16" stroke="#020617" stroke-width="1.4" fill="none" stroke-linecap="round" />
+        <path d="M -5,-6 C -9,-12 -8,-21 -3,-20" stroke="#020617" stroke-width="1.4" fill="none" stroke-linecap="round" />
+        <path d="M 0,-7 C -2,-14 2,-23 5,-20" stroke="#020617" stroke-width="1.4" fill="none" stroke-linecap="round" />
+        <path d="M 5,-6 C 9,-12 8,-21 3,-20" stroke="#020617" stroke-width="1.4" fill="none" stroke-linecap="round" />
+        <path d="M 10,-4 C 16,-8 16,-17 11,-16" stroke="#020617" stroke-width="1.4" fill="none" stroke-linecap="round" />
+      `,
+      9: svg`
+        <path d="M -11,-3 Q -15,-10 -11,-13" stroke="#0f172a" stroke-width="1.2" fill="none" stroke-linecap="round" />
+        <path d="M -13,-7 Q -18,-15 -14,-18" stroke="#0f172a" stroke-width="1.2" fill="none" stroke-linecap="round" />
+        <path d="M -5,-5 Q -7,-13 -3,-16" stroke="#0f172a" stroke-width="1.2" fill="none" stroke-linecap="round" />
+        <path d="M -6,-9 Q -8,-18 -3,-22" stroke="#0f172a" stroke-width="1.2" fill="none" stroke-linecap="round" />
+        <path d="M 5,-5 Q 7,-13 3,-16" stroke="#0f172a" stroke-width="1.2" fill="none" stroke-linecap="round" />
+        <path d="M 6,-9 Q 8,-18 3,-22" stroke="#0f172a" stroke-width="1.2" fill="none" stroke-linecap="round" />
+        <path d="M 11,-3 Q 15,-10 11,-13" stroke="#0f172a" stroke-width="1.2" fill="none" stroke-linecap="round" />
+        <path d="M 13,-7 Q 18,-15 14,-18" stroke="#0f172a" stroke-width="1.2" fill="none" stroke-linecap="round" />
+      `,
+      10: svg`
+        <path d="M -12,-3 Q -18,-9 -14,-14 Q -9,-11 -7,-4" stroke="#09090b" stroke-width="1.3" fill="none" stroke-linecap="round" />
+        <path d="M -7,-6 Q -12,-18 -6,-20 Q -2,-15 -3,-6" stroke="#09090b" stroke-width="1.3" fill="none" stroke-linecap="round" />
+        <path d="M 2,-7 Q 0,-21 5,-23 Q 7,-16 4,-7" stroke="#09090b" stroke-width="1.3" fill="none" stroke-linecap="round" />
+        <path d="M 9,-5 Q 16,-12 12,-17 Q 8,-13 6,-5" stroke="#09090b" stroke-width="1.3" fill="none" stroke-linecap="round" />
+      `,
+    };
 
-    if (anc.id === 1) {
-      shapeSvg = svg`
-        <g>
-          <path d="M -12,8 L -28,14 Q -32,22 -24,28 L -10,20 Z" fill="#171717" stroke="#0a0a0a" stroke-width="0.8" />
-          <path d="M -26,16 L -12,11 M -22,21 L -11,14" stroke="#404040" stroke-width="0.6" />
-          <path d="M 12,8 L 28,14 Q 32,22 24,28 L 10,20 Z" fill="#171717" stroke="#0a0a0a" stroke-width="0.8" />
-          <path d="M 26,16 L 12,11 M 22,21 L 11,14" stroke="#404040" stroke-width="0.6" />
+    const dotsMap = {
+      1: svg`
+        <circle cx="-5" cy="18" r="0.8" fill="#ffffff" />
+        <circle cx="5" cy="18" r="0.8" fill="#ffffff" />
+        <circle cx="0" cy="28" r="0.8" fill="#ffffff" />
+        <circle cx="-4" cy="40" r="0.7" fill="#ffffff" />
+        <circle cx="4" cy="40" r="0.7" fill="#ffffff" />
+        <circle cx="0" cy="54" r="0.7" fill="#ffffff" />
+      `,
+      2: svg`
+        <circle cx="-6" cy="14" r="0.7" fill="#ffffff" />
+        <circle cx="6" cy="14" r="0.7" fill="#ffffff" />
+        <circle cx="-3" cy="24" r="0.8" fill="#ffffff" />
+        <circle cx="3" cy="24" r="0.8" fill="#ffffff" />
+        <circle cx="-5" cy="35" r="0.7" fill="#ffffff" />
+        <circle cx="5" cy="35" r="0.7" fill="#ffffff" />
+        <circle cx="0" cy="46" r="0.8" fill="#ffffff" />
+        <circle cx="-3" cy="58" r="0.6" fill="#ffffff" />
+        <circle cx="3" cy="58" r="0.6" fill="#ffffff" />
+      `,
+      3: svg`
+        <circle cx="-4" cy="16" r="0.8" fill="#ffffff" />
+        <circle cx="4" cy="16" r="0.8" fill="#ffffff" />
+        <circle cx="-5" cy="28" r="0.8" fill="#ffffff" />
+        <circle cx="5" cy="28" r="0.8" fill="#ffffff" />
+        <circle cx="-4" cy="42" r="0.7" fill="#ffffff" />
+        <circle cx="4" cy="42" r="0.7" fill="#ffffff" />
+        <circle cx="-3" cy="56" r="0.7" fill="#ffffff" />
+        <circle cx="3" cy="56" r="0.7" fill="#ffffff" />
+      `,
+      4: svg`
+        <circle cx="0" cy="14" r="1.1" fill="#ffffff" />
+        <circle cx="-5" cy="24" r="0.9" fill="#ffffff" />
+        <circle cx="5" cy="24" r="0.9" fill="#ffffff" />
+        <circle cx="0" cy="34" r="1.0" fill="#ffffff" />
+        <circle cx="-4" cy="46" r="0.8" fill="#ffffff" />
+        <circle cx="4" cy="46" r="0.8" fill="#ffffff" />
+        <circle cx="0" cy="58" r="0.9" fill="#ffffff" />
+      `,
+      5: svg`
+        <circle cx="-6" cy="16" r="0.7" fill="#ffffff" />
+        <circle cx="0" cy="18" r="0.7" fill="#ffffff" />
+        <circle cx="6" cy="16" r="0.7" fill="#ffffff" />
+        <circle cx="-5" cy="30" r="0.7" fill="#ffffff" />
+        <circle cx="5" cy="30" r="0.7" fill="#ffffff" />
+        <circle cx="0" cy="40" r="0.7" fill="#ffffff" />
+        <circle cx="-4" cy="52" r="0.6" fill="#ffffff" />
+        <circle cx="4" cy="52" r="0.6" fill="#ffffff" />
+      `,
+      6: svg`
+        <circle cx="-5" cy="15" r="0.8" fill="#ffffff" />
+        <circle cx="4" cy="18" r="0.8" fill="#ffffff" />
+        <circle cx="-2" cy="27" r="0.8" fill="#ffffff" />
+        <circle cx="5" cy="33" r="0.7" fill="#ffffff" />
+        <circle cx="-4" cy="42" r="0.7" fill="#ffffff" />
+        <circle cx="1" cy="49" r="0.8" fill="#ffffff" />
+        <circle cx="-2" cy="59" r="0.7" fill="#ffffff" />
+      `,
+      7: svg`
+        <circle cx="-7" cy="14" r="0.6" fill="#ffffff" />
+        <circle cx="-2" cy="16" r="0.6" fill="#ffffff" />
+        <circle cx="3" cy="15" r="0.6" fill="#ffffff" />
+        <circle cx="7" cy="17" r="0.6" fill="#ffffff" />
+        <circle cx="-5" cy="26" r="0.6" fill="#ffffff" />
+        <circle cx="0" cy="28" r="0.6" fill="#ffffff" />
+        <circle cx="5" cy="27" r="0.6" fill="#ffffff" />
+        <circle cx="-4" cy="39" r="0.6" fill="#ffffff" />
+        <circle cx="3" cy="41" r="0.6" fill="#ffffff" />
+        <circle cx="-2" cy="52" r="0.5" fill="#ffffff" />
+        <circle cx="2" cy="54" r="0.5" fill="#ffffff" />
+      `,
+      8: svg`
+        <circle cx="-5" cy="17" r="0.9" fill="#ffffff" />
+        <circle cx="5" cy="17" r="0.9" fill="#ffffff" />
+        <circle cx="0" cy="30" r="1.0" fill="#ffffff" />
+        <circle cx="-4" cy="44" r="0.8" fill="#ffffff" />
+        <circle cx="4" cy="44" r="0.8" fill="#ffffff" />
+        <circle cx="0" cy="60" r="0.8" fill="#ffffff" />
+      `,
+      9: svg`
+        <circle cx="-6" cy="15" r="0.7" fill="#ffffff" />
+        <circle cx="6" cy="15" r="0.7" fill="#ffffff" />
+        <circle cx="-3" cy="22" r="0.7" fill="#ffffff" />
+        <circle cx="3" cy="22" r="0.7" fill="#ffffff" />
+        <circle cx="-5" cy="32" r="0.7" fill="#ffffff" />
+        <circle cx="5" cy="32" r="0.7" fill="#ffffff" />
+        <circle cx="-2" cy="42" r="0.7" fill="#ffffff" />
+        <circle cx="2" cy="42" r="0.7" fill="#ffffff" />
+        <circle cx="0" cy="54" r="0.6" fill="#ffffff" />
+      `,
+      10: svg`
+        <circle cx="-4" cy="15" r="0.8" fill="#ffffff" />
+        <circle cx="5" cy="18" r="0.8" fill="#ffffff" />
+        <circle cx="0" cy="25" r="0.8" fill="#ffffff" />
+        <circle cx="-5" cy="36" r="0.8" fill="#ffffff" />
+        <circle cx="4" cy="40" r="0.7" fill="#ffffff" />
+        <circle cx="-1" cy="50" r="0.7" fill="#ffffff" />
+        <circle cx="3" cy="60" r="0.6" fill="#ffffff" />
+      `,
+    };
 
-          <path d="M -8,32 L -18,42 L -14,47 L -6,38 Z" fill="#171717" stroke="#0a0a0a" stroke-width="0.6" />
-          <path d="M 8,32 L 18,42 L 14,47 L 6,38 Z" fill="#171717" stroke="#0a0a0a" stroke-width="0.6" />
-
-          <path d="M -13,0 C -17,16 -16,36 -11,52 L -4,74 L 4,74 L 11,52 C 16,36 17,16 13,0 C 9,-10 -9,-10 -13,0 Z" fill="#212121" stroke="#0a0a0a" stroke-width="1.1" />
-          <circle cx="-5" cy="16" r="0.8" fill="#ffffff" opacity="0.85" />
-          <circle cx="5" cy="16" r="0.8" fill="#ffffff" opacity="0.85" />
-          <circle cx="0" cy="28" r="0.8" fill="#ffffff" opacity="0.85" />
-          <circle cx="-4" cy="42" r="0.7" fill="#ffffff" opacity="0.75" />
-          <circle cx="4" cy="42" r="0.7" fill="#ffffff" opacity="0.75" />
-          <circle cx="0" cy="58" r="0.7" fill="#ffffff" opacity="0.75" />
-
-          <line x1="-10" y1="-7" x2="-14" y2="-12" stroke="#0a0a0a" stroke-width="1.3" stroke-linecap="round" />
-          <line x1="-5" y1="-9" x2="-7" y2="-15" stroke="#0a0a0a" stroke-width="1.3" stroke-linecap="round" />
-          <line x1="0" y1="-10" x2="0" y2="-16" stroke="#0a0a0a" stroke-width="1.3" stroke-linecap="round" />
-          <line x1="5" y1="-9" x2="7" y2="-15" stroke="#0a0a0a" stroke-width="1.3" stroke-linecap="round" />
-          <line x1="10" y1="-7" x2="14" y2="-12" stroke="#0a0a0a" stroke-width="1.3" stroke-linecap="round" />
-
-          <g transform="translate(0, 2) scale(${mouthPulse}, ${mouthPulse})">
-            <ellipse cx="0" cy="0" rx="7.5" ry="5.8" fill="#333333" stroke="#0a0a0a" stroke-width="0.9" />
-            <ellipse cx="0" cy="0" rx="5.0" ry="3.8" fill="#171717" />
-            <ellipse cx="0" cy="0" rx="2.4" ry="1.6" fill="#444444" />
-          </g>
-        </g>
-      `;
-    } else if (anc.id === 2) {
-      shapeSvg = svg`
-        <g>
-          <path d="M -12,6 C -24,10 -30,18 -26,26 C -20,26 -14,20 -9,14 Z" fill="#171717" stroke="#000000" stroke-width="0.8" />
-          <path d="M -26,26 C -20,26 -14,20 -9,14" stroke="#ffffff" stroke-width="1.2" fill="none" />
-          <path d="M 12,6 C 24,10 30,18 26,26 C 20,26 14,20 9,14 Z" fill="#171717" stroke="#000000" stroke-width="0.8" />
-          <path d="M 26,26 C 20,26 14,20 9,14" stroke="#ffffff" stroke-width="1.2" fill="none" />
-
-          <path d="M -7,30 C -15,36 -15,44 -7,42 Z" fill="#171717" />
-          <path d="M -15,44 C -12,44 -7,42 -7,42" stroke="#ffffff" stroke-width="0.9" fill="none" />
-          <path d="M 7,30 C 15,36 15,44 7,42 Z" fill="#171717" />
-          <path d="M 15,44 C 12,44 7,42 7,42" stroke="#ffffff" stroke-width="0.9" fill="none" />
-
-          <path d="M -12,0 C -16,16 -15,34 -9,52 L -3,74 L 3,74 L 9,52 C 15,34 16,16 12,0 C 9,-8 -9,-8 -12,0 Z" fill="#1c1917" stroke="#000000" stroke-width="1.1" />
-          <path d="M -5,74 L 0,80 L 5,74 Z" fill="#171717" />
-          <path d="M -5,74 L 0,80 L 5,74" stroke="#ffffff" stroke-width="1.2" fill="none" />
-
-          <circle cx="-8" cy="-7" r="1.1" fill="#000000" />
-          <circle cx="-3" cy="-9" r="1.2" fill="#000000" />
-          <circle cx="3" cy="-9" r="1.2" fill="#000000" />
-          <circle cx="8" cy="-7" r="1.1" fill="#000000" />
-
-          <g transform="translate(0, 1) scale(${mouthPulse}, ${mouthPulse})">
-            <ellipse cx="0" cy="0" rx="7.2" ry="5.6" fill="#292524" stroke="#000000" stroke-width="0.8" />
-            <ellipse cx="0" cy="0" rx="4.8" ry="3.6" fill="#0c0a09" />
-          </g>
-        </g>
-      `;
-    } else if (anc.id === 3) {
-      shapeSvg = svg`
-        <g>
-          <path d="M -11,6 L -29,14 L -26,22 L -10,17 Z" fill="#1e293b" stroke="#0f172a" stroke-width="0.8" />
-          <line x1="-11" y1="6" x2="-29" y2="14" stroke="#64748b" stroke-width="1.2" stroke-linecap="round" />
-          <path d="M 11,6 L 29,14 L 26,22 L 10,17 Z" fill="#1e293b" stroke="#0f172a" stroke-width="0.8" />
-          <line x1="11" y1="6" x2="29" y2="14" stroke="#64748b" stroke-width="1.2" stroke-linecap="round" />
-
-          <path d="M -7,30 L -16,40 L -13,44 L -5,37 Z" fill="#1e293b" />
-          <path d="M 7,30 L 16,40 L 13,44 L 5,37 Z" fill="#1e293b" />
-
-          <path d="M -13,2 C -16,18 -14,34 -10,50 L -4,72 L 4,72 L 10,50 C 14,34 16,18 13,2 C 10,-8 -10,-8 -13,2 Z" fill="#0f172a" stroke="#020617" stroke-width="1.1" />
-          <path d="M -8,18 L 0,23 L 8,18" stroke="#334155" stroke-width="1.1" fill="none" />
-          <path d="M -7,30 L 0,35 L 7,30" stroke="#334155" stroke-width="1.1" fill="none" />
-          <path d="M -5,42 L 0,47 L 5,42" stroke="#334155" stroke-width="1.1" fill="none" />
-          <path d="M -4,54 L 0,58 L 4,54" stroke="#334155" stroke-width="1.1" fill="none" />
-
-          <g transform="translate(0, 3) scale(${mouthPulse}, ${mouthPulse})">
-            <ellipse cx="0" cy="0" rx="7.4" ry="5.8" fill="#334155" stroke="#020617" stroke-width="0.9" />
-            <path d="M -3,0 L 3,0" stroke="#94a3b8" stroke-width="1.1" />
-            <ellipse cx="0" cy="2" rx="2.6" ry="1.5" fill="#020617" />
-          </g>
-        </g>
-      `;
-    } else if (anc.id === 4) {
-      shapeSvg = svg`
-        <g>
-          <path d="M -12,6 Q -26,10 -28,20 Q -20,24 -10,18 Z" fill="#18181b" stroke="#09090b" stroke-width="0.8" />
-          <path d="M 12,6 Q 26,10 28,20 Q 20,24 10,18 Z" fill="#18181b" stroke="#09090b" stroke-width="0.8" />
-          <path d="M -7,32 Q -16,40 -12,46 Q -7,42 -6,36 Z" fill="#18181b" />
-          <path d="M 7,32 Q 16,40 12,46 Q 7,42 6,36 Z" fill="#18181b" />
-
-          <path d="M -13,0 C -17,16 -15,36 -10,54 L -4,74 L 4,74 L 10,54 C 15,36 17,16 13,0 C 9,-10 -9,-10 -13,0 Z" fill="#27272a" stroke="#09090b" stroke-width="1.1" />
-          <ellipse cx="-4" cy="12" rx="1.8" ry="1.2" fill="#09090b" opacity="0.6" />
-          <ellipse cx="4" cy="18" rx="2" ry="1.3" fill="#09090b" opacity="0.6" />
-          <ellipse cx="-3" cy="28" rx="1.9" ry="1.3" fill="#09090b" opacity="0.6" />
-          <ellipse cx="3" cy="38" rx="1.7" ry="1.1" fill="#09090b" opacity="0.6" />
-          <ellipse cx="0" cy="50" rx="1.8" ry="1.2" fill="#09090b" opacity="0.6" />
-
-          <path d="M -9,-6 Q -13,-12 -9,-14 Q -7,-11 -5,-7" stroke="#09090b" stroke-width="1.2" fill="none" stroke-linecap="round" />
-          <path d="M -4,-8 Q -6,-15 -2,-16 Q -1,-12 -2,-8" stroke="#09090b" stroke-width="1.2" fill="none" stroke-linecap="round" />
-          <path d="M 4,-8 Q 6,-15 2,-16 Q 1,-12 2,-8" stroke="#09090b" stroke-width="1.2" fill="none" stroke-linecap="round" />
-          <path d="M 9,-6 Q 13,-12 9,-14 Q 7,-11 5,-7" stroke="#09090b" stroke-width="1.2" fill="none" stroke-linecap="round" />
-
-          <g transform="translate(0, 1) scale(${mouthPulse}, ${mouthPulse})">
-            <ellipse cx="0" cy="0" rx="7.6" ry="6.0" fill="#3f3f46" stroke="#facc15" stroke-width="0.7" />
-            <ellipse cx="0" cy="0" rx="4.8" ry="3.7" fill="#09090b" />
-            <circle cx="0" cy="0" r="1.4" fill="#facc15" opacity="0.7" />
-          </g>
-        </g>
-      `;
-    } else if (anc.id === 5) {
-      shapeSvg = svg`
-        <g>
-          <path d="M -11,8 C -22,12 -26,18 -22,24 C -17,24 -12,18 -9,14 Z" fill="#141414" stroke="#000000" stroke-width="0.8" />
-          <path d="M 11,8 C 22,12 26,18 22,24 C 17,24 12,18 9,14 Z" fill="#141414" stroke="#000000" stroke-width="0.8" />
-          <path d="M -6,32 C -14,38 -12,44 -6,40 Z" fill="#141414" />
-          <path d="M 6,32 C 14,38 12,44 6,40 Z" fill="#141414" />
-
-          <path d="M -12,0 C -15,16 -14,34 -9,52 L -3,74 L 3,74 L 9,52 C 14,34 15,16 12,0 C 9,-8 -9,-8 -12,0 Z" fill="#1f1f1f" stroke="#000000" stroke-width="1.1" />
-          <circle cx="0" cy="20" r="1.1" fill="#e5e5e5" opacity="0.9" />
-          <circle cx="-4" cy="30" r="0.9" fill="#e5e5e5" opacity="0.8" />
-          <circle cx="4" cy="30" r="0.9" fill="#e5e5e5" opacity="0.8" />
-          <circle cx="0" cy="42" r="0.9" fill="#e5e5e5" opacity="0.8" />
-          <circle cx="-3" cy="54" r="0.8" fill="#e5e5e5" opacity="0.7" />
-          <circle cx="3" cy="54" r="0.8" fill="#e5e5e5" opacity="0.7" />
-
-          <circle cx="-8" cy="-8" r="1.2" fill="#000000" />
-          <circle cx="-4" cy="-10" r="1.3" fill="#000000" />
-          <circle cx="0" cy="-11" r="1.3" fill="#000000" />
-          <circle cx="4" cy="-10" r="1.3" fill="#000000" />
-          <circle cx="8" cy="-8" r="1.2" fill="#000000" />
-
-          <g transform="translate(0, 4) scale(${mouthPulse}, ${mouthPulse})">
-            <ellipse cx="0" cy="0" rx="7.0" ry="5.4" fill="#2b2b2b" stroke="#000000" stroke-width="0.8" />
-            <ellipse cx="0" cy="0" rx="4.2" ry="3.2" fill="#000000" />
-          </g>
-        </g>
-      `;
-    } else {
-      shapeSvg = svg`
-        <g>
-          <path d="M -11,7 L -27,13 Q -30,20 -23,25 L -10,18 Z" fill="#1c1917" stroke="#0c0a09" stroke-width="0.8" />
-          <line x1="-11" y1="7" x2="-27" y2="13" stroke="#d6d3d1" stroke-width="1.2" stroke-linecap="round" />
-          <path d="M 11,7 L 27,13 Q 30,20 23,25 L 10,18 Z" fill="#1c1917" stroke="#0c0a09" stroke-width="0.8" />
-          <line x1="11" y1="7" x2="27" y2="13" stroke="#d6d3d1" stroke-width="1.2" stroke-linecap="round" />
-
-          <path d="M -7,32 L -16,40 L -13,44 L -5,37 Z" fill="#1c1917" stroke="#0c0a09" stroke-width="0.6" />
-          <path d="M 7,32 L 16,40 L 13,44 L 5,37 Z" fill="#1c1917" stroke="#0c0a09" stroke-width="0.6" />
-
-          <path d="M -13,0 C -17,16 -15,36 -10,54 L -4,76 L 4,76 L 10,54 C 15,36 17,16 13,0 C 9,-9 -9,-9 -13,0 Z" fill="#292524" stroke="#0c0a09" stroke-width="1.1" />
-          <path d="M -8,15 Q 0,18 8,15" stroke="#44403c" stroke-width="1" fill="none" />
-          <path d="M -7,26 Q 0,29 7,26" stroke="#44403c" stroke-width="1" fill="none" />
-          <path d="M -6,37 Q 0,40 6,37" stroke="#44403c" stroke-width="1" fill="none" />
-          <path d="M -5,48 Q 0,51 5,48" stroke="#44403c" stroke-width="1" fill="none" />
-
-          <line x1="-8" y1="-8" x2="-11" y2="-13" stroke="#0c0a09" stroke-width="1.4" stroke-linecap="round" />
-          <line x1="-3" y1="-10" x2="-4" y2="-16" stroke="#0c0a09" stroke-width="1.4" stroke-linecap="round" />
-          <line x1="3" y1="-10" x2="4" y2="-16" stroke="#0c0a09" stroke-width="1.4" stroke-linecap="round" />
-          <line x1="8" y1="-8" x2="11" y2="-13" stroke="#0c0a09" stroke-width="1.4" stroke-linecap="round" />
-
-          <g transform="translate(0, 2) scale(${mouthPulse}, ${mouthPulse})">
-            <ellipse cx="0" cy="0" rx="7.6" ry="6.0" fill="#44403c" stroke="#0c0a09" stroke-width="0.9" />
-            <ellipse cx="0" cy="0" rx="5.2" ry="4.0" fill="#1c1917" />
-            <path d="M -2.5,-0.5 L 2.5,-0.5" stroke="#fafaf9" stroke-width="1.0" />
-            <ellipse cx="0" cy="1.6" rx="2.4" ry="1.4" fill="#0c0a09" />
-          </g>
-        </g>
-      `;
-    }
+    const finSeamsMap = {
+      1: svg``,
+      2: svg`
+        <path d="M -26,26 C -20,26 -14,20 -9,14" stroke="#ffffff" stroke-width="1.1" fill="none" opacity="0.85" />
+        <path d="M 26,26 C 20,26 14,20 9,14" stroke="#ffffff" stroke-width="1.1" fill="none" opacity="0.85" />
+        <path d="M -4,74 L 0,79 L 4,74" stroke="#ffffff" stroke-width="1.1" fill="none" opacity="0.85" />
+      `,
+      3: svg`
+        <line x1="-12" y1="6" x2="-26" y2="26" stroke="#475569" stroke-width="0.7" />
+        <line x1="12" y1="6" x2="26" y2="26" stroke="#475569" stroke-width="0.7" />
+      `,
+      4: svg`
+        <path d="M -15,44 C -12,44 -7,42 -7,42" stroke="#ffffff" stroke-width="0.8" fill="none" opacity="0.7" />
+        <path d="M 15,44 C 12,44 7,42 7,42" stroke="#ffffff" stroke-width="0.8" fill="none" opacity="0.7" />
+      `,
+      5: svg``,
+      6: svg`
+        <path d="M -26,26 Q -18,24 -9,14" stroke="#d4d4d8" stroke-width="0.9" fill="none" opacity="0.8" />
+        <path d="M 26,26 Q 18,24 9,14" stroke="#d4d4d8" stroke-width="0.9" fill="none" opacity="0.8" />
+      `,
+      7: svg``,
+      8: svg`
+        <circle cx="-18" cy="20" r="0.7" fill="#ffffff" />
+        <circle cx="18" cy="20" r="0.7" fill="#ffffff" />
+      `,
+      9: svg`
+        <path d="M -4,74 L 0,80 L 4,74" stroke="#facc15" stroke-width="0.9" fill="none" opacity="0.85" />
+      `,
+      10: svg``,
+    };
 
     return svg`
-      <g transform="translate(${anc.x}, ${anc.y})">
-        <g transform="translate(0, -36)">
+      <g transform="translate(${anc.x}, ${anc.y}) scale(0.82, 0.82)">
+        <!-- Number badge bubble above Ancistrus -->
+        <g transform="translate(0, -38)">
           <circle cx="0" cy="0" r="11" fill="#0284c7" stroke="#ffffff" stroke-width="2" />
           <text x="0" y="4" font-family="system-ui, sans-serif" font-size="11" font-weight="700" fill="#ffffff" text-anchor="middle">${anc.id}</text>
         </g>
 
+        <!-- Body group -->
         <g opacity="${bodyOpacity}">
-          ${shapeSvg}
+          <!-- Compact flowing pectoral fins (Ancistrus 2 base) -->
+          <path d="M -12,6 C -24,10 -30,18 -26,26 C -20,26 -14,20 -9,14 Z" fill="#182026" stroke="#0a0f14" stroke-width="0.8" />
+          <path d="M 12,6 C 24,10 30,18 26,26 C 20,26 14,20 9,14 Z" fill="#182026" stroke="#0a0f14" stroke-width="0.8" />
+          ${finSeamsMap[anc.id] || svg``}
+
+          <!-- Pelvic fins -->
+          <path d="M -7,30 C -15,36 -15,44 -7,42 Z" fill="#182026" stroke="#0a0f14" stroke-width="0.6" />
+          <path d="M 7,30 C 15,36 15,44 7,42 Z" fill="#182026" stroke="#0a0f14" stroke-width="0.6" />
+
+          <!-- Streamlined body (Ancistrus 2 base, color 1) -->
+          <path d="M -12,0 C -16,16 -15,34 -9,52 L -3,74 L 3,74 L 9,52 C 15,34 16,16 12,0 C 9,-8 -9,-8 -12,0 Z" fill="#1e293b" stroke="#0a0f14" stroke-width="1.1" />
+
+          <!-- White micro-dots -->
+          ${dotsMap[anc.id] || svg``}
+
+          <!-- Snout bristles / poils (Ancistrus 1 tentacle base) -->
+          ${bristlesMap[anc.id] || svg``}
+
+          <!-- Recessed sucker mouth inside body -->
+          <g transform="translate(0, 3) scale(${mouthPulse}, ${mouthPulse})">
+            <ellipse cx="0" cy="0" rx="7.4" ry="5.6" fill="#334155" stroke="#0a0f14" stroke-width="0.9" />
+            <ellipse cx="0" cy="0" rx="4.8" ry="3.6" fill="#0f172a" />
+            <ellipse cx="0" cy="0" rx="2.2" ry="1.5" fill="#475569" />
+          </g>
         </g>
 
         ${p > 0
@@ -1477,28 +1542,30 @@ class AquariumShowerCard extends LitElement {
   _renderStatusPanel(currentTemp, currentVolume, isFullscreen, targetBudget, isWarning, isCritical, isBoiling, isHeatDead) {
     if (!isFullscreen) return svg``;
 
-    const r = 95;
+    const r = 68;
     const circ = 2 * Math.PI * r;
-    const strokeW = 9;
+    const strokeW = 7;
 
-    const volCx = 889;
-    const volCy = 135;
+    // Shifted further towards edges: left at x=90, right at x=934
+    const volCx = 934;
+    const volCy = 85;
     const volFraction = Math.max(0, Math.min(1, currentVolume / Math.max(1, targetBudget)));
     const volColor = isCritical ? "#ef4444" : isWarning ? "#f59e0b" : "#38bdf8";
     const volArc = (volFraction * circ).toFixed(1);
 
-    const tempCx = 135;
-    const tempCy = 135;
+    const tempCx = 90;
+    const tempCy = 85;
     const showTemp = currentTemp > 0;
     const tempFraction = Math.max(0, Math.min(1, currentTemp / 45));
     const tempColor = isHeatDead ? "#ef4444" : isBoiling ? "#f59e0b" : "#facc15";
     const tempArc = (tempFraction * circ).toFixed(1);
 
     return svg`
+      <!-- Left HUD: Temperature (transparent background circle, x2.5 font size) -->
       ${showTemp
         ? svg`
             <g transform="translate(${tempCx}, ${tempCy})">
-              <circle r="${r}" fill="#0f172a" opacity="0.25" />
+              <circle r="${r}" fill="none" />
               <circle r="${r}" fill="none" stroke="#ffffff" stroke-width="${strokeW}" opacity="0.25" />
               <circle
                 r="${r}"
@@ -1509,14 +1576,15 @@ class AquariumShowerCard extends LitElement {
                 stroke-dasharray="${tempArc} ${circ.toFixed(1)}"
                 transform="rotate(-90)"
               />
-              <text y="-4" font-family="system-ui, sans-serif" font-size="42" font-weight="700" fill="#ffffff" text-anchor="middle">${currentTemp.toFixed(1)}°</text>
-              <text y="28" font-family="system-ui, sans-serif" font-size="14" font-weight="600" fill="#ffffff" opacity="0.8" text-anchor="middle" letter-spacing="1">TEMP</text>
+              <text y="7" font-family="system-ui, sans-serif" font-size="44" font-weight="800" fill="#ffffff" text-anchor="middle">${currentTemp.toFixed(1)}°</text>
+              <text y="28" font-family="system-ui, sans-serif" font-size="12" font-weight="700" fill="#ffffff" opacity="0.85" text-anchor="middle" letter-spacing="1.2">TEMP</text>
             </g>
           `
         : ""}
 
+      <!-- Right HUD: Litres (transparent background circle, x2.5 font size) -->
       <g transform="translate(${volCx}, ${volCy})">
-        <circle r="${r}" fill="#0f172a" opacity="0.25" />
+        <circle r="${r}" fill="none" />
         <circle r="${r}" fill="none" stroke="#ffffff" stroke-width="${strokeW}" opacity="0.25" />
         <circle
           r="${r}"
@@ -1527,8 +1595,8 @@ class AquariumShowerCard extends LitElement {
           stroke-dasharray="${volArc} ${circ.toFixed(1)}"
           transform="rotate(-90)"
         />
-        <text y="-4" font-family="system-ui, sans-serif" font-size="42" font-weight="700" fill="#ffffff" text-anchor="middle">${currentVolume.toFixed(1)}</text>
-        <text y="28" font-family="system-ui, sans-serif" font-size="14" font-weight="600" fill="#ffffff" opacity="0.8" text-anchor="middle" letter-spacing="1">LITRES</text>
+        <text y="7" font-family="system-ui, sans-serif" font-size="44" font-weight="800" fill="#ffffff" text-anchor="middle">${currentVolume.toFixed(1)}</text>
+        <text y="28" font-family="system-ui, sans-serif" font-size="12" font-weight="700" fill="#ffffff" opacity="0.85" text-anchor="middle" letter-spacing="1.2">LITRES</text>
       </g>
     `;
   }
