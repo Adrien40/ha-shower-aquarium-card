@@ -1,6 +1,6 @@
 import { LitElement, html, css, svg } from "./lit-element-bundle.min.js";
 
-const CARD_VERSION = "0.2.2";
+const CARD_VERSION = "0.2.3";
 
 const TRANSLATIONS = {
   en: {
@@ -678,8 +678,14 @@ class AquariumShowerCard extends LitElement {
     if (!this._lastTimestamp) {
       this._lastTimestamp = timestamp;
     }
+
+    // Frame-rate throttle to ~30 FPS for low-power devices like Google Nest Hub 2
     const deltaMs = timestamp - this._lastTimestamp;
-    const delta = Math.min(deltaMs / 16.66, 2.0);
+    if (deltaMs < 31) {
+      return;
+    }
+
+    const delta = Math.min(deltaMs / 16.66, 2.5);
     this._lastTimestamp = timestamp;
     this._animTime = timestamp * 0.0035;
 
@@ -710,7 +716,7 @@ class AquariumShowerCard extends LitElement {
     const isStressed = (currentVolume > targetBudget || isBoiling) && !isDead;
     const speedMultiplier = (isStressed ? 2.0 : 1.0) * userSpeed;
 
-    const deathStep = (deltaMs || 16.66) / 10000;
+    const deathStep = (deltaMs || 33.33) / 10000;
     const themeKey = this._config.theme || "freshwater";
     let stateChanged = false;
 
@@ -912,7 +918,7 @@ class AquariumShowerCard extends LitElement {
     const amp = 3.5;
     const wavelen = 90;
     const phase = this._animTime * 1.6;
-    const step = 16;
+    const step = 20;
 
     const topPts = [];
     const botPts = [];
@@ -1226,7 +1232,7 @@ class AquariumShowerCard extends LitElement {
     const spineColor = "#475569";
 
     return svg`
-      <g transform="translate(${anc.x}, ${anc.y}) scale(1.35, 1.35)">
+      <g transform="translate(${anc.x}, ${anc.y}) scale(1.5, 1.5)">
         <g opacity="${bodyOpacity}">
           <!-- Left Pectoral Fin with spine ray -->
           <path d="M -12,6 C -24,10 -30,18 -26,26 C -20,26 -14,20 -9,14 Z" fill="${finColor}" stroke="${borderColor}" stroke-width="0.8" />
@@ -1342,20 +1348,20 @@ class AquariumShowerCard extends LitElement {
   _renderStatusPanel(currentTemp, currentVolume, isFullscreen, targetBudget, isWarning, isCritical, isBoiling, isHeatDead) {
     if (!isFullscreen) return svg``;
 
-    const r = 68;
+    const r = 74;
     const circ = 2 * Math.PI * r;
-    const strokeW = 7;
-    const cy = 115;
+    const strokeW = 8;
+    const cy = 90;
 
-    // Left Gauge: Temperature
-    const tempCx = 88;
+    // Left Gauge: Temperature (closer to top & edge)
+    const tempCx = 94;
     const showTemp = currentTemp > 0;
     const tempFraction = Math.max(0, Math.min(1, currentTemp / 45));
     const tempColor = isHeatDead ? "#ef4444" : isBoiling ? "#f59e0b" : "#facc15";
     const tempArc = (tempFraction * circ).toFixed(1);
 
     // Right Gauge: Consumed Volume
-    const volCx = 936;
+    const volCx = 930;
     const volFraction = Math.max(0, Math.min(1, currentVolume / Math.max(1, targetBudget)));
     const volColor = isCritical ? "#ef4444" : isWarning ? "#f59e0b" : "#38bdf8";
     const volArc = (volFraction * circ).toFixed(1);
@@ -1365,8 +1371,8 @@ class AquariumShowerCard extends LitElement {
       ${showTemp
         ? svg`
             <g transform="translate(${tempCx}, ${cy})">
-              <circle r="${r}" fill="#0f172a" opacity="0.18" />
-              <circle r="${r}" fill="none" stroke="#ffffff" stroke-width="${strokeW}" opacity="0.25" />
+              <circle r="${r}" fill="#0f172a" opacity="0.16" />
+              <circle r="${r}" fill="none" stroke="#ffffff" stroke-width="${strokeW}" opacity="0.22" />
               <circle
                 r="${r}"
                 fill="none"
@@ -1376,16 +1382,16 @@ class AquariumShowerCard extends LitElement {
                 stroke-dasharray="${tempArc} ${circ.toFixed(1)}"
                 transform="rotate(-90)"
               />
-              <text y="8" font-family="system-ui, sans-serif" font-size="44" font-weight="800" fill="#ffffff" text-anchor="middle">${currentTemp.toFixed(1)}°</text>
-              <text y="28" font-family="system-ui, sans-serif" font-size="12" font-weight="700" fill="#ffffff" opacity="0.9" text-anchor="middle" letter-spacing="1.2">TEMP</text>
+              <text y="10" font-family="system-ui, sans-serif" font-size="54" font-weight="900" fill="#ffffff" text-anchor="middle">${currentTemp.toFixed(1)}°</text>
+              <text y="36" font-family="system-ui, sans-serif" font-size="13" font-weight="700" fill="#ffffff" opacity="0.9" text-anchor="middle" letter-spacing="1.2">TEMP</text>
             </g>
           `
         : ""}
 
       <!-- Right Gauge: Consumed Volume -->
       <g transform="translate(${volCx}, ${cy})">
-        <circle r="${r}" fill="#0f172a" opacity="0.18" />
-        <circle r="${r}" fill="none" stroke="#ffffff" stroke-width="${strokeW}" opacity="0.25" />
+        <circle r="${r}" fill="#0f172a" opacity="0.16" />
+        <circle r="${r}" fill="none" stroke="#ffffff" stroke-width="${strokeW}" opacity="0.22" />
         <circle
           r="${r}"
           fill="none"
@@ -1395,8 +1401,8 @@ class AquariumShowerCard extends LitElement {
           stroke-dasharray="${volArc} ${circ.toFixed(1)}"
           transform="rotate(-90)"
         />
-        <text y="8" font-family="system-ui, sans-serif" font-size="44" font-weight="800" fill="#ffffff" text-anchor="middle">${currentVolume.toFixed(1)}</text>
-        <text y="28" font-family="system-ui, sans-serif" font-size="12" font-weight="700" fill="#ffffff" opacity="0.9" text-anchor="middle" letter-spacing="1.2">LITRES</text>
+        <text y="10" font-family="system-ui, sans-serif" font-size="54" font-weight="900" fill="#ffffff" text-anchor="middle">${currentVolume.toFixed(1)}</text>
+        <text y="36" font-family="system-ui, sans-serif" font-size="13" font-weight="700" fill="#ffffff" opacity="0.9" text-anchor="middle" letter-spacing="1.2">LITRES</text>
       </g>
     `;
   }
