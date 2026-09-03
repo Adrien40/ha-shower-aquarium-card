@@ -2,7 +2,7 @@ import { LitElement, html, css, svg } from "./lit-element-bundle.min.js";
 
 // Shower Aquarium Card
 // Version tracked via Git tags / GitHub Releases (see CARD_VERSION below and the repo's Releases page)
-const CARD_VERSION = "0.1.5";
+const CARD_VERSION = "0.1.6";
 
 const TRANSLATIONS = {
   en: {
@@ -1471,33 +1471,41 @@ class AquariumShowerCard extends LitElement {
     `;
   }
 
-  _renderStatusPanel(currentTemp, currentVolume, isFullscreen, canvasH) {
+  _renderStatusPanel(currentTemp, currentVolume, isFullscreen, canvasH, targetBudget, isWarning, isCritical, isBoiling, isHeatDead) {
     const showTemp = currentTemp > 0;
-    const lineCount = showTemp ? 2 : 1;
-    const panelH = lineCount === 2 ? 56 : 34;
-    const panelW = 150;
-    const topMargin = isFullscreen ? 16 : 28;
-    const x = (isFullscreen ? 1024 : 1012) - panelW - 16;
-    const y = topMargin;
-    const volLine = showTemp ? 38 : 17;
+    const r = 34;
+    const circ = 2 * Math.PI * r;
+    const rightX = (isFullscreen ? 1024 : 1012) - 46;
+    const topY = (isFullscreen ? 20 : 34) + r;
+
+    const volFraction = Math.max(0, Math.min(1, currentVolume / Math.max(1, targetBudget)));
+    const volColor = isCritical ? "#ef4444" : isWarning ? "#f59e0b" : "#38bdf8";
+    const volArc = (volFraction * circ).toFixed(1);
+    const volCx = showTemp ? rightX : rightX - 40;
+
+    const tempFraction = Math.max(0, Math.min(1, currentTemp / 45));
+    const tempColor = isHeatDead ? "#ef4444" : isBoiling ? "#f59e0b" : "#facc15";
+    const tempArc = (tempFraction * circ).toFixed(1);
+    const tempCx = rightX - 78;
 
     return svg`
-      <g transform="translate(${x}, ${y})">
-        <rect x="0" y="0" width="${panelW}" height="${panelH}" rx="7" fill="#111827" stroke="#4b5563" stroke-width="2" />
-        <circle cx="8" cy="8" r="2" fill="#374151" />
-        <circle cx="${panelW - 8}" cy="8" r="2" fill="#374151" />
-        <rect x="7" y="7" width="${panelW - 14}" height="${panelH - 14}" rx="3" fill="#0a0f1a" />
-
-        ${showTemp
-          ? svg`
-              <rect x="15" y="14" width="5" height="16" rx="2.5" fill="#4ade80" opacity="0.9" />
-              <circle cx="17.5" cy="31" r="4" fill="#4ade80" opacity="0.9" />
-              <text x="27" y="27" font-family="monospace" font-size="13" font-weight="700" fill="#4ade80">${currentTemp.toFixed(1)}°C</text>
-            `
-          : ""}
-
-        <path d="M 17.5,${volLine} C 21,${volLine + 4} 21,${volLine + 8} 17.5,${volLine + 10} C 14,${volLine + 8} 14,${volLine + 4} 17.5,${volLine} Z" fill="#4ade80" opacity="0.9" />
-        <text x="27" y="${volLine + 8}" font-family="monospace" font-size="13" font-weight="700" fill="#4ade80">${currentVolume.toFixed(1)} L</text>
+      ${showTemp
+        ? svg`
+            <g transform="translate(${tempCx}, ${topY})">
+              <circle r="${r}" fill="#0f172a" opacity="0.18" />
+              <circle r="${r}" fill="none" stroke="#ffffff" stroke-width="4" opacity="0.3" />
+              <circle r="${r}" fill="none" stroke="${tempColor}" stroke-width="4" stroke-linecap="round" stroke-dasharray="${tempArc} ${circ.toFixed(1)}" transform="rotate(-90)" />
+              <text y="-2" font-family="system-ui, sans-serif" font-size="15" font-weight="700" fill="#ffffff" text-anchor="middle">${currentTemp.toFixed(1)}°</text>
+              <text y="13" font-family="system-ui, sans-serif" font-size="8" fill="#ffffff" opacity="0.75" text-anchor="middle" letter-spacing="0.5">TEMP</text>
+            </g>
+          `
+        : ""}
+      <g transform="translate(${volCx}, ${topY})">
+        <circle r="${r}" fill="#0f172a" opacity="0.18" />
+        <circle r="${r}" fill="none" stroke="#ffffff" stroke-width="4" opacity="0.3" />
+        <circle r="${r}" fill="none" stroke="${volColor}" stroke-width="4" stroke-linecap="round" stroke-dasharray="${volArc} ${circ.toFixed(1)}" transform="rotate(-90)" />
+        <text y="-2" font-family="system-ui, sans-serif" font-size="15" font-weight="700" fill="#ffffff" text-anchor="middle">${currentVolume.toFixed(1)}</text>
+        <text y="13" font-family="system-ui, sans-serif" font-size="8" fill="#ffffff" opacity="0.75" text-anchor="middle" letter-spacing="0.5">LITRES</text>
       </g>
     `;
   }
@@ -1723,7 +1731,7 @@ class AquariumShowerCard extends LitElement {
               ${themeKey === "saltwater" ? this._renderShrimp(isDead) : ""}
               ${themeKey === "saltwater" ? this._renderCrab(isDead) : ""}
               ${this._renderAlgae(effectiveAlgaeHours, isFullscreen)}
-              ${this._renderStatusPanel(currentTemp, currentVolume, isFullscreen, canvasH)}
+              ${this._renderStatusPanel(currentTemp, currentVolume, isFullscreen, canvasH, targetBudget, isWarning, isCritical, isBoiling, isHeatDead)}
             </g>
 
             ${!isFullscreen
