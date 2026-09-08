@@ -1,6 +1,6 @@
 import { LitElement, html, css, svg } from "./lit-element-bundle.min.js";
 
-const CARD_VERSION = "0.2.9";
+const CARD_VERSION = "0.2.10";
 
 const TRANSLATIONS = {
   en: {
@@ -349,10 +349,8 @@ class AquariumShowerCard extends LitElement {
     };
     this._bubbles = [
       { x: 180, y: 560, vy: 1.2, r: 4.5 },
-      { x: 210, y: 580, vy: 1.4, r: 3.5 },
       { x: 512, y: 570, vy: 1.0, r: 5.0 },
       { x: 820, y: 580, vy: 1.3, r: 4.0 },
-      { x: 845, y: 550, vy: 1.5, r: 3.0 },
     ];
   }
 
@@ -410,29 +408,31 @@ class AquariumShowerCard extends LitElement {
       .aquarium-container {
         position: relative;
         width: 100%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
+        overflow: hidden;
       }
       :host([fullscreen]) .aquarium-container {
         width: 100%;
         height: 100%;
         flex: 1;
-        max-width: 100%;
-        padding: 0;
-        margin: 0;
       }
-      svg {
+      .layer-bg,
+      .layer-dynamic,
+      .layer-hud {
         display: block;
         width: 100%;
-        height: auto;
-        max-height: calc(100vh - 100px);
-      }
-      :host([fullscreen]) svg {
-        width: 100%;
         height: 100%;
-        max-height: 100%;
-        aspect-ratio: auto !important;
+      }
+      .layer-dynamic,
+      .layer-hud {
+        position: absolute;
+        top: 0;
+        left: 0;
+        pointer-events: none;
+      }
+      /* Hardware compositing layer for static background */
+      .layer-bg {
+        will-change: transform;
+        transform: translateZ(0);
       }
       .metrics-grid {
         display: grid;
@@ -641,11 +641,11 @@ class AquariumShowerCard extends LitElement {
   _updatePhysics(timestamp) {
     if (!this._lastTimestamp) this._lastTimestamp = timestamp;
 
-    // Smooth ~40 FPS throttle for CastOS / Nest Hub 2
+    // Rock-solid 30 FPS throttle tailored for Amlogic A55 / CastOS
     const deltaMs = timestamp - this._lastTimestamp;
-    if (deltaMs < 24) return;
+    if (deltaMs < 31) return;
 
-    const delta = Math.min(deltaMs / 16.66, 2.0);
+    const delta = Math.min(deltaMs / 16.66, 2.2);
     this._lastTimestamp = timestamp;
     this._animTime = timestamp * 0.0035;
 
@@ -669,7 +669,7 @@ class AquariumShowerCard extends LitElement {
     const isDead = (currentTemp >= deadlyTemp && currentTemp > 0) || remainingVolume <= 0;
     const userSpeed = Number(this._config.fish_speed_multiplier) || 1.2;
 
-    // Hardware-accelerated matrix transforms for wave and water level
+    // Fast matrix translations for water group and wave (no path re-tessellation)
     if (this._domWaterGroup) {
       this._domWaterGroup.setAttribute("transform", `translate(0, ${waterSurfaceY.toFixed(1)})`);
     }
@@ -677,7 +677,7 @@ class AquariumShowerCard extends LitElement {
       this._domWaterRect.setAttribute("height", `${Math.max(0, tankBottom - waterSurfaceY).toFixed(1)}`);
     }
     if (this._domWaterWave) {
-      const waveX = -((this._animTime * 45) % 180);
+      const waveX = -((this._animTime * 35) % 200);
       this._domWaterWave.setAttribute("transform", `translate(${waveX.toFixed(1)}, 0)`);
     }
 
@@ -1002,7 +1002,7 @@ class AquariumShowerCard extends LitElement {
     const themeKey = this._config.theme || "freshwater";
     const theme = THEME_PRESETS[themeKey] || THEME_PRESETS.freshwater;
 
-    // Adapts cleanly to HA light/dark themes, only turning amber/red on thermal warnings
+    // Matches Home Assistant theme in normal view, only warning on boil/deadly
     const tempColor = currentTemp >= deadlyTemp
       ? "#ef4444"
       : currentTemp >= boilTemp
@@ -1014,17 +1014,42 @@ class AquariumShowerCard extends LitElement {
 
     return html`
       <ha-card>
-        <div class="aquarium-container">
+        <div class="aquarium-container" style="${isFullscreen ? "" : `aspect-ratio: ${rWidth} / ${rHeight};`}">
+          <!-- Layer 1: Static Background & Decor (GPU cached, never re-rasterized by animation loop) -->
           <svg
+            class="layer-bg"
             viewBox="0 0 1024 ${isFullscreen ? 600 : canvasH}"
             preserveAspectRatio="${isFullscreen ? "none" : "xMidYMid meet"}"
-            style="${isFullscreen ? "width: 100%; height: 100%;" : `aspect-ratio: ${rWidth} / ${rHeight};`}"
           >
-            <!-- Background & Sand -->
             <rect width="1024" height="100%" fill="${theme.background}" />
             <path d="M 0 540 Q 280 515, 512 545 T 1024 540 L 1024 600 L 0 600 Z" fill="${theme.sandColor}" />
-
             ${this._renderThemeDecoration(themeKey, isFullscreen)}
+          </svg>
+
+          <!-- Layer 2: Dynamic Water & Animals (Lightweight live updates) -->
+          <svg
+            class="layer-dynamic"
+            viewBox="0 0 1024 ${isFullscreen ? 600 : canvasH}"
+            preserveAspectRatio="${isFullscreen ? "none" : "xMidYMid meet"}"
+          >
+            <!-- Water level and low-overhead wave crest -->
+            <g id="water-dynamic-group" transform="translate(0, 200)">
+              <rect id="water-rect" x="0" y="0" width="1024" height="400" fill="${theme.waterBottom}" opacity="0.45" />
+              <g id="water-wave-layer">
+                <path
+                  d="M -200,0 Q -150,-7 -100,0 T 0,0 T 100,0 T 200,0 T 300,0 T 400,0 T 500,0 T 600,0 T 700,0 T 800,0 T 900,0 T 1000,0 T 1100,0 T 1200,0"
+                  fill="none"
+                  stroke="#ffffff"
+                  stroke-width="2.5"
+                  opacity="0.85"
+                />
+                <path
+                  d="M -200,0 Q -150,-7 -100,0 T 0,0 T 100,0 T 200,0 T 300,0 T 400,0 T 500,0 T 600,0 T 700,0 T 800,0 T 900,0 T 1000,0 T 1100,0 T 1200,0 L 1200,7 L -200,7 Z"
+                  fill="#ffffff"
+                  opacity="0.18"
+                />
+              </g>
+            </g>
 
             <!-- Snails Layer -->
             <g id="snail-layer">
@@ -1041,25 +1066,6 @@ class AquariumShowerCard extends LitElement {
                   </g>
                 `;
               })}
-            </g>
-
-            <!-- Dynamic Water level body & low-overhead continuous wave crest -->
-            <g id="water-dynamic-group" transform="translate(0, 200)">
-              <rect id="water-rect" x="0" y="0" width="1024" height="400" fill="${theme.waterBottom}" opacity="0.45" />
-              <g id="water-wave-layer">
-                <path
-                  d="M -360,0 Q -315,-6 -270,0 T -180,0 T -90,0 T 0,0 T 90,0 T 180,0 T 270,0 T 360,0 T 450,0 T 540,0 T 630,0 T 720,0 T 810,0 T 900,0 T 990,0 T 1080,0 T 1170,0 T 1260,0 T 1350,0 T 1440,0"
-                  fill="none"
-                  stroke="#ffffff"
-                  stroke-width="3"
-                  opacity="0.85"
-                />
-                <path
-                  d="M -360,0 Q -315,-6 -270,0 T -180,0 T -90,0 T 0,0 T 90,0 T 180,0 T 270,0 T 360,0 T 450,0 T 540,0 T 630,0 T 720,0 T 810,0 T 900,0 T 990,0 T 1080,0 T 1170,0 T 1260,0 T 1350,0 T 1440,0 L 1440,8 L -360,8 Z"
-                  fill="#ffffff"
-                  opacity="0.2"
-                />
-              </g>
             </g>
 
             <!-- Bubbles Layer -->
@@ -1082,9 +1088,11 @@ class AquariumShowerCard extends LitElement {
             ${themeKey === "freshwater" ? this._renderAncistrus() : ""}
             ${themeKey === "saltwater" ? this._renderShrimp() : ""}
             ${themeKey === "saltwater" ? this._renderCrab() : ""}
+          </svg>
 
-            <!-- Fullscreen HUD: Clean, pure black, large text without circles or gauge tracks -->
-            ${isFullscreen ? svg`
+          <!-- Layer 3: HUD (Fullscreen: High-contrast pure black numbers with distinct ' L') -->
+          ${isFullscreen ? svg`
+            <svg class="layer-hud" viewBox="0 0 1024 600" preserveAspectRatio="none">
               <!-- Left: Temperature -->
               ${currentTemp > 0 ? svg`
                 <text
@@ -1098,7 +1106,7 @@ class AquariumShowerCard extends LitElement {
                 >${currentTemp.toFixed(1)}°</text>
               ` : ""}
 
-              <!-- Right: Consumed Litres with lowercase 'l' -->
+              <!-- Right: Consumed Litres with distinct uppercase 'L' -->
               <text
                 x="969"
                 y="85"
@@ -1107,24 +1115,24 @@ class AquariumShowerCard extends LitElement {
                 font-weight="900"
                 fill="#000000"
                 text-anchor="end"
-              >${currentVolume.toFixed(1)}l</text>
-            ` : ""}
-          </svg>
+              >${currentVolume.toFixed(1)}<tspan font-size="52" font-weight="800" dx="4">L</tspan></text>
+            </svg>
+          ` : ""}
         </div>
 
         <!-- Normal Mode Metrics Grid -->
         ${!isFullscreen ? html`
           <div class="metrics-grid">
             <div class="metric-box">
-              <div class="metric-value">${currentVolume.toFixed(1)} <span class="metric-unit">l</span></div>
+              <div class="metric-value">${currentVolume.toFixed(1)} <span class="metric-unit">L</span></div>
               <div class="metric-label">${this._t("label_consumed")}</div>
             </div>
             <div class="metric-box">
-              <div class="metric-value">${displayedRemaining.toFixed(1)} <span class="metric-unit">l</span></div>
+              <div class="metric-value">${displayedRemaining.toFixed(1)} <span class="metric-unit">L</span></div>
               <div class="metric-label">${this._t("label_remaining")}</div>
             </div>
             <div class="metric-box">
-              <div class="metric-value">${targetBudget} <span class="metric-unit">l</span></div>
+              <div class="metric-value">${targetBudget} <span class="metric-unit">L</span></div>
               <div class="metric-label">${this._t("label_target")}</div>
             </div>
             ${currentTemp > 0 ? html`
