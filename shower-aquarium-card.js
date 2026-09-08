@@ -1,6 +1,6 @@
 import { LitElement, html, css, svg } from "./lit-element-bundle.min.js";
 
-const CARD_VERSION = "0.2.7";
+const CARD_VERSION = "0.2.8";
 
 const TRANSLATIONS = {
   en: {
@@ -308,7 +308,9 @@ class AquariumShowerCard extends LitElement {
 
   constructor() {
     super();
-    this._schedulerTimer = null;
+    this._animationFrameId = null;
+    this._lastTimestamp = 0;
+    this._animTime = 0;
     this._cachedConsumedVolume = 0;
     this._cachedTemperature = 0;
     this._cachedTargetBudget = 50;
@@ -318,27 +320,40 @@ class AquariumShowerCard extends LitElement {
 
     this._fishes = this._generateDefaultFishes(4, "freshwater");
     this._snails = [
-      { x: 340, y: 590, nextTime: 0, dir: 1, type: "bottom", color: "#854d0e" },
-      { x: 18, y: 340, nextTime: 0, dir: 1, type: "glass_left", color: "#a16207" },
-      { x: 1006, y: 220, nextTime: 0, dir: -1, type: "glass_right", color: "#78350f" },
+      { x: 340, y: 590, vx: 0.12, vy: 0, dir: 1, type: "bottom", color: "#854d0e" },
+      { x: 18, y: 340, vx: 0, vy: 0.1, dir: 1, type: "glass_left", color: "#a16207" },
+      { x: 1006, y: 220, vx: 0, vy: -0.09, dir: -1, type: "glass_right", color: "#78350f" },
     ];
     this._ancistrus = {
       x: 70,
       y: 340,
-      nextTime: 0,
+      targetY: 340,
+      state: "idle",
+      idleUntil: 0,
     };
     this._shrimp = {
       x: 840,
       y: 550,
-      nextTime: 0,
+      targetX: 840,
+      state: "idle",
+      idleUntil: 0,
       dir: -1,
     };
     this._crab = {
       x: 350,
       y: 555,
-      nextTime: 0,
+      targetX: 350,
+      state: "idle",
+      idleUntil: 0,
       dir: 1,
     };
+    this._bubbles = [
+      { x: 180, y: 560, vy: 1.2, r: 4.5 },
+      { x: 210, y: 580, vy: 1.4, r: 3.5 },
+      { x: 512, y: 570, vy: 1.0, r: 5.0 },
+      { x: 820, y: 580, vy: 1.3, r: 4.0 },
+      { x: 845, y: 550, vy: 1.5, r: 3.0 },
+    ];
   }
 
   static get styles() {
@@ -419,36 +434,6 @@ class AquariumShowerCard extends LitElement {
         max-height: 100%;
         aspect-ratio: auto !important;
       }
-
-      /* Hardware accelerated transitions without JS loop */
-      .hw-trans-fish {
-        will-change: transform;
-      }
-      .hw-trans-water {
-        will-change: transform;
-        transition: transform 1.2s ease-out;
-      }
-      .hw-bubble {
-        animation: riseBubble 4s linear infinite;
-      }
-
-      @keyframes riseBubble {
-        0% {
-          transform: translate3d(0, 0, 0);
-          opacity: 0;
-        }
-        15% {
-          opacity: 0.6;
-        }
-        85% {
-          opacity: 0.6;
-        }
-        100% {
-          transform: translate3d(0, -380px, 0);
-          opacity: 0;
-        }
-      }
-
       .metrics-grid {
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(75px, 1fr));
@@ -547,14 +532,17 @@ class AquariumShowerCard extends LitElement {
     return Array.from({ length: n }, (_, index) => {
       const species = this._assignSpecies(index, themeKey);
       const isClownfish = themeKey === "saltwater" && species === 0;
+      const baseVx = 1.6 + (index % 3) * 0.25;
       return {
         species,
         color: theme.palette[index % theme.palette.length],
         scale: sizePresets[index % sizePresets.length],
-        x: isClownfish ? 190 + index * 140 : 140 + (index * 700) / Math.max(1, n - 1),
-        y: isClownfish ? 470 : 160 + (index % 3) * 90,
+        phase: Math.random() * 6.28,
+        x: isClownfish ? 190 + index * 140 : 130 + (index * 720) / Math.max(1, n - 1),
+        y: isClownfish ? 470 : 170 + (index % 3) * 85,
+        vx: baseVx,
+        vy: 0.55 * (index % 2 === 0 ? 1 : -1),
         dir: index % 2 === 0 ? 1 : -1,
-        nextTime: 0,
       };
     });
   }
@@ -601,54 +589,67 @@ class AquariumShowerCard extends LitElement {
 
   connectedCallback() {
     super.connectedCallback();
-    this._startScheduler();
+    this._startAnimation();
   }
 
   disconnectedCallback() {
     super.disconnectedCallback();
-    this._stopScheduler();
+    this._stopAnimation();
   }
 
   firstUpdated() {
     this._cacheDomNodes();
-    this._updateWaterTransform();
-    this._scheduleNextMoves(true);
   }
 
   updated() {
     this._cacheDomNodes();
-    this._updateWaterTransform();
   }
 
   _cacheDomNodes() {
     const root = this.shadowRoot;
     if (!root) return;
+
     this._domFish = this._fishes.map((_, i) => root.querySelector(`#fish-item-${i}`));
     this._domSnails = this._snails.map((_, i) => root.querySelector(`#snail-item-${i}`));
     this._domAncistrus = root.querySelector("#ancistrus-item");
     this._domShrimp = root.querySelector("#shrimp-item");
     this._domCrab = root.querySelector("#crab-item");
-    this._domWaterGroup = root.querySelector("#water-dynamic-group");
+    this._domBubbles = this._bubbles.map((_, i) => root.querySelector(`#bubble-item-${i}`));
+    this._domWaterRect = root.querySelector("#water-rect");
+    this._domWaterLine = root.querySelector("#water-line");
     this._domNodesCached = true;
   }
 
-  _startScheduler() {
-    if (!this._schedulerTimer) {
-      this._schedulerTimer = setInterval(() => {
-        this._scheduleNextMoves(false);
-      }, 750);
+  _startAnimation() {
+    if (!this._animationFrameId) {
+      const loop = (timestamp) => {
+        this._updatePhysics(timestamp);
+        this._animationFrameId = requestAnimationFrame(loop);
+      };
+      this._animationFrameId = requestAnimationFrame(loop);
     }
   }
 
-  _stopScheduler() {
-    if (this._schedulerTimer) {
-      clearInterval(this._schedulerTimer);
-      this._schedulerTimer = null;
+  _stopAnimation() {
+    if (this._animationFrameId) {
+      cancelAnimationFrame(this._animationFrameId);
+      this._animationFrameId = null;
     }
   }
 
-  _updateWaterTransform() {
-    if (!this._domWaterGroup) return;
+  _updatePhysics(timestamp) {
+    if (!this._lastTimestamp) this._lastTimestamp = timestamp;
+
+    // Smooth ~40 FPS throttle tailored for low-overhead on CastOS
+    const deltaMs = timestamp - this._lastTimestamp;
+    if (deltaMs < 24) return;
+
+    const delta = Math.min(deltaMs / 16.66, 2.0);
+    this._lastTimestamp = timestamp;
+    this._animTime = timestamp * 0.0035;
+
+    if (!this._domNodesCached) return;
+
     const currentVolume = this._cachedConsumedVolume;
     const targetBudget = this._cachedTargetBudget;
     const survivalVolume = this._cachedSurvivalVolume;
@@ -662,131 +663,154 @@ class AquariumShowerCard extends LitElement {
     const tankHeight = tankBottom - tankTop;
     const waterSurfaceY = tankBottom - waterRatio * tankHeight;
 
-    this._domWaterGroup.style.transform = `translate3d(0, ${waterSurfaceY.toFixed(1)}px, 0)`;
-  }
-
-  _scheduleNextMoves(immediate) {
-    if (!this._domNodesCached) return;
-
-    const now = Date.now();
-    const isFullscreen = Boolean(this._config.fullscreen);
-    const tankTop = isFullscreen ? 0 : 15;
-    const tankBottom = isFullscreen ? 600 : this._getCanvasHeight() - 35;
-    const currentVolume = this._cachedConsumedVolume;
-    const totalVolume = this._cachedTargetBudget + this._cachedSurvivalVolume;
-    const waterRatio = Math.max(0, (totalVolume - currentVolume) / totalVolume);
-    const waterSurfaceY = tankBottom - waterRatio * (tankBottom - tankTop);
-
     const currentTemp = this._cachedTemperature;
     const deadlyTemp = Number(this._config.temp_deadly_threshold) || 45;
-    const isDead = (currentTemp >= deadlyTemp && currentTemp > 0) || totalVolume - currentVolume <= 0;
-    const speedMult = Number(this._config.fish_speed_multiplier) || 1.2;
+    const isDead = (currentTemp >= deadlyTemp && currentTemp > 0) || remainingVolume <= 0;
+    const userSpeed = Number(this._config.fish_speed_multiplier) || 1.2;
 
-    // Fishes async state movement
+    // Update water geometry
+    if (this._domWaterRect) {
+      this._domWaterRect.setAttribute("y", `${waterSurfaceY.toFixed(1)}`);
+      this._domWaterRect.setAttribute("height", `${Math.max(0, tankBottom - waterSurfaceY).toFixed(1)}`);
+    }
+    if (this._domWaterLine) {
+      this._domWaterLine.setAttribute("y1", `${waterSurfaceY.toFixed(1)}`);
+      this._domWaterLine.setAttribute("y2", `${waterSurfaceY.toFixed(1)}`);
+    }
+
+    // Lively continuous fish swimming
     this._fishes.forEach((fish, i) => {
       const el = this._domFish[i];
       if (!el) return;
 
-      if (isDead) {
-        el.style.transition = "transform 4s ease-out";
-        el.style.transform = `translate3d(${fish.x.toFixed(1)}px, ${(tankBottom - 25).toFixed(1)}px, 0) scale(${fish.dir * fish.scale}, ${-fish.scale})`;
-        return;
-      }
+      if (!isDead) {
+        fish.x += fish.vx * fish.dir * userSpeed * delta;
+        fish.y += (fish.vy + Math.sin(this._animTime * 2.5 + fish.phase) * 0.35) * userSpeed * delta;
 
-      if (immediate || now >= fish.nextTime) {
-        const targetX = 130 + Math.random() * 760;
+        if (fish.x < 110) {
+          fish.x = 110;
+          fish.dir = 1;
+        } else if (fish.x > 910) {
+          fish.x = 910;
+          fish.dir = -1;
+        }
+
         const minY = Math.max(tankTop + 45, waterSurfaceY + 35);
-        const maxY = tankBottom - 45;
-        const targetY = minY + Math.random() * Math.max(10, maxY - minY);
-
-        const dx = targetX - fish.x;
-        const dy = targetY - fish.y;
-        const dist = Math.sqrt(dx * dx + dy * dy);
-        const baseSpeed = 85 * speedMult;
-        const duration = Math.max(2.2, dist / baseSpeed);
-
-        fish.dir = dx < 0 ? -1 : 1;
-        fish.x = targetX;
-        fish.y = targetY;
-        fish.nextTime = now + duration * 1000 + Math.random() * 800;
-
-        el.style.transition = `transform ${duration.toFixed(2)}s ease-in-out`;
-        el.style.transform = `translate3d(${targetX.toFixed(1)}px, ${targetY.toFixed(1)}px, 0) scale(${fish.dir * fish.scale}, ${fish.scale})`;
+        if (fish.y < minY) {
+          fish.y = minY;
+          fish.vy = Math.abs(fish.vy);
+        } else if (fish.y > tankBottom - 45) {
+          fish.y = tankBottom - 45;
+          fish.vy = -Math.abs(fish.vy);
+        }
+      } else {
+        fish.y = Math.min(tankBottom - 25, fish.y + 1.2 * delta);
       }
+
+      el.setAttribute(
+        "transform",
+        `translate(${fish.x.toFixed(1)}, ${fish.y.toFixed(1)}) scale(${fish.dir * fish.scale}, ${isDead ? -fish.scale : fish.scale})`
+      );
     });
 
-    // Ancistrus async vertical movement (Scale 1.5x)
+    // Ancistrus active vertical patrol (scale 1.5x)
     if (this._domAncistrus) {
       const anc = this._ancistrus;
-      const el = this._domAncistrus;
+      if (!isDead) {
+        const minVY = Math.max(tankTop + 65, waterSurfaceY + 70);
+        const maxVY = tankBottom - 110;
 
-      if (isDead) {
-        el.style.transition = "transform 3s ease-out";
-        el.style.transform = `translate3d(${anc.x}px, ${(tankBottom - 35).toFixed(1)}px, 0) scale(1.5, -1.5)`;
-      } else if (immediate || now >= anc.nextTime) {
-        const minY = Math.max(tankTop + 65, waterSurfaceY + 70);
-        const maxY = tankBottom - 120;
-        const targetY = minY + Math.random() * Math.max(10, maxY - minY);
-        const dist = Math.abs(targetY - anc.y);
-        const duration = Math.max(3.0, dist / (40 * speedMult));
+        if (!anc.idleUntil) {
+          anc.idleUntil = timestamp + 2500 + Math.random() * 3000;
+        }
 
-        anc.y = targetY;
-        anc.nextTime = now + duration * 1000 + 2500 + Math.random() * 3000;
-
-        el.style.transition = `transform ${duration.toFixed(2)}s ease-in-out`;
-        el.style.transform = `translate3d(${anc.x}px, ${targetY.toFixed(1)}px, 0) scale(1.5, 1.5)`;
+        if (anc.state === "moving") {
+          const dy = anc.targetY - anc.y;
+          const step = Math.sign(dy) * Math.min(Math.abs(dy), 0.9 * userSpeed * delta);
+          anc.y += step;
+          if (Math.abs(anc.targetY - anc.y) < 2) {
+            anc.state = "idle";
+            anc.idleUntil = timestamp + 2000 + Math.random() * 3000;
+          }
+        } else if (timestamp >= anc.idleUntil) {
+          anc.state = "moving";
+          anc.targetY = minVY + Math.random() * (maxVY - minVY);
+        }
+      } else {
+        anc.y = Math.min(tankBottom - 35, anc.y + 1.2 * delta);
       }
+
+      this._domAncistrus.setAttribute(
+        "transform",
+        `translate(${anc.x}, ${anc.y.toFixed(1)}) scale(1.5, ${isDead ? -1.5 : 1.5})`
+      );
     }
 
-    // Snails slow movement
+    // Snails active crawling
     this._snails.forEach((snail, i) => {
       const el = this._domSnails[i];
       if (!el) return;
 
-      if (immediate || now >= snail.nextTime) {
-        let duration = 8;
+      if (!isDead) {
         if (snail.type === "bottom") {
-          snail.dir = snail.x < 300 ? 1 : snail.x > 800 ? -1 : snail.dir;
-          snail.x += snail.dir * (60 + Math.random() * 80);
-          duration = 10;
+          snail.x += snail.vx * snail.dir * delta;
+          if (snail.x < 100) { snail.x = 100; snail.dir = 1; }
+          else if (snail.x > 920) { snail.x = 920; snail.dir = -1; }
         } else {
-          snail.dir = snail.y < 200 ? 1 : snail.y > 450 ? -1 : snail.dir;
-          snail.y += snail.dir * (50 + Math.random() * 70);
-          duration = 9;
+          snail.y += snail.vy * delta;
+          const minY = Math.max(tankTop + 35, waterSurfaceY + 25);
+          if (snail.y < minY) { snail.y = minY; snail.vy = Math.abs(snail.vy); }
+          else if (snail.y > tankBottom - 25) { snail.y = tankBottom - 25; snail.vy = -Math.abs(snail.vy); }
         }
-        snail.nextTime = now + duration * 1000;
-        el.style.transition = `transform ${duration}s linear`;
-        el.style.transform = `translate3d(${snail.x.toFixed(1)}px, ${snail.y.toFixed(1)}px, 0)`;
       }
+      el.setAttribute("transform", `translate(${snail.x.toFixed(1)}, ${snail.y.toFixed(1)})`);
     });
 
-    // Shrimp crawl
-    if (this._domShrimp && (immediate || now >= this._shrimp.nextTime)) {
+    // Bottom shrimp & crab
+    if (this._domShrimp && !isDead) {
       const s = this._shrimp;
-      const targetX = 730 + Math.random() * 210;
-      const dist = Math.abs(targetX - s.x);
-      const duration = Math.max(1.8, dist / (55 * speedMult));
-      s.dir = targetX < s.x ? -1 : 1;
-      s.x = targetX;
-      s.nextTime = now + duration * 1000 + 2000 + Math.random() * 2500;
-
-      this._domShrimp.style.transition = `transform ${duration.toFixed(2)}s ease-in-out`;
-      this._domShrimp.style.transform = `translate3d(${targetX.toFixed(1)}px, ${s.y}px, 0) scale(${s.dir * 1.5}, 1.5)`;
+      if (!s.idleUntil) s.idleUntil = timestamp + 1500;
+      if (s.state === "moving") {
+        const dx = s.targetX - s.x;
+        s.dir = dx < 0 ? -1 : 1;
+        s.x += Math.sign(dx) * Math.min(Math.abs(dx), 1.0 * userSpeed * delta);
+        if (Math.abs(s.targetX - s.x) < 2) {
+          s.state = "idle";
+          s.idleUntil = timestamp + 1800 + Math.random() * 2500;
+        }
+      } else if (timestamp >= s.idleUntil) {
+        s.state = "moving";
+        s.targetX = 740 + Math.random() * 200;
+      }
+      this._domShrimp.setAttribute("transform", `translate(${s.x.toFixed(1)}, ${s.y}) scale(${s.dir * 1.5}, 1.5)`);
     }
 
-    // Crab crawl
-    if (this._domCrab && (immediate || now >= this._crab.nextTime)) {
+    if (this._domCrab && !isDead) {
       const c = this._crab;
-      const targetX = 240 + Math.random() * 220;
-      const dist = Math.abs(targetX - c.x);
-      const duration = Math.max(2.2, dist / (45 * speedMult));
-      c.dir = targetX < c.x ? -1 : 1;
-      c.x = targetX;
-      c.nextTime = now + duration * 1000 + 2500 + Math.random() * 3000;
-
-      this._domCrab.style.transition = `transform ${duration.toFixed(2)}s ease-in-out`;
-      this._domCrab.style.transform = `translate3d(${targetX.toFixed(1)}px, ${c.y}px, 0) scale(${c.dir * 1.4}, 1.4)`;
+      if (!c.idleUntil) c.idleUntil = timestamp + 1800;
+      if (c.state === "moving") {
+        const dx = c.targetX - c.x;
+        c.dir = dx < 0 ? -1 : 1;
+        c.x += Math.sign(dx) * Math.min(Math.abs(dx), 0.8 * userSpeed * delta);
+        if (Math.abs(c.targetX - c.x) < 2) {
+          c.state = "idle";
+          c.idleUntil = timestamp + 2200 + Math.random() * 3000;
+        }
+      } else if (timestamp >= c.idleUntil) {
+        c.state = "moving";
+        c.targetX = 240 + Math.random() * 220;
+      }
+      this._domCrab.setAttribute("transform", `translate(${c.x.toFixed(1)}, ${c.y}) scale(${c.dir * 1.4}, 1.4)`);
     }
+
+    // Ambient bubbles continuous rising
+    this._bubbles.forEach((b, i) => {
+      const el = this._domBubbles[i];
+      if (!el) return;
+      b.y -= b.vy * delta;
+      if (b.y < waterSurfaceY) b.y = tankBottom - 15;
+      el.setAttribute("cy", `${b.y.toFixed(1)}`);
+    });
   }
 
   _renderThemeDecoration(themeKey, isFullscreen) {
@@ -865,7 +889,7 @@ class AquariumShowerCard extends LitElement {
       `;
     }
 
-    // Freshwater
+    // Freshwater: Angelfish & Neon
     if (fish.species === 0) {
       return svg`
         <polygon points="5,-42 -10,-12 10,-12" fill="${fish.color}" opacity="0.9" />
@@ -893,7 +917,7 @@ class AquariumShowerCard extends LitElement {
     const spineColor = "#475569";
 
     return svg`
-      <g id="ancistrus-item" class="hw-trans-fish" style="transform: translate3d(70px, 340px, 0) scale(1.5, 1.5);">
+      <g id="ancistrus-item">
         <!-- Left Pectoral Fin with spine ray -->
         <path d="M -12,6 C -24,10 -30,18 -26,26 C -20,26 -14,20 -9,14 Z" fill="${finColor}" stroke="${borderColor}" stroke-width="0.8" />
         <line x1="-12" y1="8" x2="-24" y2="24" stroke="${spineColor}" stroke-width="1.4" stroke-linecap="round" />
@@ -936,7 +960,7 @@ class AquariumShowerCard extends LitElement {
 
   _renderShrimp() {
     return svg`
-      <g id="shrimp-item" class="hw-trans-fish" style="transform: translate3d(840px, 550px, 0) scale(-1.5, 1.5);">
+      <g id="shrimp-item">
         <path d="M 20,14 L 32,6 L 34,14 L 32,23 L 20,18 Z" fill="#dc2626" stroke="#7f1d1d" stroke-width="0.7" />
         <path d="M -30,-10 C -20,-16 -6,-16 4,-10 C 12,-6 16,-2 20,6 C 23,11 23,15 19,16 C 8,17 -2,15 -10,10 C -18,5 -24,-2 -30,-10 Z" fill="#b91c1c" stroke="#7f1d1d" stroke-width="0.9" />
         <circle cx="-22" cy="-8" r="1.5" fill="#fef2f2" /><circle cx="-14" cy="-11" r="1.4" fill="#fef2f2" />
@@ -949,7 +973,7 @@ class AquariumShowerCard extends LitElement {
 
   _renderCrab() {
     return svg`
-      <g id="crab-item" class="hw-trans-fish" style="transform: translate3d(350px, 555px, 0) scale(1.4, 1.4);">
+      <g id="crab-item">
         <path d="M -14,-2 L -26,-10 L -34,-8" stroke="#7c2d12" stroke-width="2.4" fill="none" stroke-linecap="round" />
         <path d="M -15,4 L -28,4 L -36,9" stroke="#7c2d12" stroke-width="2.4" fill="none" stroke-linecap="round" />
         <path d="M 14,-2 L 26,-10 L 34,-8" stroke="#7c2d12" stroke-width="2.4" fill="none" stroke-linecap="round" />
@@ -975,20 +999,7 @@ class AquariumShowerCard extends LitElement {
     const themeKey = this._config.theme || "freshwater";
     const theme = THEME_PRESETS[themeKey] || THEME_PRESETS.freshwater;
 
-    // HUD Gauge parameters: r=80, stroke=8, text=65px in pure black
-    const r = 80;
-    const circ = 2 * Math.PI * r;
-    const strokeW = 8;
-    const cy = 96;
-
-    const volFraction = Math.max(0, Math.min(1, currentVolume / Math.max(1, targetBudget)));
-    const volColor = currentVolume > targetBudget ? "#ef4444" : currentVolume > targetBudget * 0.7 ? "#f59e0b" : "#38bdf8";
-    const volArc = (volFraction * circ).toFixed(1);
-
-    const tempFraction = Math.max(0, Math.min(1, currentTemp / 45));
-    const tempColor = currentTemp >= deadlyTemp ? "#ef4444" : currentTemp >= boilTemp ? "#f59e0b" : "#facc15";
-    const tempArc = (tempFraction * circ).toFixed(1);
-
+    const tempColor = currentTemp >= deadlyTemp ? "#ef4444" : currentTemp >= boilTemp ? "#f59e0b" : "#111827";
     const rWidth = Number(this._config.aspect_ratio_width) || 1024;
     const rHeight = Number(this._config.aspect_ratio_height) || 600;
 
@@ -1012,7 +1023,7 @@ class AquariumShowerCard extends LitElement {
                 const rotation = snail.type === "glass_left" ? 90 : snail.type === "glass_right" ? -90 : 0;
                 const baseScale = themeKey === "saltwater" ? (sIdx % 2 === 0 ? 3.5 : 4.2) : 1.8;
                 return svg`
-                  <g id="snail-item-${sIdx}" class="hw-trans-fish" style="transform: translate3d(${snail.x}px, ${snail.y}px, 0);">
+                  <g id="snail-item-${sIdx}">
                     <g transform="rotate(${rotation}) scale(${snail.dir * baseScale}, ${baseScale})">
                       <circle cx="-3" cy="-4" r="5.5" fill="${snail.color}" />
                       <ellipse cx="2" cy="-1.5" rx="5" ry="2.2" fill="#d97706" />
@@ -1023,23 +1034,21 @@ class AquariumShowerCard extends LitElement {
               })}
             </g>
 
-            <!-- Hardware accelerated water level -->
-            <g id="water-dynamic-group" class="hw-trans-water">
-              <rect x="0" y="0" width="1024" height="600" fill="${theme.waterBottom}" opacity="0.45" />
-              <line x1="0" y1="0" x2="1024" y2="0" stroke="#ffffff" stroke-width="3" opacity="0.8" />
-            </g>
+            <!-- Dynamic Water level body & surface line -->
+            <rect id="water-rect" x="0" y="200" width="1024" height="400" fill="${theme.waterBottom}" opacity="0.45" />
+            <line id="water-line" x1="0" y1="200" x2="1024" y2="200" stroke="#ffffff" stroke-width="3" opacity="0.85" />
 
-            <!-- Continuous gentle ambient bubbles (pure CSS) -->
+            <!-- Bubbles Layer -->
             <g id="bubbles-layer">
-              <circle class="hw-bubble" cx="180" cy="560" r="4.5" fill="#ffffff" style="animation-delay: 0s;" />
-              <circle class="hw-bubble" cx="512" cy="570" r="5.0" fill="#ffffff" style="animation-delay: 1.5s;" />
-              <circle class="hw-bubble" cx="820" cy="580" r="4.0" fill="#ffffff" style="animation-delay: 2.8s;" />
+              ${this._bubbles.map((b, i) => svg`
+                <circle id="bubble-item-${i}" cx="${b.x}" cy="${b.y}" r="${b.r}" fill="#ffffff" opacity="0.6" />
+              `)}
             </g>
 
             <!-- Fishes Layer -->
             <g id="fish-layer">
               ${this._fishes.map((f, i) => svg`
-                <g id="fish-item-${i}" class="hw-trans-fish" style="transform: translate3d(${f.x}px, ${f.y}px, 0) scale(${f.dir * f.scale}, ${f.scale});">
+                <g id="fish-item-${i}">
                   ${this._renderFishShape(f, themeKey)}
                 </g>
               `)}
@@ -1050,60 +1059,48 @@ class AquariumShowerCard extends LitElement {
             ${themeKey === "saltwater" ? this._renderShrimp() : ""}
             ${themeKey === "saltwater" ? this._renderCrab() : ""}
 
-            <!-- HUD Gauges (Fullscreen: numbers in black, +20% bigger, high contrast) -->
+            <!-- Fullscreen HUD: Clean, pure black, large text without circles or gauge tracks -->
             ${isFullscreen ? svg`
-              <!-- Left Gauge: Temperature -->
+              <!-- Left: Temperature -->
               ${currentTemp > 0 ? svg`
-                <g transform="translate(100, ${cy})">
-                  <circle r="${r}" fill="#0f172a" opacity="0.14" />
-                  <circle r="${r}" fill="none" stroke="#ffffff" stroke-width="${strokeW}" opacity="0.25" />
-                  <circle
-                    r="${r}"
-                    fill="none"
-                    stroke="${tempColor}"
-                    stroke-width="${strokeW}"
-                    stroke-linecap="round"
-                    stroke-dasharray="${tempArc} ${circ.toFixed(1)}"
-                    transform="rotate(-90)"
-                  />
-                  <text y="14" font-family="system-ui, sans-serif" font-size="65" font-weight="900" fill="#000000" text-anchor="middle">${currentTemp.toFixed(1)}°</text>
-                  <text y="42" font-family="system-ui, sans-serif" font-size="13" font-weight="700" fill="#1f2937" opacity="0.85" text-anchor="middle" letter-spacing="1.2">TEMP</text>
-                </g>
+                <text
+                  x="55"
+                  y="85"
+                  font-family="system-ui, sans-serif"
+                  font-size="68"
+                  font-weight="900"
+                  fill="#000000"
+                  text-anchor="start"
+                >${currentTemp.toFixed(1)}°</text>
               ` : ""}
 
-              <!-- Right Gauge: Consumed Litres -->
-              <g transform="translate(924, ${cy})">
-                <circle r="${r}" fill="#0f172a" opacity="0.14" />
-                <circle r="${r}" fill="none" stroke="#ffffff" stroke-width="${strokeW}" opacity="0.25" />
-                <circle
-                  r="${r}"
-                  fill="none"
-                  stroke="${volColor}"
-                  stroke-width="${strokeW}"
-                  stroke-linecap="round"
-                  stroke-dasharray="${volArc} ${circ.toFixed(1)}"
-                  transform="rotate(-90)"
-                />
-                <text y="14" font-family="system-ui, sans-serif" font-size="65" font-weight="900" fill="#000000" text-anchor="middle">${currentVolume.toFixed(1)}</text>
-                <text y="42" font-family="system-ui, sans-serif" font-size="13" font-weight="700" fill="#1f2937" opacity="0.85" text-anchor="middle" letter-spacing="1.2">LITRES</text>
-              </g>
+              <!-- Right: Consumed Litres with lowercase 'l' -->
+              <text
+                x="969"
+                y="85"
+                font-family="system-ui, sans-serif"
+                font-size="68"
+                font-weight="900"
+                fill="#000000"
+                text-anchor="end"
+              >${currentVolume.toFixed(1)}l</text>
             ` : ""}
           </svg>
         </div>
 
-        <!-- Normal View Metrics Grid -->
+        <!-- Normal Mode Metrics Grid -->
         ${!isFullscreen ? html`
           <div class="metrics-grid">
             <div class="metric-box">
-              <div class="metric-value">${currentVolume.toFixed(1)} <span class="metric-unit">L</span></div>
+              <div class="metric-value">${currentVolume.toFixed(1)} <span class="metric-unit">l</span></div>
               <div class="metric-label">${this._t("label_consumed")}</div>
             </div>
             <div class="metric-box">
-              <div class="metric-value">${displayedRemaining.toFixed(1)} <span class="metric-unit">L</span></div>
+              <div class="metric-value">${displayedRemaining.toFixed(1)} <span class="metric-unit">l</span></div>
               <div class="metric-label">${this._t("label_remaining")}</div>
             </div>
             <div class="metric-box">
-              <div class="metric-value">${targetBudget} <span class="metric-unit">L</span></div>
+              <div class="metric-value">${targetBudget} <span class="metric-unit">l</span></div>
               <div class="metric-label">${this._t("label_target")}</div>
             </div>
             ${currentTemp > 0 ? html`
