@@ -1,6 +1,6 @@
 import { LitElement, html, css, svg } from "./lit-element-bundle.min.js";
 
-const CARD_VERSION = "0.2.8";
+const CARD_VERSION = "0.2.9";
 
 const TRANSLATIONS = {
   en: {
@@ -615,8 +615,9 @@ class AquariumShowerCard extends LitElement {
     this._domShrimp = root.querySelector("#shrimp-item");
     this._domCrab = root.querySelector("#crab-item");
     this._domBubbles = this._bubbles.map((_, i) => root.querySelector(`#bubble-item-${i}`));
+    this._domWaterGroup = root.querySelector("#water-dynamic-group");
     this._domWaterRect = root.querySelector("#water-rect");
-    this._domWaterLine = root.querySelector("#water-line");
+    this._domWaterWave = root.querySelector("#water-wave-layer");
     this._domNodesCached = true;
   }
 
@@ -640,7 +641,7 @@ class AquariumShowerCard extends LitElement {
   _updatePhysics(timestamp) {
     if (!this._lastTimestamp) this._lastTimestamp = timestamp;
 
-    // Smooth ~40 FPS throttle tailored for low-overhead on CastOS
+    // Smooth ~40 FPS throttle for CastOS / Nest Hub 2
     const deltaMs = timestamp - this._lastTimestamp;
     if (deltaMs < 24) return;
 
@@ -668,17 +669,19 @@ class AquariumShowerCard extends LitElement {
     const isDead = (currentTemp >= deadlyTemp && currentTemp > 0) || remainingVolume <= 0;
     const userSpeed = Number(this._config.fish_speed_multiplier) || 1.2;
 
-    // Update water geometry
+    // Hardware-accelerated matrix transforms for wave and water level
+    if (this._domWaterGroup) {
+      this._domWaterGroup.setAttribute("transform", `translate(0, ${waterSurfaceY.toFixed(1)})`);
+    }
     if (this._domWaterRect) {
-      this._domWaterRect.setAttribute("y", `${waterSurfaceY.toFixed(1)}`);
       this._domWaterRect.setAttribute("height", `${Math.max(0, tankBottom - waterSurfaceY).toFixed(1)}`);
     }
-    if (this._domWaterLine) {
-      this._domWaterLine.setAttribute("y1", `${waterSurfaceY.toFixed(1)}`);
-      this._domWaterLine.setAttribute("y2", `${waterSurfaceY.toFixed(1)}`);
+    if (this._domWaterWave) {
+      const waveX = -((this._animTime * 45) % 180);
+      this._domWaterWave.setAttribute("transform", `translate(${waveX.toFixed(1)}, 0)`);
     }
 
-    // Lively continuous fish swimming
+    // Active continuous fish swimming
     this._fishes.forEach((fish, i) => {
       const el = this._domFish[i];
       if (!el) return;
@@ -999,7 +1002,13 @@ class AquariumShowerCard extends LitElement {
     const themeKey = this._config.theme || "freshwater";
     const theme = THEME_PRESETS[themeKey] || THEME_PRESETS.freshwater;
 
-    const tempColor = currentTemp >= deadlyTemp ? "#ef4444" : currentTemp >= boilTemp ? "#f59e0b" : "#111827";
+    // Adapts cleanly to HA light/dark themes, only turning amber/red on thermal warnings
+    const tempColor = currentTemp >= deadlyTemp
+      ? "#ef4444"
+      : currentTemp >= boilTemp
+      ? "#f59e0b"
+      : "var(--primary-text-color, #111827)";
+
     const rWidth = Number(this._config.aspect_ratio_width) || 1024;
     const rHeight = Number(this._config.aspect_ratio_height) || 600;
 
@@ -1034,9 +1043,24 @@ class AquariumShowerCard extends LitElement {
               })}
             </g>
 
-            <!-- Dynamic Water level body & surface line -->
-            <rect id="water-rect" x="0" y="200" width="1024" height="400" fill="${theme.waterBottom}" opacity="0.45" />
-            <line id="water-line" x1="0" y1="200" x2="1024" y2="200" stroke="#ffffff" stroke-width="3" opacity="0.85" />
+            <!-- Dynamic Water level body & low-overhead continuous wave crest -->
+            <g id="water-dynamic-group" transform="translate(0, 200)">
+              <rect id="water-rect" x="0" y="0" width="1024" height="400" fill="${theme.waterBottom}" opacity="0.45" />
+              <g id="water-wave-layer">
+                <path
+                  d="M -360,0 Q -315,-6 -270,0 T -180,0 T -90,0 T 0,0 T 90,0 T 180,0 T 270,0 T 360,0 T 450,0 T 540,0 T 630,0 T 720,0 T 810,0 T 900,0 T 990,0 T 1080,0 T 1170,0 T 1260,0 T 1350,0 T 1440,0"
+                  fill="none"
+                  stroke="#ffffff"
+                  stroke-width="3"
+                  opacity="0.85"
+                />
+                <path
+                  d="M -360,0 Q -315,-6 -270,0 T -180,0 T -90,0 T 0,0 T 90,0 T 180,0 T 270,0 T 360,0 T 450,0 T 540,0 T 630,0 T 720,0 T 810,0 T 900,0 T 990,0 T 1080,0 T 1170,0 T 1260,0 T 1350,0 T 1440,0 L 1440,8 L -360,8 Z"
+                  fill="#ffffff"
+                  opacity="0.2"
+                />
+              </g>
+            </g>
 
             <!-- Bubbles Layer -->
             <g id="bubbles-layer">
