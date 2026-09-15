@@ -1,17 +1,39 @@
-# OS generated files
+# Operating system
 .DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
 Thumbs.db
-*.log
+[Dd]esktop.ini
 
-# IDE & Editors
+# Editors & IDEs
 .vscode/
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
 .idea/
+*.sublime-project
+*.sublime-workspace
 *.swp
 *.swo
+*~
 
-# Node / JS (si tu utilises npm/build plus tard)
+# Node & package managers
 node_modules/
 package-lock.json
 yarn.lock
-dist/
 .npm/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# Build outputs, cache & logs
+*.log
+.temp/
+.cache/
+dist/
+build/
