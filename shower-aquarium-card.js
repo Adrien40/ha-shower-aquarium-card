@@ -1,6 +1,6 @@
 import { LitElement, html, css, svg } from "./lit-element-bundle.min.js";
 
-const CARD_VERSION = "0.2.11";
+const CARD_VERSION = "0.3.0";
 
 const TRANSLATIONS = {
   en: {
@@ -11,6 +11,9 @@ const TRANSLATIONS = {
     field_entity: "Shower volume entity",
     field_temp_entity: "Water temperature entity (optional)",
     field_title: "Card title (leave empty to hide)",
+    theme_freshwater: "Freshwater (Tropical)",
+    theme_saltwater: "Saltwater (Reef)",
+    theme_coldwater: "Coldwater (Goldfish)",
     field_theme: "Aquarium biotope",
     field_fish_count: "Number of fishes",
     field_target_budget_entity: "Target entity (max water volume)",
@@ -26,9 +29,6 @@ const TRANSLATIONS = {
     helper_fullscreen: "Tablet, Nest Hub...",
     field_aspect_ratio_width: "Ratio - Width (e.g. 1024, 16, 4)",
     field_aspect_ratio_height: "Ratio - Height (e.g. 600, 9, 3)",
-    theme_freshwater: "Freshwater (Tropical)",
-    theme_saltwater: "Saltwater (Reef)",
-    theme_coldwater: "Coldwater (Goldfish)",
   },
   fr: {
     label_consumed: "Consommé",
@@ -38,6 +38,9 @@ const TRANSLATIONS = {
     field_entity: "Entité de volume de douche",
     field_temp_entity: "Entité température de l'eau (optionnel)",
     field_title: "Titre de la carte (laisser vide pour masquer)",
+    theme_freshwater: "Eau douce (Tropical)",
+    theme_saltwater: "Eau de mer (Récif)",
+    theme_coldwater: "Eau froide (Poissons rouges)",
     field_theme: "Biotope de l'aquarium",
     field_fish_count: "Nombre de poissons",
     field_target_budget_entity: "Entité d'objectif (volume d'eau max)",
@@ -53,9 +56,6 @@ const TRANSLATIONS = {
     helper_fullscreen: "Tablette, Nest Hub...",
     field_aspect_ratio_width: "Ratio - Largeur (ex : 1024, 16, 4)",
     field_aspect_ratio_height: "Ratio - Hauteur (ex : 600, 9, 3)",
-    theme_freshwater: "Eau douce (Tropical)",
-    theme_saltwater: "Eau de mer (Récif)",
-    theme_coldwater: "Eau froide (Poissons rouges)",
   },
 };
 
@@ -965,8 +965,6 @@ class AquariumShowerCard extends LitElement {
             <path d="M -80 0 Q -110 -90, -85 -160 Q -55 -90, -55 0 Z" fill="#c084fc" opacity="0.85" />
             <path d="M -55 0 Q -70 -120, -35 -185 Q -15 -120, -25 0 Z" fill="#a855f7" opacity="0.9" />
             <path d="M -25 0 Q -20 -135, 10 -205 Q 30 -130, 0 0 Z" fill="#d8b4fe" opacity="0.85" />
-            <path d="M 0 0 Q 35 -140, 60 -195 Q 55 -115, 25 0 Z" fill="#a855f7" opacity="0.95" />
-            <path d="M 25 0 Q 75 -115, 100 -170 Q 80 -90, 55 0 Z" fill="#c084fc" opacity="0.85" />
             <circle cx="0" cy="-20" r="60" fill="#7e22ce" opacity="0.75" />
           </g>
           <g transform="translate(190, ${bottomY - 70})">
@@ -975,9 +973,8 @@ class AquariumShowerCard extends LitElement {
             <circle cx="0" cy="0" r="5" fill="#60a5fa" />
           </g>
           <g id="live-rock" transform="translate(750, ${bottomY})">
-            <path d="M -25.5,-18.0 Q -25.5,-18.0 -30.2,-12.4 Q -34.9,-6.8 -43.4,-1.7 Q -52.0,3.3 -60.8,-1.6 Q -69.6,-6.4 -74.3,-12.2 Q -79.0,-18.0 -75.4,-24.5 Q -71.7,-30.9 -61.9,-32.5 Q -52.0,-34.1 -40.9,-33.3 Q -29.8,-32.6 -27.6,-25.3 Z" fill="#8b6a9c" />
-            <path d="M 60.3,-38.0 Q 60.3,-38.0 57.1,-25.7 Q 53.9,-13.4 42.9,-0.9 Q 31.9,11.5 11.6,8.1 Q -8.7,4.7 -24.7,0.1 Q -40.8,-4.6 -51.6,-14.8 Q -62.4,-25.0 -55.7,-36.6 Q -49.0,-48.2 -44.9,-59.8 Q -40.9,-71.5 -25.2,-78.1 Q -9.5,-84.7 10.3,-84.7 Q 30.0,-84.6 35.1,-70.5 Q 40.3,-56.4 50.3,-47.2 Z" fill="#6d5280" />
-            <path d="M 77.8,-68.0 Q 77.8,-68.0 72.3,-56.4 Q 66.8,-44.7 60.1,-28.3 Q 53.4,-11.9 39.7,-16.8 Q 25.9,-21.6 23.7,-38.9 Q 21.5,-56.1 11.9,-72.6 Q 2.4,-89.2 12.7,-105.2 Q 23.0,-121.2 37.9,-120.4 Q 52.8,-119.6 64.2,-110.3 Q 75.5,-101.0 76.6,-84.5 Z" fill="#7a5d8f" />
+            <path d="M -25.5,-18.0 Q -25.5,-18.0 -30.2,-12.4 Q -34.9,-6.8 -43.4,-1.7 Q -52.0,3.3 -60.8,-1.6 Q -69.6,-6.4 -74.3,-12.2 Q -79.0,-18.0 -75.4,-24.5 Z" fill="#8b6a9c" />
+            <path d="M 60.3,-38.0 Q 60.3,-38.0 57.1,-25.7 Q 53.9,-13.4 42.9,-0.9 Q 31.9,11.5 11.6,8.1 Q -8.7,4.7 -24.7,0.1 Q -40.8,-4.6 -51.6,-14.8 Z" fill="#6d5280" />
           </g>
           <g id="live-rock-2" transform="translate(420, ${bottomY})">
             <path d="M 41.8,-26.0 Q 41.8,-26.0 37.1,-16.4 Q 32.4,-6.8 19.8,-2.1 Q 7.2,2.6 -3.0,-3.6 Q -13.2,-9.9 -23.4,-13.6 Q -33.5,-17.4 -32.1,-25.6 Q -30.6,-33.9 -24.0,-40.5 Q -17.3,-47.1 -6.3,-46.0 Q 4.7,-44.9 13.2,-41.9 Q 21.7,-38.9 31.8,-32.4 Z" fill="#6d5280" />
@@ -1002,11 +999,6 @@ class AquariumShowerCard extends LitElement {
           <ellipse cx="300" cy="${bottomY - 10}" rx="26" ry="10" fill="#94a3b8" opacity="0.85" />
           <ellipse cx="600" cy="${bottomY - 8}" rx="22" ry="9" fill="#94a3b8" opacity="0.8" />
           <ellipse cx="660" cy="${bottomY - 14}" rx="34" ry="14" fill="#475569" opacity="0.9" />
-          <path d="M 110 ${bottomY - 25} Q 85 ${bottomY - 195}, 125 ${bottomY - 295} Q 155 ${bottomY - 185}, 135 ${bottomY - 25} Z" fill="#0d9488" opacity="0.9" />
-          <path d="M 145 ${bottomY - 25} Q 180 ${bottomY - 175}, 150 ${bottomY - 265} Q 125 ${bottomY - 155}, 155 ${bottomY - 25} Z" fill="#14b8a6" opacity="0.75" />
-          <path d="M 620 ${bottomY - 14} Q 610 ${bottomY - 110}, 640 ${bottomY - 170} Q 660 ${bottomY - 100}, 645 ${bottomY - 14} Z" fill="#0d9488" opacity="0.85" />
-          <path d="M 655 ${bottomY - 14} Q 680 ${bottomY - 90}, 660 ${bottomY - 150} Q 635 ${bottomY - 85}, 650 ${bottomY - 14} Z" fill="#14b8a6" opacity="0.7" />
-          <path d="M 780 ${bottomY - 15} Q 800 ${bottomY - 60}, 830 ${bottomY - 55} Q 850 ${bottomY - 50}, 845 ${bottomY - 30} Q 815 ${bottomY - 35}, 795 ${bottomY - 20} Z" fill="#78716c" opacity="0.9" />
         </g>
       `;
     }
@@ -1017,16 +1009,11 @@ class AquariumShowerCard extends LitElement {
         <path d="M 75 ${bottomY} Q 95 ${bottomY - 60}, 135${bottomY - 55} Q 170 ${bottomY - 75}, 210${bottomY - 40} Q 250 ${bottomY - 50}, 270${bottomY} Z" fill="#22c55e" opacity="0.85" />
         <circle cx="110" cy="${bottomY - 55}" r="11" fill="#4ade80" opacity="0.7" />
         <circle cx="170" cy="${bottomY - 63}" r="12" fill="#4ade80" opacity="0.7" />
-        <circle cx="225" cy="${bottomY - 45}" r="10" fill="#86efac" opacity="0.6" />
         <path d="M 120 ${bottomY} Q 140 ${bottomY - 105}, 160${bottomY - 155} Q 165 ${bottomY - 205}, 145${bottomY - 265}" stroke="#14532d" stroke-width="8" fill="none" stroke-linecap="round" />
         <path d="M 145 ${bottomY - 265} Q 105${bottomY - 305}, 85 ${bottomY - 280} C 70${bottomY - 250}, 110 ${bottomY - 220}, 145${bottomY - 265} Z" fill="#166534" />
         <path d="M 145 ${bottomY - 265} Q 185${bottomY - 315}, 215 ${bottomY - 295} C 230${bottomY - 270}, 190 ${bottomY - 230}, 145${bottomY - 265} Z" fill="#15803d" />
-        <path d="M 155 ${bottomY - 215} Q 105${bottomY - 230}, 80 ${bottomY - 205} C 65${bottomY - 175}, 115 ${bottomY - 155}, 155${bottomY - 215} Z" fill="#166534" />
-        <path d="M 160 ${bottomY - 175} Q 210${bottomY - 205}, 240 ${bottomY - 175} C 248${bottomY - 150}, 200 ${bottomY - 130}, 160${bottomY - 175} Z" fill="#15803d" />
-        <path d="M 140 ${bottomY - 125} Q 90${bottomY - 125}, 70 ${bottomY - 100} C 65${bottomY - 75}, 110 ${bottomY - 70}, 140${bottomY - 125} Z" fill="#14532d" />
         <path d="M 880 ${bottomY} Q 920 ${bottomY - 195}, 870${bottomY - 355} Q 845 ${bottomY - 195}, 860${bottomY} Z" fill="#16a34a" opacity="0.9" />
         <path d="M 920 ${bottomY} Q 960 ${bottomY - 215}, 930${bottomY - 375} Q 895 ${bottomY - 205}, 900${bottomY} Z" fill="#22c55e" opacity="0.8" />
-        <path d="M 845 ${bottomY} Q 810 ${bottomY - 175}, 845${bottomY - 275} Q 870 ${bottomY - 165}, 865${bottomY} Z" fill="#15803d" opacity="0.85" />
       </g>
     `;
   }
@@ -1335,6 +1322,107 @@ class AquariumShowerCard extends LitElement {
     `;
   }
 
+  _renderStatusPanel(
+    currentTemp,
+    currentVolume,
+    targetBudget,
+    deadlyTemp,
+    boilTemp
+  ) {
+    const r = 74;
+    const circ = 2 * Math.PI * r;
+    const strokeW = 9;
+    const cy = 102;
+
+    // Left gauge: Temperature
+    const tempCx = 102;
+    const showTemp = currentTemp > 0;
+    const tempFraction = Math.max(0, Math.min(1, currentTemp / 45));
+    const tempColor =
+      currentTemp >= deadlyTemp
+        ? "#ef4444"
+        : currentTemp >= boilTemp
+        ? "#f97316"
+        : currentTemp >= 38
+        ? "#f59e0b"
+        : "#0284c7";
+    const tempArc = (tempFraction * circ).toFixed(1);
+
+    // Right gauge: Consumed volume
+    const volCx = 922;
+    const volFraction = Math.max(
+      0,
+      Math.min(1, currentVolume / Math.max(1, targetBudget))
+    );
+    const volColor =
+      currentVolume > targetBudget
+        ? "#ef4444"
+        : currentVolume > targetBudget * 0.7
+        ? "#f59e0b"
+        : "#0284c7";
+    const volArc = (volFraction * circ).toFixed(1);
+
+    return svg`
+      <!-- Left Gauge: Water Temperature -->
+      ${showTemp
+        ? svg`
+            <g transform="translate(${tempCx}, ${cy})">
+              <!-- Frosted glass backdrop disk -->
+              <circle r="${r + 14}" fill="rgba(255, 255, 255, 0.65)" stroke="rgba(255, 255, 255, 0.9)" stroke-width="2" />
+              <!-- Track background ring -->
+              <circle r="${r}" fill="none" stroke="rgba(15, 23, 42, 0.1)" stroke-width="${strokeW}" />
+              <!-- Animated progress arc -->
+              <circle
+                r="${r}"
+                fill="none"
+                stroke="${tempColor}"
+                stroke-width="${strokeW}"
+                stroke-linecap="round"
+                stroke-dasharray="${tempArc} ${circ.toFixed(1)}"
+                transform="rotate(-90)"
+              />
+              <!-- Central temperature number -->
+              <text y="10" font-family="system-ui, sans-serif" font-size="46" font-weight="900" fill="#0f172a" text-anchor="middle">
+                ${currentTemp.toFixed(1)}°
+              </text>
+              <!-- Sleek bottom sub-badge -->
+              <rect x="-24" y="24" width="48" height="20" rx="10" fill="rgba(15, 23, 42, 0.08)" />
+              <text y="38" font-family="system-ui, sans-serif" font-size="11" font-weight="800" fill="#334155" text-anchor="middle" letter-spacing="0.8">
+                °C
+              </text>
+            </g>
+          `
+        : ""}
+
+      <!-- Right Gauge: Consumed Water Volume -->
+      <g transform="translate(${volCx},${cy})">
+        <!-- Frosted glass backdrop disk -->
+        <circle r="${r + 14}" fill="rgba(255, 255, 255, 0.65)" stroke="rgba(255, 255, 255, 0.9)" stroke-width="2" />
+        <!-- Track background ring -->
+        <circle r="${r}" fill="none" stroke="rgba(15, 23, 42, 0.1)" stroke-width="${strokeW}" />
+        <!-- Animated progress arc -->
+        <circle
+          r="${r}"
+          fill="none"
+          stroke="${volColor}"
+          stroke-width="${strokeW}"
+          stroke-linecap="round"
+          stroke-dasharray="${volArc}${circ.toFixed(1)}"
+          transform="rotate(-90)"
+        />
+        <!-- Central volume number -->
+        <text y="10" font-family="system-ui, sans-serif" font-size="46" font-weight="900" fill="#0f172a" text-anchor="middle">
+          ${currentVolume.toFixed(1)}
+        </text>
+        <!-- Sleek bottom target sub-badge -->
+        <rect x="-32" y="24" width="64" height="20" rx="10" fill="rgba(15, 23, 42, 0.08)" />
+        <text y="38" font-family="system-ui, sans-serif" font-size="11" font-weight="800" fill="#334155" text-anchor="middle" letter-spacing="0.5">
+          / ${targetBudget} L
+        </text>
+      </g>
+    `;
+  }
+
   render() {
     if (!this._config || !this._hass) return html``;
 
@@ -1388,7 +1476,6 @@ class AquariumShowerCard extends LitElement {
     const algaeAge = Number(this._config.algae_age) || 0;
     const effectiveAlgaeHours = algaeAge > 0 ? algaeAge : this._cachedHoursSinceLastShower;
 
-    // Harmonized colors for Home Assistant standard theme
     const tempTileColor = currentTemp >= deadlyTemp
       ? "#ef4444"
       : currentTemp >= boilTemp
@@ -1543,32 +1630,15 @@ class AquariumShowerCard extends LitElement {
               ${themeKey === "saltwater" ? this._renderCrab(isDead) : ""}
               ${this._renderAlgae(effectiveAlgaeHours, isFullscreen)}
 
-              <!-- Clean Fullscreen HUD: No circles, high-contrast, distinct 'L' -->
+              <!-- Modern Frosted Glass HUD Gauges -->
               ${isFullscreen
-                ? svg`
-                    ${currentTemp > 0
-                      ? svg`
-                          <text
-                            x="55"
-                            y="85"
-                            font-family="system-ui, sans-serif"
-                            font-size="68"
-                            font-weight="900"
-                            fill="#000000"
-                            text-anchor="start"
-                          >${currentTemp.toFixed(1)}°</text>
-                        `
-                      : ""}
-                    <text
-                      x="969"
-                      y="85"
-                      font-family="system-ui, sans-serif"
-                      font-size="68"
-                      font-weight="900"
-                      fill="#000000"
-                      text-anchor="end"
-                    >${currentVolume.toFixed(1)}<tspan font-size="52" font-weight="800" dx="4">L</tspan></text>
-                  `
+                ? this._renderStatusPanel(
+                    currentTemp,
+                    currentVolume,
+                    targetBudget,
+                    deadlyTemp,
+                    boilTemp
+                  )
                 : ""}
             </g>
 
