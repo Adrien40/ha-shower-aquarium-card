@@ -355,3 +355,191 @@ describe("computeGaugeState", () => {
     expect(computeGaugeState({ ...base, targetBudget: 0, currentVolume: 0 }).volFraction).toBe(0);
   });
 });
+
+import {
+  createFlowTracker,
+  trackFlow,
+  flowTarget,
+  isShowerOver,
+  qualifiesForCelebration,
+  flowBubbleCount,
+  classifyTap,
+  computeScareKick,
+  pickFoodTarget,
+  createFlakes,
+  celebrationScale,
+  celebrationOpacity,
+  FLOW_ACTIVE_WINDOW_MS,
+} from "./pure.js";
+
+describe("flow tracking", () => {
+  it("ignores the very first sample (no phantom shower on load)", () => {
+    const s = trackFlow(createFlowTracker(), 36, 1000);
+    expect(s.lastVolume).toBe(36);
+    expect(s.showerActive).toBe(false);
+    expect(flowTarget(s, 1500)).toBe(0);
+  });
+
+  it("starts a shower on the first increase with a medium intensity", () => {
+    let s = trackFlow(createFlowTracker(), 0, 0);
+    s = trackFlow(s, 1, 1000);
+    expect(s.showerActive).toBe(true);
+    expect(flowTarget(s, 1500)).toBe(0.5);
+  });
+
+  it("infers a higher intensity from a faster volume growth", () => {
+    let s = trackFlow(createFlowTracker(), 0, 0);
+    s = trackFlow(s, 1, 1000);
+    s = trackFlow(s, 2, 4000); // 1 L in 3 s = 20 L/min -> capped at 1
+    expect(flowTarget(s, 4100)).toBe(1);
+    s = trackFlow(s, 2.5, 10000); // 0.5 L in 6 s = 5 L/min -> 0.5
+    expect(flowTarget(s, 10100)).toBeCloseTo(0.5, 5);
+  });
+
+  it("drops to zero after the activity window and reports the shower as over", () => {
+    let s = trackFlow(createFlowTracker(), 0, 0);
+    s = trackFlow(s, 1, 1000);
+    expect(isShowerOver(s, 1000 + FLOW_ACTIVE_WINDOW_MS - 1)).toBe(false);
+    expect(flowTarget(s, 1000 + FLOW_ACTIVE_WINDOW_MS)).toBe(0);
+    expect(isShowerOver(s, 1000 + FLOW_ACTIVE_WINDOW_MS)).toBe(true);
+  });
+
+  it("resets when the counter goes back down", () => {
+    let s = trackFlow(createFlowTracker(), 0, 0);
+    s = trackFlow(s, 20, 1000);
+    s = trackFlow(s, 0, 2000);
+    expect(s.showerActive).toBe(false);
+    expect(s.lastVolume).toBe(0);
+  });
+
+  it("only celebrates a living tank that stayed within budget", () => {
+    expect(qualifiesForCelebration(20, 36, false)).toBe(true);
+    expect(qualifiesForCelebration(36, 36, false)).toBe(true);
+    expect(qualifiesForCelebration(37, 36, false)).toBe(false);
+    expect(qualifiesForCelebration(0, 36, false)).toBe(false);
+    expect(qualifiesForCelebration(20, 36, true)).toBe(false);
+  });
+
+  it("scales the bubble stream with the intensity", () => {
+    expect(flowBubbleCount(0)).toBe(0);
+    expect(flowBubbleCount(0.01)).toBe(0);
+    expect(flowBubbleCount(0.5)).toBeGreaterThan(flowBubbleCount(0.25));
+    expect(flowBubbleCount(1)).toBe(36);
+  });
+});
+
+describe("tap interactions", () => {
+  it("feeds near the surface and knocks deeper in the tank", () => {
+    expect(classifyTap(100, 120)).toBe("feed");
+    expect(classifyTap(160, 120)).toBe("feed");
+    expect(classifyTap(300, 120)).toBe("knock");
+  });
+
+  it("pushes fish away from the knock, harder when closer", () => {
+    const near = computeScareKick(500, 300, 450, 300);
+    const far = computeScareKick(700, 300, 450, 300);
+    expect(near.kx).toBeGreaterThan(0);
+    expect(near.scare).toBeGreaterThan(far.scare);
+    expect(Math.hypot(near.kx, near.ky)).toBeGreaterThan(Math.hypot(far.kx, far.ky));
+    expect(computeScareKick(900, 300, 450, 300)).toBeNull();
+  });
+
+  it("handles a knock exactly on a fish without dividing by zero", () => {
+    const k = computeScareKick(400, 300, 400, 300, 280, () => 0.25);
+    expect(Number.isFinite(k.kx)).toBe(true);
+    expect(Number.isFinite(k.ky)).toBe(true);
+  });
+
+  it("picks the closest uneaten flake within range", () => {
+    const flakes = [
+      { x: 300, y: 200, eaten: false },
+      { x: 120, y: 210, eaten: true },
+      { x: 700, y: 200, eaten: false },
+    ];
+    expect(pickFoodTarget(100, 200, flakes)).toBe(flakes[0]);
+    expect(pickFoodTarget(100, 200, [flakes[1]])).toBeNull();
+    expect(pickFoodTarget(100, 200, [flakes[2]])).toBeNull();
+  });
+
+  it("drops the requested number of flakes around the tap", () => {
+    const flakes = createFlakes(500, 100, 5, () => 0.5);
+    expect(flakes).toHaveLength(5);
+    flakes.forEach((f) => {
+      expect(f.eaten).toBe(false);
+      expect(Math.abs(f.x - 500)).toBeLessThanOrEqual(35);
+    });
+  });
+});
+
+describe("celebration curves", () => {
+  it("pops from 0, overshoots, then settles at 1", () => {
+    expect(celebrationScale(0)).toBeCloseTo(0, 5);
+    const peak = Math.max(...[100, 200, 300, 400, 500, 600].map(celebrationScale));
+    expect(peak).toBeGreaterThan(1);
+    expect(celebrationScale(900)).toBeCloseTo(1, 5);
+    expect(celebrationScale(5000)).toBeCloseTo(1, 5);
+  });
+
+  it("stays opaque then fades out at the end", () => {
+    expect(celebrationOpacity(1000)).toBe(1);
+    expect(celebrationOpacity(7000)).toBe(0);
+    expect(celebrationOpacity(6300)).toBeGreaterThan(0);
+    expect(celebrationOpacity(6300)).toBeLessThan(1);
+  });
+});
+
+import {
+  isNightFromEntity,
+  estimateEnergyKwh,
+  computeShowerCost,
+  formatEuro,
+} from "./pure.js";
+
+describe("night detection", () => {
+  it("uses sun.sun below_horizon", () => {
+    expect(isNightFromEntity("sun.sun", { state: "below_horizon" })).toBe(true);
+    expect(isNightFromEntity("sun.sun", { state: "above_horizon" })).toBe(false);
+  });
+
+  it("treats an 'on' binary sensor / boolean as night", () => {
+    expect(isNightFromEntity("binary_sensor.night", { state: "on" })).toBe(true);
+    expect(isNightFromEntity("input_boolean.night", { state: "off" })).toBe(false);
+  });
+
+  it("compares an illuminance sensor to the threshold", () => {
+    expect(isNightFromEntity("sensor.lux", { state: "5" }, 20)).toBe(true);
+    expect(isNightFromEntity("sensor.lux", { state: "300" }, 20)).toBe(false);
+    expect(isNightFromEntity("sensor.lux", { state: "unavailable" }, 20)).toBe(false);
+  });
+
+  it("is off without an entity or state", () => {
+    expect(isNightFromEntity("", { state: "on" })).toBe(false);
+    expect(isNightFromEntity("sun.sun", undefined)).toBe(false);
+  });
+});
+
+describe("cost estimation", () => {
+  it("computes heating energy from volume and temperature rise", () => {
+    // 100 L heated by 30 K = 100 * 30 * 4.186 / 3600 kWh
+    expect(estimateEnergyKwh(100, 45, 15)).toBeCloseTo(3.4883, 3);
+    expect(estimateEnergyKwh(50, 15, 15)).toBe(0);
+    expect(estimateEnergyKwh(0, 40, 15)).toBe(0);
+  });
+
+  it("adds water and energy costs", () => {
+    const c = computeShowerCost({
+      volumeL: 50,
+      energyKwh: 2,
+      waterPricePerM3: 4,
+      energyPricePerKwh: 0.25,
+    });
+    expect(c.water).toBeCloseTo(0.2, 5);
+    expect(c.energy).toBeCloseTo(0.5, 5);
+    expect(c.total).toBeCloseTo(0.7, 5);
+  });
+
+  it("formats euros for the given language", () => {
+    expect(formatEuro(0.7, "fr")).toContain("0,70");
+    expect(formatEuro(0.7, "en")).toContain("0.70");
+  });
+});

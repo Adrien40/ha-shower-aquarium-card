@@ -63,6 +63,31 @@ export const CARD_EDITOR_SCHEMA = [
     default: 1.2,
     selector: { number: { min: 0.2, max: 3.0, step: 0.1, mode: "slider" } },
   },
+  {
+    name: "night_entity",
+    selector: { entity: { domain: ["sun", "sensor", "binary_sensor", "input_boolean"] } },
+  },
+  {
+    name: "night_lux_threshold",
+    default: 20,
+    selector: { number: { min: 1, max: 1000, unit_of_measurement: "lx", mode: "box" } },
+  },
+  { name: "show_cost", default: false, selector: { boolean: {} } },
+  {
+    name: "water_price_per_m3",
+    default: 4.5,
+    selector: { number: { min: 0, max: 30, step: 0.01, unit_of_measurement: "€/m³", mode: "box" } },
+  },
+  {
+    name: "energy_price_per_kwh",
+    default: 0.25,
+    selector: { number: { min: 0, max: 2, step: 0.001, unit_of_measurement: "€/kWh", mode: "box" } },
+  },
+  {
+    name: "cold_water_temp",
+    default: 15,
+    selector: { number: { min: 0, max: 30, unit_of_measurement: "°C", mode: "box" } },
+  },
   { name: "fullscreen", default: false, selector: { boolean: {} } },
   {
     name: "aspect_ratio_width",
@@ -95,6 +120,12 @@ const FIELD_LABEL_KEYS = {
   algae_delay_hours: "field_algae_delay",
   algae_age: "field_algae_age",
   fish_speed_multiplier: "field_fish_speed",
+  night_entity: "field_night_entity",
+  night_lux_threshold: "field_night_lux",
+  show_cost: "field_show_cost",
+  water_price_per_m3: "field_water_price",
+  energy_price_per_kwh: "field_energy_price",
+  cold_water_temp: "field_cold_water_temp",
   fullscreen: "field_fullscreen",
   aspect_ratio_width: "field_aspect_ratio_width",
   aspect_ratio_height: "field_aspect_ratio_height",
@@ -122,7 +153,17 @@ export class AquariumShowerCardEditor extends LitElement {
   }
 
   _computeHelper(schema) {
-    return schema.name === "fullscreen" ? translate(this._lang(), "helper_fullscreen") : "";
+    const lang = this._lang();
+    switch (schema.name) {
+      case "fullscreen":
+        return translate(lang, "helper_fullscreen");
+      case "night_entity":
+        return translate(lang, "helper_night_entity");
+      case "show_cost":
+        return translate(lang, "helper_show_cost");
+      default:
+        return "";
+    }
   }
 
   _valueChanged(ev) {

@@ -10,6 +10,25 @@ import {
   generateDefaultFishes,
   computeTankState,
   computeGaugeState,
+  createFlowTracker,
+  trackFlow,
+  flowTarget,
+  isShowerOver,
+  qualifiesForCelebration,
+  flowBubbleCount,
+  classifyTap,
+  computeScareKick,
+  pickFoodTarget,
+  createFlakes,
+  createCelebrationParticles,
+  celebrationScale,
+  celebrationOpacity,
+  CELEBRATION_DURATION_MS,
+  RIPPLE_DURATION_MS,
+  isNightFromEntity,
+  estimateEnergyKwh,
+  computeShowerCost,
+  formatEuro,
 } from "./pure.js";
 
 class AquariumShowerCard extends LitElement {
@@ -24,6 +43,11 @@ class AquariumShowerCard extends LitElement {
       _crab: { type: Object },
       _bubbles: { type: Array },
       _boilingBubbles: { type: Array },
+      _flowBubbles: { type: Array },
+      _food: { type: Array },
+      _ripples: { type: Array },
+      _celebration: { type: Object },
+      _nightProgress: { type: Number },
     };
   }
 
@@ -65,6 +89,24 @@ class AquariumShowerCard extends LitElement {
   constructor() {
     super();
     this._animationFrameId = null;
+    this._deathProgress = 0;
+    this._flow = createFlowTracker();
+    this._flowIntensity = 0;
+    this._food = [];
+    this._ripples = [];
+    this._celebration = null;
+    this._isNight = false;
+    this._nightProgress = 0;
+    this._energyKwh = 0;
+    this._flowBubbles = Array.from({ length: 36 }, () => ({
+      active: false,
+      x: 512,
+      baseX: 512,
+      y: 0,
+      vy: 2,
+      r: 3,
+      phase: 0,
+    }));
     this._lastTimestamp = 0;
     this._animTime = 0;
     this._cachedConsumedVolume = 0;
@@ -141,6 +183,11 @@ class AquariumShowerCard extends LitElement {
     this._cachedTemperature = metrics.temperature;
     this._cachedTargetBudget = metrics.targetBudget;
     this._cachedSurvivalVolume = metrics.survivalVolume;
+    this._isNight = isNightFromEntity(
+      this._config.night_entity,
+      this._hass.states?.[this._config.night_entity],
+      Number(this._config.night_lux_threshold) || 20
+    );
   }
 
   setConfig(config) {
@@ -162,6 +209,11 @@ class AquariumShowerCard extends LitElement {
       algae_age: 0,
       fish_speed_multiplier: 1.2,
       fullscreen: false,
+      night_lux_threshold: 20,
+      show_cost: false,
+      water_price_per_m3: 4.5,
+      energy_price_per_kwh: 0.25,
+      cold_water_temp: 15,
       ...config,
     };
 
@@ -175,6 +227,10 @@ class AquariumShowerCard extends LitElement {
     const count = Number(this._config.fish_count) || 4;
     this._fishes = generateDefaultFishes(count, themeKey);
 
+    this._flow = createFlowTracker();
+    this._food = [];
+    this._celebration = null;
+
     this._updateCachedMetrics();
     this.requestUpdate();
   }
@@ -182,6 +238,29 @@ class AquariumShowerCard extends LitElement {
   set hass(hass) {
     this._hass = hass;
     this._updateCachedMetrics();
+    this._trackFlow();
+  }
+
+  // Feeds the cumulative-volume sensor into the flow tracker. Skipped while
+  // the entity is missing/unavailable so a reconnect is not mistaken for a
+  // shower.
+  _trackFlow() {
+    if (!this._hass || !this._config) return;
+    const raw = this._hass.states?.[this._config.entity]?.state;
+    if (raw === undefined || isNaN(parseFloat(raw))) return;
+    const volume = this._cachedConsumedVolume;
+    const previous = this._flow.lastVolume;
+    const coldTemp = Number.isFinite(Number(this._config.cold_water_temp))
+      ? Number(this._config.cold_water_temp)
+      : 15;
+    // Heating energy is accumulated litre by litre at the temperature
+    // measured when the water flowed, so it survives temperature changes.
+    if (previous === null || volume < previous - 1e-6) {
+      this._energyKwh = estimateEnergyKwh(volume, this._cachedTemperature, coldTemp);
+    } else if (volume > previous + 1e-6) {
+      this._energyKwh += estimateEnergyKwh(volume - previous, this._cachedTemperature, coldTemp);
+    }
+    this._flow = trackFlow(this._flow, volume, Date.now());
   }
 
   connectedCallback() {
@@ -237,6 +316,89 @@ class AquariumShowerCard extends LitElement {
     const themeKey = this._config.theme || "freshwater";
     let stateChanged = false;
 
+    this._deathProgress = isDead
+      ? Math.min(1.0, (this._deathProgress || 0) + deathStep)
+      : 0;
+
+    const nowMs = Date.now();
+
+    // --- Night mode: smooth fade to a dim moonlit tank -------------------
+    const nightGoal = this._isNight ? 1 : 0;
+    if (this._nightProgress !== nightGoal) {
+      this._nightProgress += (nightGoal - this._nightProgress) * Math.min(1, 0.04 * delta);
+      if (Math.abs(nightGoal - this._nightProgress) < 0.005) this._nightProgress = nightGoal;
+      stateChanged = true;
+    }
+
+    // --- Water flow: smoothed intensity + end-of-shower detection ---------
+    const flowGoal = isDead ? 0 : flowTarget(this._flow, nowMs);
+    this._flowIntensity += (flowGoal - this._flowIntensity) * Math.min(1, 0.03 * delta);
+    if (this._flowIntensity < 0.005 && flowGoal === 0) this._flowIntensity = 0;
+
+    if (isShowerOver(this._flow, nowMs)) {
+      if (qualifiesForCelebration(metrics.consumedVolume, metrics.targetBudget, isDead)) {
+        this._celebration = {
+          start: nowMs,
+          particles: createCelebrationParticles(),
+        };
+      }
+      this._flow = { ...this._flow, showerActive: false };
+    }
+    if (this._celebration) {
+      if (isDead || nowMs - this._celebration.start >= CELEBRATION_DURATION_MS) {
+        this._celebration = null;
+      }
+      stateChanged = true;
+    }
+
+    // --- Shock waves on the glass ----------------------------------------
+    if (this._ripples.length > 0) {
+      this._ripples = this._ripples.filter((r) => nowMs - r.born < RIPPLE_DURATION_MS);
+      stateChanged = true;
+    }
+
+    // --- Fish food: sinking flakes ---------------------------------------
+    if (isDead || waterRatio <= 0) {
+      this._food = [];
+    } else if (this._food.length > 0) {
+      this._food.forEach((f) => {
+        if (f.landedAt) return;
+        f.y += f.vy * delta;
+        f.x += Math.sin(this._animTime * 1.5 + f.phase) * 0.25 * delta;
+        if (f.y < waterSurfaceY) f.y = waterSurfaceY;
+        if (f.y >= tankBottom - 30) {
+          f.y = tankBottom - 30;
+          f.landedAt = nowMs;
+        }
+      });
+      this._food = this._food.filter(
+        (f) => !f.eaten && !(f.landedAt && nowMs - f.landedAt > 6000)
+      );
+      stateChanged = true;
+    }
+
+    // --- Flow bubbles: continuous stream rising from the bottom ----------
+    const wantedBubbles = waterRatio > 0 && !isDead ? flowBubbleCount(this._flowIntensity) : 0;
+    this._flowBubbles.forEach((b, i) => {
+      if (!b.active) {
+        if (i < wantedBubbles) {
+          b.active = true;
+          b.baseX = 512 + (Math.random() - 0.5) * 90;
+          b.x = b.baseX;
+          b.y = tankBottom - 10 - Math.random() * 40;
+          b.vy = 1.8 + Math.random() * 2.2 + this._flowIntensity * 1.2;
+          b.r = 2 + Math.random() * 4;
+          b.phase = Math.random() * Math.PI * 2;
+        }
+        return;
+      }
+      b.y -= b.vy * delta;
+      b.x = b.baseX + Math.sin(this._animTime * 2 + b.phase) * 6;
+      if (b.y < waterSurfaceY + 2 || isDead) b.active = false;
+      stateChanged = true;
+    });
+    if (this._flowIntensity > 0) stateChanged = true;
+
     if (this._fishes && this._fishes.length > 0) {
       this._fishes.forEach((fish) => {
         if (isDead) {
@@ -248,6 +410,19 @@ class AquariumShowerCard extends LitElement {
 
         fish.deathProgress = 0;
         const isClownfish = themeKey === "saltwater" && fish.species === 0;
+
+        // Head for the nearest food flake (unless startled).
+        const foodTarget = fish.scare > 0.05 ? null : pickFoodTarget(fish.x, fish.y, this._food);
+        if (foodTarget) {
+          if (fish._baseVy === undefined) fish._baseVy = fish.vy;
+          if (Math.abs(foodTarget.x - fish.x) > 6) fish.dir = foodTarget.x < fish.x ? -1 : 1;
+          fish.vy = Math.max(-1.1, Math.min(1.1, (foodTarget.y - fish.y) * 0.02));
+          fish._seeking = true;
+        } else if (fish._seeking) {
+          if (fish._baseVy !== undefined) fish.vy = fish._baseVy;
+          fish._seeking = false;
+        }
+        const foodBoost = foodTarget ? 1.8 : 1;
         const minY = isClownfish
           ? Math.max(tankTop + 45, waterSurfaceY + 35, tankBottom - 160)
           : Math.max(tankTop + 45, waterSurfaceY + 35);
@@ -255,8 +430,32 @@ class AquariumShowerCard extends LitElement {
         const minX = isClownfish ? 160 : 110;
         const maxX = isClownfish ? 380 : 910;
 
-        fish.x += fish.vx * fish.dir * speedMultiplier * delta;
+        fish.x += fish.vx * fish.dir * speedMultiplier * foodBoost * delta;
         fish.y += fish.vy * speedMultiplier * delta;
+
+        // Startle impulse from a knock on the glass: a sharp dash that fades.
+        if (fish.kickX || fish.kickY) {
+          fish.x += fish.kickX * delta;
+          fish.y += fish.kickY * delta;
+          const decay = Math.pow(0.93, delta);
+          fish.kickX *= decay;
+          fish.kickY *= decay;
+          const speed = Math.hypot(fish.kickX, fish.kickY);
+          fish.scare = Math.min(1, speed / 8);
+          if (speed < 0.15) {
+            fish.kickX = 0;
+            fish.kickY = 0;
+            fish.scare = 0;
+          }
+        }
+
+        // Swallow any flake that reaches the mouth.
+        if (this._food.length > 0) {
+          const mouthX = fish.x + fish.dir * 22 * (fish.scale || 1.4);
+          this._food.forEach((f) => {
+            if (!f.eaten && Math.hypot(f.x - mouthX, f.y - fish.y) < 28) f.eaten = true;
+          });
+        }
 
         if (fish.x < minX) {
           fish.x = minX;
@@ -441,18 +640,21 @@ class AquariumShowerCard extends LitElement {
   }
 
   _renderWaterSurface(x1, x2, y) {
-    const amp = 3.5;
-    const wavelen = 90;
-    const phase = this._animTime * 1.6;
+    // Calm ripple at rest; livelier, choppier surface while water is running.
+    const flow = this._flowIntensity || 0;
+    const amp = 3.5 + flow * 6.5;
+    const wavelen = 90 - flow * 35;
+    const phase = this._animTime * (1.6 + flow * 2.4);
     const step = 16;
+    const chop = (x) => Math.sin(x / 17 + phase * 2.3) * flow * 2.4;
 
     const topPts = [];
     const botPts = [];
     for (let x = x1; x < x2; x += step) {
-      topPts.push([x, y + Math.sin(x / wavelen + phase) * amp]);
+      topPts.push([x, y + Math.sin(x / wavelen + phase) * amp + chop(x)]);
       botPts.push([x, y + 4 + Math.sin(x / wavelen + phase + 0.6) * amp * 0.7]);
     }
-    topPts.push([x2, y + Math.sin(x2 / wavelen + phase) * amp]);
+    topPts.push([x2, y + Math.sin(x2 / wavelen + phase) * amp + chop(x2)]);
     botPts.push([x2, y + 4 + Math.sin(x2 / wavelen + phase + 0.6) * amp * 0.7]);
 
     const fmt = (p) => `${p[0].toFixed(1)},${p[1].toFixed(1)}`;
@@ -469,7 +671,7 @@ class AquariumShowerCard extends LitElement {
     `;
   }
 
-  _renderAnemoneTentacles() {
+  _renderAnemoneTentacles(deathProgress = 0) {
     const layers = [
       { count: 11, baseR: 20, lenMin: 60, lenMax: 95, spread: 160, width: 5, color: "#a21caf", tip: "#f0abfc", speed: 0.55 },
       { count: 16, baseR: 22, lenMin: 50, lenMax: 88, spread: 190, width: 6.5, color: "#c026d3", tip: "#f5d0fe", speed: 0.68 },
@@ -480,9 +682,10 @@ class AquariumShowerCard extends LitElement {
         const t = i / (layer.count - 1);
         const baseAngle = -90 - layer.spread / 2 + t * layer.spread;
         const length =
-          layer.lenMin + (layer.lenMax - layer.lenMin) * (0.5 + 0.5 * Math.sin(t * Math.PI));
+          (layer.lenMin + (layer.lenMax - layer.lenMin) * (0.5 + 0.5 * Math.sin(t * Math.PI))) *
+          (1 - 0.3 * deathProgress);
         const phase = li * 10 + i * 0.7;
-        const sway = Math.sin(this._animTime * layer.speed + phase) * 9;
+        const sway = Math.sin(this._animTime * layer.speed + phase) * 9 * (1 - deathProgress);
         const rad = (baseAngle * Math.PI) / 180;
         const bx = Math.cos(rad) * layer.baseR;
         const by = Math.sin(rad) * layer.baseR;
@@ -499,12 +702,16 @@ class AquariumShowerCard extends LitElement {
     return parts;
   }
 
-  _renderThemeDecoration(themeKey, isFullscreen) {
+  _renderThemeDecoration(themeKey, isFullscreen, deathProgress = 0) {
     const bottomY = isFullscreen ? 600 : this._getCanvasHeight() - 35;
+    // Living decor (plants, corals, anemone) fades to a dull, withered look
+    // as the tank dies; rocks and sand are left untouched.
+    const lifeStyle = `filter: grayscale(${(deathProgress * 0.85).toFixed(2)}) sepia(${(deathProgress * 0.5).toFixed(2)}) brightness(${(1 - deathProgress * 0.45).toFixed(2)});`;
 
     if (themeKey === "saltwater") {
       return svg`
         <g id="reef-decor">
+          <g style="${lifeStyle}">
           <path d="M 60 ${bottomY} Q 40 ${bottomY - 165}, 95 ${bottomY - 225} Q 120 ${bottomY - 275}, 85 ${bottomY - 335} Q 135 ${bottomY - 265}, 120 ${bottomY - 195} Q 150 ${bottomY - 135}, 115 ${bottomY} Z" fill="#f43f5e" opacity="0.95" />
           <path d="M 115 ${bottomY} Q 150 ${bottomY - 155}, 190 ${bottomY - 205} Q 215 ${bottomY - 245}, 190 ${bottomY - 295} Q 230 ${bottomY - 235}, 205 ${bottomY - 155} Q 180 ${bottomY - 105}, 155 ${bottomY} Z" fill="#fb7185" opacity="0.9" />
           <g transform="translate(830, ${bottomY})">
@@ -518,6 +725,7 @@ class AquariumShowerCard extends LitElement {
             <path d="M 0,-34 L 0,18 M -35,-4 L 35,-4 M -18,36 L 18,36" stroke="#3b82f6" stroke-width="3" stroke-linecap="round" opacity="0.75" />
             <circle cx="0" cy="0" r="5" fill="#60a5fa" />
           </g>
+          </g>
           <g id="live-rock" transform="translate(750, ${bottomY})">
             <path d="M -25.5,-18.0 Q -25.5,-18.0 -30.2,-12.4 Q -34.9,-6.8 -43.4,-1.7 Q -52.0,3.3 -60.8,-1.6 Q -69.6,-6.4 -74.3,-12.2 Q -79.0,-18.0 -75.4,-24.5 Z" fill="#8b6a9c" />
             <path d="M 60.3,-38.0 Q 60.3,-38.0 57.1,-25.7 Q 53.9,-13.4 42.9,-0.9 Q 31.9,11.5 11.6,8.1 Q -8.7,4.7 -24.7,0.1 Q -40.8,-4.6 -51.6,-14.8 Z" fill="#6d5280" />
@@ -525,8 +733,8 @@ class AquariumShowerCard extends LitElement {
           <g id="live-rock-2" transform="translate(420, ${bottomY})">
             <path d="M 41.8,-26.0 Q 41.8,-26.0 37.1,-16.4 Q 32.4,-6.8 19.8,-2.1 Q 7.2,2.6 -3.0,-3.6 Q -13.2,-9.9 -23.4,-13.6 Q -33.5,-17.4 -32.1,-25.6 Q -30.6,-33.9 -24.0,-40.5 Q -17.3,-47.1 -6.3,-46.0 Q 4.7,-44.9 13.2,-41.9 Q 21.7,-38.9 31.8,-32.4 Z" fill="#6d5280" />
           </g>
-          <g id="anemone" transform="translate(260, ${bottomY - 17}) scale(1.4, 1.4)">
-            ${this._renderAnemoneTentacles()}
+          <g id="anemone" style="${lifeStyle}" transform="translate(260, ${bottomY - 17}) scale(1.4, 1.4)">
+            ${this._renderAnemoneTentacles(deathProgress)}
             <ellipse cx="0" cy="-16" rx="30" ry="11" fill="#86198f" opacity="0.9" />
             <path d="M -22,-5 C -26,3 -23,12 -15,17 C -7,21 7,21 15,17 C 23,12 26,3 22,-5 C 14,-14 -14,-14 -22,-5 Z" fill="#701a75" />
             <ellipse cx="0" cy="16" rx="26" ry="9" fill="#4a044e" opacity="0.75" />
@@ -550,16 +758,16 @@ class AquariumShowerCard extends LitElement {
     }
 
     return svg`
-      <g id="freshwater-plants">
-        <path d="M 45 ${bottomY} Q 65 ${bottomY - 75}, 115${bottomY - 60} Q 155 ${bottomY - 85}, 200${bottomY - 50} Q 240 ${bottomY - 70}, 285${bottomY} Z" fill="#15803d" />
-        <path d="M 75 ${bottomY} Q 95 ${bottomY - 60}, 135${bottomY - 55} Q 170 ${bottomY - 75}, 210${bottomY - 40} Q 250 ${bottomY - 50}, 270${bottomY} Z" fill="#22c55e" opacity="0.85" />
+      <g id="freshwater-plants" style="${lifeStyle}">
+        <path d="M 45 ${bottomY} Q 65 ${bottomY - 75}, 115 ${bottomY - 60} Q 155 ${bottomY - 85}, 200 ${bottomY - 50} Q 240 ${bottomY - 70}, 285 ${bottomY} Z" fill="#15803d" />
+        <path d="M 75 ${bottomY} Q 95 ${bottomY - 60}, 135 ${bottomY - 55} Q 170 ${bottomY - 75}, 210 ${bottomY - 40} Q 250 ${bottomY - 50}, 270 ${bottomY} Z" fill="#22c55e" opacity="0.85" />
         <circle cx="110" cy="${bottomY - 55}" r="11" fill="#4ade80" opacity="0.7" />
         <circle cx="170" cy="${bottomY - 63}" r="12" fill="#4ade80" opacity="0.7" />
-        <path d="M 120 ${bottomY} Q 140 ${bottomY - 105}, 160${bottomY - 155} Q 165 ${bottomY - 205}, 145${bottomY - 265}" stroke="#14532d" stroke-width="8" fill="none" stroke-linecap="round" />
-        <path d="M 145 ${bottomY - 265} Q 105${bottomY - 305}, 85 ${bottomY - 280} C 70${bottomY - 250}, 110 ${bottomY - 220}, 145${bottomY - 265} Z" fill="#166534" />
-        <path d="M 145 ${bottomY - 265} Q 185${bottomY - 315}, 215 ${bottomY - 295} C 230${bottomY - 270}, 190 ${bottomY - 230}, 145${bottomY - 265} Z" fill="#15803d" />
-        <path d="M 880 ${bottomY} Q 920 ${bottomY - 195}, 870${bottomY - 355} Q 845 ${bottomY - 195}, 860${bottomY} Z" fill="#16a34a" opacity="0.9" />
-        <path d="M 920 ${bottomY} Q 960 ${bottomY - 215}, 930${bottomY - 375} Q 895 ${bottomY - 205}, 900${bottomY} Z" fill="#22c55e" opacity="0.8" />
+        <path d="M 120 ${bottomY} Q 140 ${bottomY - 105}, 160 ${bottomY - 155} Q 165 ${bottomY - 205}, 145 ${bottomY - 265}" stroke="#14532d" stroke-width="8" fill="none" stroke-linecap="round" />
+        <path d="M 145 ${bottomY - 265} Q 105 ${bottomY - 305}, 85 ${bottomY - 280} C 70 ${bottomY - 250}, 110 ${bottomY - 220}, 145 ${bottomY - 265} Z" fill="#166534" />
+        <path d="M 145 ${bottomY - 265} Q 185 ${bottomY - 315}, 215 ${bottomY - 295} C 230 ${bottomY - 270}, 190 ${bottomY - 230}, 145 ${bottomY - 265} Z" fill="#15803d" />
+        <path d="M 880 ${bottomY} Q 920 ${bottomY - 195}, 870 ${bottomY - 355} Q 845 ${bottomY - 195}, 860 ${bottomY} Z" fill="#16a34a" opacity="0.9" />
+        <path d="M 920 ${bottomY} Q 960 ${bottomY - 215}, 930 ${bottomY - 375} Q 895 ${bottomY - 205}, 900 ${bottomY} Z" fill="#22c55e" opacity="0.8" />
       </g>
     `;
   }
@@ -571,9 +779,10 @@ class AquariumShowerCard extends LitElement {
     const bodyOpacity = (1.0 - p).toFixed(2);
     const skeletonOpacity = p.toFixed(2);
 
+    const scare = isDead ? 0 : fish.scare || 0;
     const tailWag = isDead
       ? 0
-      : Math.sin(this._animTime * (3.5 * fish.vx) + fish.phase) * 14;
+      : Math.sin(this._animTime * (3.5 * fish.vx) + fish.phase) * 14 * (1 + 0.8 * scare);
     const finWag = isDead
       ? 0
       : Math.sin(this._animTime * (4.5 * fish.vx) + fish.phase) * 10;
@@ -868,6 +1077,170 @@ class AquariumShowerCard extends LitElement {
     `;
   }
 
+  // Converts a pointer event to SVG viewBox coordinates.
+  _eventToSvgPoint(e) {
+    const svgEl = e.currentTarget;
+    const ctm = svgEl.getScreenCTM ? svgEl.getScreenCTM() : null;
+    if (!ctm) return null;
+    const pt = svgEl.createSVGPoint();
+    pt.x = e.clientX;
+    pt.y = e.clientY;
+    const p = pt.matrixTransform(ctm.inverse());
+    return { x: p.x, y: p.y };
+  }
+
+  // Tap near the surface drops food; tap in the water knocks on the glass.
+  _onTankTap(e) {
+    if (!this._config || !this._hass) return;
+    const point = this._eventToSvgPoint(e);
+    if (!point) return;
+
+    const metrics = {
+      consumedVolume: this._cachedConsumedVolume,
+      temperature: this._cachedTemperature,
+      targetBudget: this._cachedTargetBudget,
+      survivalVolume: this._cachedSurvivalVolume,
+    };
+    const { waterRatio, waterSurfaceY, isDead } = computeTankState({
+      config: this._config,
+      metrics,
+      canvasHeight: this._getCanvasHeight(),
+    });
+    if (isDead || waterRatio <= 0) return;
+
+    if (classifyTap(point.y, waterSurfaceY) === "feed") {
+      const x = Math.max(80, Math.min(944, point.x));
+      this._food = [...this._food, ...createFlakes(x, waterSurfaceY + 2)].slice(-30);
+    } else {
+      this._ripples = [...this._ripples, { x: point.x, y: point.y, born: Date.now() }];
+      (this._fishes || []).forEach((fish) => {
+        const kick = computeScareKick(fish.x, fish.y, point.x, point.y);
+        if (!kick) return;
+        fish.kickX = kick.kx;
+        fish.kickY = kick.ky;
+        fish.scare = kick.scare;
+        if (Math.abs(kick.kx) > 0.5) fish.dir = kick.kx < 0 ? -1 : 1;
+      });
+    }
+    this.requestUpdate();
+  }
+
+  _renderFlowBubbles() {
+    return svg`
+      <g>
+        ${this._flowBubbles
+          .filter((b) => b.active)
+          .map(
+            (b) => svg`<circle cx="${b.x.toFixed(1)}" cy="${b.y.toFixed(1)}" r="${b.r.toFixed(1)}" fill="#ffffff" fill-opacity="0.22" stroke="#ffffff" stroke-opacity="0.75" stroke-width="1.2" />`
+          )}
+      </g>
+    `;
+  }
+
+  _renderFood() {
+    if (!this._food.length) return svg``;
+    return svg`
+      <g>
+        ${this._food.map(
+          (f) => svg`<ellipse cx="${f.x.toFixed(1)}" cy="${f.y.toFixed(1)}" rx="${f.r.toFixed(1)}" ry="${(f.r * 0.6).toFixed(1)}" fill="${f.color}" stroke="#b45309" stroke-width="0.6" />`
+        )}
+      </g>
+    `;
+  }
+
+  _renderRipples() {
+    if (!this._ripples.length) return svg``;
+    const now = Date.now();
+    return svg`
+      <g>
+        ${this._ripples.map((r) => {
+          const t = Math.min(1, (now - r.born) / RIPPLE_DURATION_MS);
+          const fade = (1 - t).toFixed(2);
+          return svg`
+            <circle cx="${r.x.toFixed(1)}" cy="${r.y.toFixed(1)}" r="${(14 + t * 150).toFixed(1)}" fill="none" stroke="#ffffff" stroke-width="${(5 - t * 3).toFixed(1)}" stroke-opacity="${fade}" />
+            <circle cx="${r.x.toFixed(1)}" cy="${r.y.toFixed(1)}" r="${(6 + t * 90).toFixed(1)}" fill="#ffffff" fill-opacity="${(0.28 * (1 - t)).toFixed(2)}" />
+          `;
+        })}
+      </g>
+    `;
+  }
+
+  // Golden bubbles rising through the tank plus a popping trophy.
+  _renderCelebration(waterSurfaceY, tankTop, tankBottom) {
+    const c = this._celebration;
+    if (!c) return svg``;
+    const age = Date.now() - c.start;
+    const opacity = celebrationOpacity(age).toFixed(2);
+    const scale = celebrationScale(age);
+    const cy = (tankTop + tankBottom) / 2;
+    const seconds = age / 1000;
+    const top = Math.min(waterSurfaceY, tankBottom - 60);
+
+    return svg`
+      <g id="celebration" opacity="${opacity}" pointer-events="none">
+        ${c.particles.map((p) => {
+          const t = seconds - p.delay;
+          if (t <= 0) return svg``;
+          const y = tankBottom - 12 - t * p.speed;
+          if (y < top) return svg``;
+          const x = p.x + Math.sin(seconds * 2 + p.phase) * 12;
+          return svg`
+            <circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${p.r.toFixed(1)}" fill="${p.color}" fill-opacity="0.85" stroke="#ffffff" stroke-opacity="0.8" stroke-width="1" />
+            <circle cx="${(x - p.r * 0.3).toFixed(1)}" cy="${(y - p.r * 0.3).toFixed(1)}" r="${(p.r * 0.28).toFixed(1)}" fill="#ffffff" fill-opacity="0.9" />
+          `;
+        })}
+        <g transform="translate(512, ${cy.toFixed(1)}) scale(${(scale * 2.2).toFixed(3)}) rotate(${(Math.sin(seconds * 2.5) * 4).toFixed(1)})">
+          <circle r="34" fill="#fde047" fill-opacity="0.28" />
+          <path d="M -22,-30 H 22 V -8 C 22,8 10,16 0,16 C -10,16 -22,8 -22,-8 Z" fill="#fbbf24" stroke="#b45309" stroke-width="2" stroke-linejoin="round" />
+          <path d="M -22,-24 H -33 C -33,-8 -28,-2 -20,0 M 22,-24 H 33 C 33,-8 28,-2 20,0" fill="none" stroke="#b45309" stroke-width="3" stroke-linecap="round" />
+          <rect x="-4" y="16" width="8" height="14" fill="#f59e0b" stroke="#b45309" stroke-width="1.5" />
+          <rect x="-17" y="30" width="34" height="8" rx="3" fill="#fbbf24" stroke="#b45309" stroke-width="2" />
+          <path d="M 0,-24 L 3.4,-15.5 L 12.5,-15 L 5.5,-9 L 7.8,0 L 0,-5 L -7.8,0 L -5.5,-9 L -12.5,-15 L -3.4,-15.5 Z" fill="#fff7ed" stroke="#b45309" stroke-width="1" stroke-linejoin="round" />
+        </g>
+      </g>
+    `;
+  }
+
+  // Dim blue-night tint with a soft moon glow; drawn above the whole scene
+  // (gauges included) so nothing dazzles during late/early showers.
+  _renderNightOverlay(canvasH, tankTop) {
+    const p = this._nightProgress;
+    if (!(p > 0.01)) return svg``;
+    const moonY = tankTop + 46;
+    return svg`
+      <g id="night-overlay" opacity="${p.toFixed(3)}" pointer-events="none">
+        <defs>
+          <radialGradient id="moonGlow" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stop-color="#dbeafe" stop-opacity="0.55" />
+            <stop offset="100%" stop-color="#dbeafe" stop-opacity="0" />
+          </radialGradient>
+          <mask id="moonMask">
+            <rect x="-30" y="-30" width="60" height="60" fill="#ffffff" />
+            <circle cx="7" cy="-4" r="13" fill="#000000" />
+          </mask>
+        </defs>
+        <rect x="0" y="0" width="1024" height="${canvasH}" fill="#0b1740" fill-opacity="0.6" />
+        <ellipse cx="300" cy="${moonY}" rx="250" ry="200" fill="url(#moonGlow)" />
+        <g transform="translate(300, ${moonY})">
+          <circle r="26" fill="#e0f2fe" fill-opacity="0.22" />
+          <circle r="15" fill="#f1f5f9" mask="url(#moonMask)" />
+        </g>
+      </g>
+    `;
+  }
+
+  // Live shower cost pill for fullscreen mode.
+  _renderCostPill(cost, canvasH) {
+    if (!cost) return svg``;
+    const label = formatEuro(cost.total, resolveLang(this._hass));
+    return svg`
+      <g transform="translate(512, ${canvasH - 34})" pointer-events="none">
+        <rect x="-64" y="-19" width="128" height="38" rx="19" fill="#ffffff" fill-opacity="0.85" stroke="#94a3b8" stroke-width="1.5" />
+        <text y="7" font-family="system-ui, sans-serif" font-size="21" font-weight="800" fill="#0f172a" text-anchor="middle">${label}</text>
+      </g>
+    `;
+  }
+
   _renderStatusPanel(
     currentTemp,
     currentVolume,
@@ -917,14 +1290,7 @@ class AquariumShowerCard extends LitElement {
                 transform="rotate(-90)"
               />
               <!-- Central temperature number -->
-              <text y="10" font-family="system-ui, sans-serif" font-size="46" font-weight="900" fill="#0f172a" text-anchor="middle">
-                ${currentTemp.toFixed(1)}°
-              </text>
-              <!-- Sleek bottom sub-badge -->
-              <rect x="-24" y="24" width="48" height="20" rx="10" fill="rgba(15, 23, 42, 0.08)" />
-              <text y="38" font-family="system-ui, sans-serif" font-size="11" font-weight="800" fill="#334155" text-anchor="middle" letter-spacing="0.8">
-                °C
-              </text>
+              <text y="16" font-family="system-ui, sans-serif" font-size="46" font-weight="900" fill="#0f172a" text-anchor="middle">${currentTemp.toFixed(1)}°</text>
             </g>
           `
         : ""}
@@ -942,18 +1308,11 @@ class AquariumShowerCard extends LitElement {
           stroke="${volColor}"
           stroke-width="${strokeW}"
           stroke-linecap="round"
-          stroke-dasharray="${volArc}${circ.toFixed(1)}"
+          stroke-dasharray="${volArc} ${circ.toFixed(1)}"
           transform="rotate(-90)"
         />
         <!-- Central volume number -->
-        <text y="10" font-family="system-ui, sans-serif" font-size="46" font-weight="900" fill="#0f172a" text-anchor="middle">
-          ${currentVolume.toFixed(1)}
-        </text>
-        <!-- Sleek bottom target sub-badge -->
-        <rect x="-32" y="24" width="64" height="20" rx="10" fill="rgba(15, 23, 42, 0.08)" />
-        <text y="38" font-family="system-ui, sans-serif" font-size="11" font-weight="800" fill="#334155" text-anchor="middle" letter-spacing="0.5">
-          / ${targetBudget} L
-        </text>
+        <text y="16" font-family="system-ui, sans-serif" font-size="46" font-weight="900" fill="#0f172a" text-anchor="middle">${currentVolume.toFixed(1)}<tspan dx="4" font-size="26" font-weight="800">L</tspan></text>
       </g>
     `;
   }
@@ -977,6 +1336,7 @@ class AquariumShowerCard extends LitElement {
       boilTemp,
       deadlyTemp,
       waterRatio,
+      tankTop,
       tankBottom,
       waterSurfaceY,
       isDead,
@@ -1014,6 +1374,14 @@ class AquariumShowerCard extends LitElement {
       ? "#f59e0b"
       : "var(--primary-text-color, #111827)";
 
+    const cost = this._config.show_cost
+      ? computeShowerCost({
+          volumeL: currentVolume,
+          energyKwh: this._energyKwh,
+          waterPricePerM3: this._config.water_price_per_m3,
+          energyPricePerKwh: this._config.energy_price_per_kwh,
+        })
+      : null;
     return html`
       <ha-card>
         ${!isFullscreen && hasTitle
@@ -1022,6 +1390,7 @@ class AquariumShowerCard extends LitElement {
 
         <div class="aquarium-container">
           <svg
+            @click=${(e) => this._onTankTap(e)}
             viewBox="0 0 1024 ${isFullscreen ? 600 : canvasH}"
             preserveAspectRatio="${isFullscreen ? "none" : "xMidYMid meet"}"
             style="${isFullscreen
@@ -1081,7 +1450,7 @@ class AquariumShowerCard extends LitElement {
                 fill="${theme.sandColor}"
               />
 
-              ${this._renderThemeDecoration(themeKey, isFullscreen)}
+              ${this._renderThemeDecoration(themeKey, isFullscreen, this._deathProgress)}
 
               <g>
                 ${this._snails.map((snail, sIdx) => {
@@ -1093,12 +1462,16 @@ class AquariumShowerCard extends LitElement {
                       : 0;
                   const baseScale = themeKey === "saltwater" ? (sIdx % 2 === 0 ? 3.5 : 4.2) : 1.8;
                   return svg`
-                    <g transform="translate(${snail.x}, ${snail.y}) rotate(${rotation}) scale(${snail.dir * baseScale},${baseScale})">
+                    <g transform="translate(${snail.x}, ${snail.y}) rotate(${isDead ? 0 : rotation}) scale(${snail.dir * baseScale},${baseScale})">
                       <circle cx="-3" cy="-4" r="5.5" fill="${snail.color}" />
                       <path d="M -3,-4 A 3 3 0 0 1 -1,-2" stroke="#ffffff" stroke-width="0.8" fill="none" />
-                      <ellipse cx="2" cy="-1.5" rx="5" ry="2.2" fill="#d97706" />
-                      <line x1="5" y1="-2.5" x2="7.5" y2="-5.5" stroke="#d97706" stroke-width="0.8" />
-                      <circle cx="7.5" cy="-5.5" r="0.6" fill="#111827" />
+                      ${isDead
+                        ? ""
+                        : svg`
+                            <ellipse cx="2" cy="-1.5" rx="5" ry="2.2" fill="#d97706" />
+                            <line x1="5" y1="-2.5" x2="7.5" y2="-5.5" stroke="#d97706" stroke-width="0.8" />
+                            <circle cx="7.5" cy="-5.5" r="0.6" fill="#111827" />
+                          `}
                     </g>
                   `;
                 })}
@@ -1135,6 +1508,9 @@ class AquariumShowerCard extends LitElement {
                   `
                 : ""}
 
+              ${waterRatio > 0 && !isDead ? this._renderFlowBubbles() : ""}
+              ${this._renderFood()}
+
               ${isBoiling && waterRatio > 0
                 ? svg`
                     <g>
@@ -1161,6 +1537,7 @@ class AquariumShowerCard extends LitElement {
               ${themeKey === "saltwater" ? this._renderShrimp(isDead) : ""}
               ${themeKey === "saltwater" ? this._renderCrab(isDead) : ""}
               ${this._renderAlgae(effectiveAlgaeHours, isFullscreen)}
+              ${this._renderRipples()}
 
               <!-- Modern Frosted Glass HUD Gauges -->
               ${isFullscreen
@@ -1172,6 +1549,10 @@ class AquariumShowerCard extends LitElement {
                     boilTemp
                   )
                 : ""}
+              ${isFullscreen ? this._renderCostPill(cost, 600) : ""}
+
+              ${this._renderNightOverlay(isFullscreen ? 600 : canvasH, tankTop)}
+              ${this._renderCelebration(waterSurfaceY, tankTop, tankBottom)}
             </g>
 
             ${!isFullscreen
@@ -1208,6 +1589,14 @@ class AquariumShowerCard extends LitElement {
                           ${currentTemp.toFixed(1)} <span class="metric-unit">°C</span>
                         </div>
                         <div class="metric-label">${this._t("label_temperature")}</div>
+                      </div>
+                    `
+                  : ""}
+                ${cost
+                  ? html`
+                      <div class="metric-box">
+                        <div class="metric-value">${formatEuro(cost.total, resolveLang(this._hass))}</div>
+                        <div class="metric-label">${this._t("label_cost")}</div>
                       </div>
                     `
                   : ""}

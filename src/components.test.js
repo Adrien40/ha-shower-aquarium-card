@@ -267,3 +267,69 @@ describe("render(): fullscreen mode", () => {
     expect(el.shadowRoot.querySelector("svg")).not.toBeNull();
   });
 });
+
+describe("render(): estimated cost tile", () => {
+  it("is hidden by default", async () => {
+    const el = mountCard();
+    await el.updateComplete;
+    expect(el.shadowRoot.textContent).not.toContain("Cost");
+  });
+
+  it("shows water + heating cost when show_cost is enabled", async () => {
+    const el = mountCard({
+      show_cost: true,
+      temperature_entity: "sensor.shower_temp",
+      water_price_per_m3: 5,
+      energy_price_per_kwh: 0.2,
+      cold_water_temp: 15,
+    });
+    el.hass = {
+      language: "en",
+      states: {
+        "sensor.shower_volume": { state: "0", last_changed: new Date().toISOString() },
+        "sensor.shower_temp": { state: "40", last_changed: new Date().toISOString() },
+      },
+    };
+    el.hass = {
+      language: "en",
+      states: {
+        "sensor.shower_volume": { state: "100", last_changed: new Date().toISOString() },
+        "sensor.shower_temp": { state: "40", last_changed: new Date().toISOString() },
+      },
+    };
+    await el.updateComplete;
+    // 100 L * 5 EUR/m3 = 0.50; 100 L * 25 K * 4.186 / 3600 = 2.906 kWh * 0.2 = 0.58
+    expect(el.shadowRoot.textContent).toContain("Cost");
+    expect(el.shadowRoot.textContent).toContain("€1.08");
+  });
+});
+
+describe("render(): night mode", () => {
+  it("draws the moonlit overlay only once the night entity says it is dark", async () => {
+    const el = mountCard({ night_entity: "sun.sun" });
+    el.hass = {
+      language: "en",
+      states: {
+        "sensor.shower_volume": { state: "12", last_changed: new Date().toISOString() },
+        "sun.sun": { state: "below_horizon" },
+      },
+    };
+    expect(el._isNight).toBe(true);
+    el._nightProgress = 1;
+    el.requestUpdate();
+    await el.updateComplete;
+    expect(el.shadowRoot.querySelector("#night-overlay")).not.toBeNull();
+
+    el.hass = {
+      language: "en",
+      states: {
+        "sensor.shower_volume": { state: "12", last_changed: new Date().toISOString() },
+        "sun.sun": { state: "above_horizon" },
+      },
+    };
+    el._nightProgress = 0;
+    el.requestUpdate();
+    await el.updateComplete;
+    expect(el.shadowRoot.querySelector("#night-overlay")).toBeNull();
+  });
+});

@@ -70,6 +70,10 @@ export const cardStyles = css`
     width: 100%;
     height: auto;
     max-height: calc(100vh - 100px);
+    cursor: pointer;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+    user-select: none;
   }
   :host([fullscreen]) svg {
     width: 100%;

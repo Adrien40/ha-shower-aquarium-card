@@ -257,3 +257,201 @@ export function computeGaugeState({ currentTemp, currentVolume, targetBudget, de
 
   return { tempFraction, tempColor, volFraction, volColor };
 }
+
+// ---------------------------------------------------------------------------
+// Interactivity, water flow and end-of-shower celebration helpers.
+// Everything below is pure (no DOM, no timers) so it can be unit-tested; the
+// card only feeds it the clock and applies the results.
+// ---------------------------------------------------------------------------
+
+/** How long (ms) without any volume increase before the water counts as stopped. */
+export const FLOW_ACTIVE_WINDOW_MS = 8000;
+/** Duration (ms) of the end-of-shower celebration. */
+export const CELEBRATION_DURATION_MS = 7000;
+/** Duration (ms) of the shock wave drawn on the glass. */
+export const RIPPLE_DURATION_MS = 900;
+
+export function createFlowTracker() {
+  return { lastVolume: null, lastIncreaseAt: 0, target: 0, showerActive: false };
+}
+
+/**
+ * Feeds a new consumed-volume sample into the flow tracker and returns the
+ * next tracker state. The card only knows the cumulative volume, so the flow
+ * is inferred from how fast that volume grows between two increases.
+ */
+export function trackFlow(state, volume, now) {
+  if (state.lastVolume === null) {
+    return { ...state, lastVolume: volume };
+  }
+  if (volume < state.lastVolume - 1e-6) {
+    // Counter reset (new shower): forget everything.
+    return { ...createFlowTracker(), lastVolume: volume };
+  }
+  if (volume > state.lastVolume + 1e-6) {
+    const dv = volume - state.lastVolume;
+    const dt = (now - state.lastIncreaseAt) / 1000;
+    const hasRate = state.lastIncreaseAt > 0 && dt > 0.2 && dt <= 15;
+    const rate = hasRate ? dv / (dt / 60) : null; // L/min
+    const target = rate === null ? 0.5 : Math.max(0.25, Math.min(1, rate / 10));
+    return { lastVolume: volume, lastIncreaseAt: now, target, showerActive: true };
+  }
+  return state;
+}
+
+/** Target flow intensity (0..1) for the current instant. */
+export function flowTarget(state, now) {
+  if (!state.lastIncreaseAt) return 0;
+  return now - state.lastIncreaseAt < FLOW_ACTIVE_WINDOW_MS ? state.target : 0;
+}
+
+/** True once a running shower has gone quiet for the whole activity window. */
+export function isShowerOver(state, now) {
+  return (
+    state.showerActive &&
+    state.lastIncreaseAt > 0 &&
+    now - state.lastIncreaseAt >= FLOW_ACTIVE_WINDOW_MS
+  );
+}
+
+export function qualifiesForCelebration(volume, targetBudget, isDead) {
+  return !isDead && volume > 0 && volume <= targetBudget;
+}
+
+/** Number of bubbles in the rising stream for a given flow intensity. */
+export function flowBubbleCount(intensity, max = 36) {
+  if (!(intensity > 0.02)) return 0;
+  return Math.min(max, Math.round(4 + intensity * (max - 4)));
+}
+
+/**
+ * A tap near the water surface drops food; a tap deeper in the tank knocks on
+ * the glass.
+ */
+export function classifyTap(y, waterSurfaceY, margin = 45) {
+  return y <= waterSurfaceY + margin ? "feed" : "knock";
+}
+
+/** Startle impulse for a fish at (fx, fy) when the glass is knocked at (tx, ty). */
+export function computeScareKick(fx, fy, tx, ty, radius = 280, rand = Math.random) {
+  const dx = fx - tx;
+  const dy = fy - ty;
+  const dist = Math.hypot(dx, dy);
+  if (dist > radius) return null;
+  let ux;
+  let uy;
+  if (dist < 1) {
+    const a = rand() * Math.PI * 2;
+    ux = Math.cos(a);
+    uy = Math.sin(a);
+  } else {
+    ux = dx / dist;
+    uy = dy / dist;
+  }
+  const strength = 1 - dist / radius;
+  const mag = 2 + 9 * strength;
+  return { kx: ux * mag, ky: uy * mag * 0.6, scare: strength };
+}
+
+/** Closest food flake within range of a fish, or null. */
+export function pickFoodTarget(fx, fy, flakes, range = 360) {
+  let best = null;
+  let bestD = range;
+  for (const f of flakes) {
+    if (f.eaten) continue;
+    const d = Math.hypot(f.x - fx, f.y - fy);
+    if (d < bestD) {
+      bestD = d;
+      best = f;
+    }
+  }
+  return best;
+}
+
+export function createFlakes(x, y, count = 6, rand = Math.random) {
+  const palette = ["#f59e0b", "#fbbf24", "#fb923c", "#facc15"];
+  return Array.from({ length: count }, () => ({
+    x: x + (rand() - 0.5) * 70,
+    y: y + rand() * 12,
+    vy: 0.45 + rand() * 0.4,
+    phase: rand() * Math.PI * 2,
+    r: 3.4 + rand() * 2,
+    color: palette[Math.floor(rand() * palette.length)],
+    landedAt: 0,
+    eaten: false,
+  }));
+}
+
+export function createCelebrationParticles(count = 42, rand = Math.random) {
+  const palette = ["#fde047", "#fbbf24", "#f59e0b", "#fcd34d"];
+  return Array.from({ length: count }, () => ({
+    x: 60 + rand() * 904,
+    r: 3 + rand() * 6,
+    speed: 70 + rand() * 110, // px per second
+    delay: rand() * 2.6, // seconds
+    phase: rand() * Math.PI * 2,
+    color: palette[Math.floor(rand() * palette.length)],
+  }));
+}
+
+/** Overshooting "pop" curve used for the trophy: 0 -> ~1.15 -> 1. */
+export function celebrationScale(ageMs) {
+  const t = Math.max(0, Math.min(1, ageMs / 900));
+  const c1 = 2.2;
+  const c3 = c1 + 1;
+  return 1 + c3 * Math.pow(t - 1, 3) + c1 * Math.pow(t - 1, 2);
+}
+
+/** Opacity of the celebration overlay: full, then fading over the last 1.4 s. */
+export function celebrationOpacity(ageMs) {
+  const fadeStart = CELEBRATION_DURATION_MS - 1400;
+  if (ageMs <= fadeStart) return 1;
+  return Math.max(0, 1 - (ageMs - fadeStart) / 1400);
+}
+
+// ---------------------------------------------------------------------------
+// Night mode and cost estimation helpers.
+// ---------------------------------------------------------------------------
+
+/**
+ * Whether the configured "night" entity says it is dark:
+ *  - sun.*                              -> below_horizon
+ *  - binary_sensor / input_boolean / switch -> on
+ *  - sensor (illuminance in lx)         -> value below the threshold
+ */
+export function isNightFromEntity(entityId, stateObj, luxThreshold = 20) {
+  if (!entityId || !stateObj || stateObj.state === undefined) return false;
+  const domain = String(entityId).split(".")[0];
+  const state = String(stateObj.state);
+  if (domain === "sun") return state === "below_horizon";
+  if (domain === "binary_sensor" || domain === "input_boolean" || domain === "switch") {
+    return state === "on";
+  }
+  if (domain === "sensor") {
+    const lux = parseFloat(state);
+    return !isNaN(lux) && lux < luxThreshold;
+  }
+  return false;
+}
+
+const WATER_HEAT_KWH_PER_L_PER_K = 4.186 / 3600; // 1 L of water, 1 K, in kWh
+
+/** Energy (kWh) needed to heat `volumeL` litres from `coldC` to `tempC`. */
+export function estimateEnergyKwh(volumeL, tempC, coldC = 15) {
+  if (!(volumeL > 0) || !(tempC > coldC)) return 0;
+  return volumeL * (tempC - coldC) * WATER_HEAT_KWH_PER_L_PER_K;
+}
+
+export function computeShowerCost({ volumeL, energyKwh, waterPricePerM3, energyPricePerKwh }) {
+  const water = Math.max(0, volumeL || 0) * (Number(waterPricePerM3) || 0) / 1000;
+  const energy = Math.max(0, energyKwh || 0) * (Number(energyPricePerKwh) || 0);
+  return { water, energy, total: water + energy };
+}
+
+export function formatEuro(amount, lang = "fr") {
+  try {
+    return new Intl.NumberFormat(lang, { style: "currency", currency: "EUR" }).format(amount);
+  } catch {
+    return `${amount.toFixed(2)} €`;
+  }
+}
