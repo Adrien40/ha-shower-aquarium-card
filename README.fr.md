@@ -121,9 +121,26 @@ Suivre sa consommation d'eau sous forme de jauges ou de chiffres peut vite deven
 | `algae_delay_hours` | Nombre | `12` | Heures d'attente avant l'apparition des premières algues. |
 | `algae_age` | Nombre | `0` | Curseur de forçage de l'âge des algues (0 à 48h). |
 | `fish_speed_multiplier` | Nombre | `1.2` | Vitesse de nage des poissons (0.2 à 3.0). |
+| `night_entity` | Entité | `-` | Déclencheur du mode nuit : `sun.sun` (nuit = sous l'horizon), un capteur binaire / booléen (`on` = nuit) ou un capteur de luminosité. |
+| `night_lux_threshold` | Nombre | `20` | Luminosité (lx) sous laquelle il fait nuit (capteurs de luminosité uniquement). |
+| `show_cost` | Booléen | `false` | Affiche le coût estimé de la douche (eau + énergie de chauffe). |
+| `water_price_per_m3` | Nombre | `4.5` | Prix de l'eau en €/m³. |
+| `energy_price_per_kwh` | Nombre | `0.25` | Prix de l'énergie en €/kWh. |
+| `cold_water_temp` | Nombre | `15` | Température de l'eau froide (°C), pour estimer l'énergie de chauffe. |
 | `fullscreen` | Booléen | `false` | Mode plein écran immersif (sans bordures ni cartes de métriques). |
 | `aspect_ratio_width` | Nombre | `1024` | Ratio d'affichage - Largeur. |
 | `aspect_ratio_height` | Nombre | `600` | Ratio d'affichage - Hauteur. |
+
+---
+
+## 🎮 Interactions et animations en direct
+
+- **Toucher l'eau** : un coup sur la vitre fait naître une onde de choc, les poissons proches s'écartent vivement puis reprennent leur nage.
+- **Toucher près de la surface** : fait tomber de la nourriture, les poissons se précipitent pour attraper les flocons pendant leur descente.
+- **Eau qui coule** : tant que le volume augmente, la surface s'agite et un flux de bulles remonte du fond. L'intensité suit le débit déduit du capteur de volume.
+- **Fin de douche** : quand le débit retombe à zéro et que le total est resté sous l'objectif, une pluie de bulles dorées et un trophée célèbrent la performance.
+- **Mode nuit** (`night_entity`) : l'aquarium bascule en ambiance bleu nuit tamisée avec une lueur lunaire.
+- **Coût** (`show_cost`) : l'énergie de chauffe est estimée d'après le volume et la température de l'eau (`4,186 kJ/kg/K`), puis valorisée avec les deux tarifs ci-dessus. C'est une estimation, pas une facture.
 
 ---
 

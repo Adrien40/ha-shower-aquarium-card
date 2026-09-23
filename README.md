@@ -121,9 +121,26 @@ Tracking water consumption with plain gauges or raw numbers can quickly become m
 | `algae_delay_hours` | Number | `12` | Hours to wait before algae starts appearing. |
 | `algae_age` | Number | `0` | Manual slider to test/force algae age (0 to 48h). |
 | `fish_speed_multiplier` | Number | `1.2` | Fish swimming speed multiplier (0.2 to 3.0). |
+| `night_entity` | Entity | `-` | Night mode trigger: `sun.sun` (night = below horizon), a binary sensor / boolean (`on` = night) or an illuminance sensor. |
+| `night_lux_threshold` | Number | `20` | Illuminance (lx) below which it counts as night (illuminance sensors only). |
+| `show_cost` | Boolean | `false` | Show the estimated shower cost (water + heating energy). |
+| `water_price_per_m3` | Number | `4.5` | Water price in €/m³. |
+| `energy_price_per_kwh` | Number | `0.25` | Energy price in €/kWh. |
+| `cold_water_temp` | Number | `15` | Cold water inlet temperature (°C), used to estimate the heating energy. |
 | `fullscreen` | Boolean | `false` | Immersive fullscreen mode (removes borders and metric cards). |
 | `aspect_ratio_width` | Number | `1024` | Aspect ratio - Width. |
 | `aspect_ratio_height` | Number | `600` | Aspect ratio - Height. |
+
+---
+
+## 🎮 Interactions & live animations
+
+- **Tap the water** to knock on the glass: a shock wave ripples out and nearby fish dart away before resuming their swim.
+- **Tap near the surface** to drop fish food: the fish rush to catch the flakes as they sink.
+- **Water running**: while the volume keeps growing, the surface becomes choppier and a stream of bubbles rises from the bottom. The intensity follows the flow inferred from the volume sensor.
+- **End of shower**: when the flow stops and the total stayed within the target budget, golden bubbles and a trophy celebrate.
+- **Night mode** (`night_entity`): the tank fades to a dim blue moonlit ambience.
+- **Cost** (`show_cost`): the heating energy is estimated from the volume and the water temperature (`4.186 kJ/kg/K`), then priced with the two rates above. It is an estimate, not a bill.
 
 ---
 
