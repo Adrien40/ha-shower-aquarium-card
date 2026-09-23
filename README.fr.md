@@ -158,6 +158,23 @@ fullscreen: false
 
 ---
 
+## 🧑‍💻 Développement
+
+Ce projet utilise [esbuild](https://esbuild.github.io/) pour empaqueter la carte en un seul fichier autonome, et [Vitest](https://vitest.dev/) pour les tests unitaires.
+
+```bash
+git clone https://github.com/Adrien40/ha-shower-aquarium-card.git
+cd ha-shower-aquarium-card
+npm install
+
+npm test         # Lance les tests unitaires
+npm run lint     # Vérifie le code avec ESLint
+npm run build    # Génère dist/shower-aquarium-card.js
+npm run watch    # Reconstruit automatiquement pendant le développement
+```
+
+---
+
 ## 🤝 Contributions et Support
 
 Pour tout bug ou suggestion d'amélioration, vous pouvez ouvrir une issue sur ce dépôt.
