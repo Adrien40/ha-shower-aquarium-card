@@ -23,5 +23,14 @@
   "field_fullscreen": "Mode plein écran",
   "helper_fullscreen": "Tablette, Nest Hub...",
   "field_aspect_ratio_width": "Ratio - Largeur (ex : 1024, 16, 4)",
-  "field_aspect_ratio_height": "Ratio - Hauteur (ex : 600, 9, 3)"
+  "field_aspect_ratio_height": "Ratio - Hauteur (ex : 600, 9, 3)",
+  "label_cost": "Coût",
+  "field_night_entity": "Entité du mode nuit (optionnel)",
+  "helper_night_entity": "sun.sun (nuit = sous l'horizon), un capteur binaire / booléen (on = nuit) ou un capteur de luminosité",
+  "field_night_lux": "Seuil de luminosité nuit (lx)",
+  "field_show_cost": "Afficher le coût estimé de la douche",
+  "helper_show_cost": "Eau + énergie de chauffe, estimés d'après le volume et la température",
+  "field_water_price": "Prix de l'eau (€/m³)",
+  "field_energy_price": "Prix de l'énergie (€/kWh)",
+  "field_cold_water_temp": "Température de l'eau froide (°C)"
 }
