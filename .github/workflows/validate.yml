@@ -1,0 +1,204 @@
+name: Validate
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions: {}
+
+jobs:
+  syntax-check:
+    name: JS syntax check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+
+      - name: Check every .js file parses
+        run: |
+          set -e
+          for f in $(find . -name "*.js" -not -path "./.git/*" -not -path "./node_modules/*" -not -path "./dist/*"); do
+            echo "Checking $f"
+            node --check "$f"
+          done
+
+  eslint:
+    name: ESLint
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+
+      - name: Setup Node
+        uses: actions/setup-node@v7
+        with:
+          node-version: 24
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run ESLint
+        run: npm run lint
+
+  unit-tests:
+    name: Unit tests (vitest)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+
+      - name: Setup Node
+        uses: actions/setup-node@v7
+        with:
+          node-version: 24
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run tests
+        run: npm test
+
+  build:
+    name: Bundle builds cleanly (esbuild)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+
+      - name: Setup Node
+        uses: actions/setup-node@v7
+        with:
+          node-version: 24
+
+      - name: Install dependencies
+        run: npm ci
+
+      # This is the check that would catch a bundling regression (e.g. a
+      # stray import esbuild can't resolve) silently leaving dist/ never
+      # rebuilt, with no other signal anything was wrong.
+      - name: Run build
+        run: npm run build
+
+  json-validate:
+    name: Translation JSON validity + parity
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+
+      # Reads the source translations/ directory, not dist/ -- this must
+      # pass on every push/PR regardless of whether dist/ has been
+      # rebuilt yet, since dist/ is only committed by build-dist.yml on
+      # pushes to main.
+      - name: Validate JSON and compare en/fr keys
+        run: |
+          python3 - <<'EOF'
+          import json
+          import sys
+
+          try:
+              en = json.load(open("translations/en.json"))
+              fr = json.load(open("translations/fr.json"))
+          except json.JSONDecodeError as e:
+              print(f"::error::Malformed translation JSON: {e}")
+              sys.exit(1)
+
+          en_keys = set(en)
+          fr_keys = set(fr)
+
+          missing_in_fr = en_keys - fr_keys
+          missing_in_en = fr_keys - en_keys
+
+          if missing_in_fr:
+              print(f"::error::Keys in en.json missing from fr.json: {sorted(missing_in_fr)}")
+          if missing_in_en:
+              print(f"::error::Keys in fr.json missing from en.json: {sorted(missing_in_en)}")
+          if missing_in_fr or missing_in_en:
+              sys.exit(1)
+
+          print(f"OK: {len(en_keys)} keys, en/fr in sync.")
+          EOF
+
+  version-consistency:
+    name: CARD_VERSION consistency
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+
+      # card-editor.js does not use CARD_VERSION today, but
+      # shower-aquarium-card.js must import it from version.js rather than
+      # redeclare its own copy -- this is the single-source-of-truth this
+      # check protects.
+      - name: shower-aquarium-card.js must not hardcode its own CARD_VERSION
+        run: |
+          set -e
+          cd src
+          if grep -qE '^\s*const CARD_VERSION\s*=' shower-aquarium-card.js; then
+            echo "::error file=src/shower-aquarium-card.js::shower-aquarium-card.js must import CARD_VERSION from version.js, not declare its own constant."
+            exit 1
+          fi
+          if ! grep -q 'import { CARD_VERSION } from "./version.js"' shower-aquarium-card.js; then
+            echo "::error file=src/shower-aquarium-card.js::shower-aquarium-card.js must import CARD_VERSION from version.js."
+            exit 1
+          fi
+
+      # card-editor.js is loaded via a *static* import and bundled together
+      # with shower-aquarium-card.js into a single dist file by esbuild
+      # (see build.mjs). Fail the build if someone reverts this to a
+      # dynamic import with a hand-rolled ?v= string, which esbuild's
+      # bundler cannot follow across a template-literal specifier anyway.
+      - name: card-editor.js must be a static import (bundled by esbuild)
+        run: |
+          set -e
+          cd src
+          if ! grep -qE '^\s*import\s+"\./card-editor\.js";?\s*$' shower-aquarium-card.js; then
+            echo "::error file=src/shower-aquarium-card.js::Expected a static import \"./card-editor.js\"; so esbuild bundles it into the single dist file."
+            exit 1
+          fi
+
+      # `lit` is a real, tracked npm dependency (see package.json) that
+      # esbuild resolves from node_modules and bundles in -- there is no
+      # vendored lit-element-bundle.min.js anymore. Fail the build if one
+      # reappears or gets imported from again: that file no longer exists
+      # in this repo, and a stray import of it would break resolution
+      # (caught more directly by the `build` job, but this keeps the
+      # failure message specific to the actual cause).
+      - name: Lit must be imported from the npm package, not a vendored file
+        run: |
+          set -e
+          cd src
+          for f in shower-aquarium-card.js card-editor.js styles.js; do
+            if grep -qE 'from\s+"\./lit-element-bundle' "$f"; then
+              echo "::error file=src/$f::Import Lit from the npm package (\"lit\"), not a vendored bundle file -- lit is a declared dependency in package.json."
+              exit 1
+            fi
+          done
+          if [ -f lit-element-bundle.min.js ]; then
+            echo "::error file=src/lit-element-bundle.min.js::A vendored Lit bundle reappeared in src/ -- lit is meant to be a real npm dependency now (see package.json)."
+            exit 1
+          fi
+
+      # The manual-install instructions must match what the build actually
+      # produces: one bundled dist/shower-aquarium-card.js (translations
+      # included). A README still listing the pre-bundle individual files
+      # (card-editor.js, pure.js, styles.js, translations.js, the vendored
+      # lit bundle) as separate downloads sends anyone following it
+      # literally looking for files that no longer exist in the build
+      # output.
+      - name: README manual-install instructions match the bundled output
+        run: |
+          set -e
+          for readme in README.md README.fr.md; do
+            if ! grep -q -- "shower-aquarium-card.js" "$readme"; then
+              echo "::error file=$readme::Manual installation instructions don't mention shower-aquarium-card.js."
+              exit 1
+            fi
+            for stale in "card-editor.js" "pure.js" "styles.js" "translations.js" "lit-element-bundle"; do
+              if grep -qE "^\s*\*\s*\`$stale" "$readme"; then
+                echo "::error file=$readme::Manual installation instructions still list '$stale' as a separate download. The build now bundles it into shower-aquarium-card.js; update the instructions instead of listing individual pre-bundle module files."
+                exit 1
+              fi
+            done
+          done
