@@ -464,6 +464,8 @@ export const ANIMATION_PROFILES = {
   // Full experience; frame rate follows the display.
   max: {
     fps: 0,
+    ambientHz: 0,
+    antialias: true,
     flowBubbles: 36,
     celebrationParticles: 42,
     celebrationHighlights: true,
@@ -474,6 +476,8 @@ export const ANIMATION_PROFILES = {
   },
   balanced: {
     fps: 30,
+    ambientHz: 0,
+    antialias: true,
     flowBubbles: 24,
     celebrationParticles: 30,
     celebrationHighlights: true,
@@ -485,6 +489,11 @@ export const ANIMATION_PROFILES = {
   // Targeted at weak displays such as the Google Nest Hub.
   light: {
     fps: 20,
+    // Slow ambient motion (water surface, anemone) refreshes ~8x/s and the
+    // edges are not anti-aliased: both cut the per-frame raster work that is
+    // the bottleneck on weak displays.
+    ambientHz: 8,
+    antialias: false,
     flowBubbles: 12,
     celebrationParticles: 15,
     celebrationHighlights: false,

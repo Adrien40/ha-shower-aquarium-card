@@ -37,5 +37,6 @@
   "quality_max": "Maximum",
   "quality_balanced": "Balanced",
   "quality_light": "Light (Google Nest Hub)",
-  "helper_animation_quality": "Light: 20 frames/s and simpler effects, for low-power screens"
+  "helper_animation_quality": "Light: 20 frames/s and simpler effects, for low-power screens",
+  "field_cost_fullscreen": "Show cost in fullscreen mode"
 }

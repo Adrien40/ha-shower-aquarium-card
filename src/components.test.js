@@ -333,3 +333,26 @@ describe("render(): night mode", () => {
     expect(el.shadowRoot.querySelector("#night-overlay")).toBeNull();
   });
 });
+
+describe("render(): cost pill in fullscreen", () => {
+  const hassWithCost = () => ({
+    language: "en",
+    states: {
+      "sensor.shower_volume": { state: "40", last_changed: new Date().toISOString() },
+    },
+  });
+
+  it("is hidden in fullscreen unless cost_in_fullscreen is enabled", async () => {
+    const el = mountCard({ show_cost: true, fullscreen: true });
+    el.hass = hassWithCost();
+    await el.updateComplete;
+    expect(el.shadowRoot.textContent).not.toContain("€");
+  });
+
+  it("appears in fullscreen when cost_in_fullscreen is enabled", async () => {
+    const el = mountCard({ show_cost: true, fullscreen: true, cost_in_fullscreen: true });
+    el.hass = hassWithCost();
+    await el.updateComplete;
+    expect(el.shadowRoot.textContent).toContain("€");
+  });
+});

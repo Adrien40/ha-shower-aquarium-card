@@ -73,6 +73,7 @@ export const CARD_EDITOR_SCHEMA = [
     selector: { number: { min: 1, max: 1000, unit_of_measurement: "lx", mode: "box" } },
   },
   { name: "show_cost", default: false, selector: { boolean: {} } },
+  { name: "cost_in_fullscreen", default: false, selector: { boolean: {} } },
   {
     name: "water_price_per_m3",
     default: 4.5,
@@ -136,6 +137,7 @@ const FIELD_LABEL_KEYS = {
   night_entity: "field_night_entity",
   night_lux_threshold: "field_night_lux",
   show_cost: "field_show_cost",
+  cost_in_fullscreen: "field_cost_fullscreen",
   water_price_per_m3: "field_water_price",
   energy_price_per_kwh: "field_energy_price",
   cold_water_temp: "field_cold_water_temp",

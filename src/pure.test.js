@@ -600,3 +600,13 @@ describe("frame limiter", () => {
     expect(maxPhysicsDelta(30)).toBeGreaterThan(2);
   });
 });
+
+describe("light profile keeps the raster cost down", () => {
+  it("refreshes ambient motion slowly and drops anti-aliasing only in light", () => {
+    expect(getAnimationProfile("light").ambientHz).toBeGreaterThan(0);
+    expect(getAnimationProfile("light").ambientHz).toBeLessThan(20);
+    expect(getAnimationProfile("light").antialias).toBe(false);
+    expect(getAnimationProfile("balanced").antialias).toBe(true);
+    expect(getAnimationProfile("max").ambientHz).toBe(0);
+  });
+});

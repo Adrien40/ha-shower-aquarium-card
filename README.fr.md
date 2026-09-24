@@ -124,6 +124,7 @@ Suivre sa consommation d'eau sous forme de jauges ou de chiffres peut vite deven
 | `night_entity` | Entité | `-` | Déclencheur du mode nuit : `sun.sun` (nuit = sous l'horizon), un capteur binaire / booléen (`on` = nuit) ou un capteur de luminosité. |
 | `night_lux_threshold` | Nombre | `20` | Luminosité (lx) sous laquelle il fait nuit (capteurs de luminosité uniquement). |
 | `show_cost` | Booléen | `false` | Affiche le coût estimé de la douche (eau + énergie de chauffe). |
+| `cost_in_fullscreen` | Booléen | `false` | Affiche aussi la bulle de coût en mode plein écran (masquée par défaut). |
 | `water_price_per_m3` | Nombre | `4.5` | Prix de l'eau en €/m³. |
 | `energy_price_per_kwh` | Nombre | `0.25` | Prix de l'énergie en €/kWh. |
 | `cold_water_temp` | Nombre | `15` | Température de l'eau froide (°C), pour estimer l'énergie de chauffe. |
@@ -156,6 +157,8 @@ Suivre sa consommation d'eau sous forme de jauges ou de chiffres peut vite deven
 | Plantes et coraux morts | fanage progressif gris-brun | fanage progressif gris-brun | estompage progressif |
 | Mode nuit | halo de lune | halo de lune | teinte bleue unie, lune simple |
 | Onde de choc (coup sur la vitre) | double cercle | double cercle | un seul cercle |
+| Mouvement de la surface et de l'anémone | à chaque image | à chaque image | rafraîchi environ 8 fois par seconde |
+| Lissage des bords (anti-crénelage) | oui | oui | non (plus rapide à dessiner) |
 
 Poissons, nourriture, trophée, jauges et coût sont identiques dans tous les modes.
 

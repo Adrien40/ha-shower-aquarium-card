@@ -37,5 +37,6 @@
   "quality_max": "Maximale",
   "quality_balanced": "Équilibrée",
   "quality_light": "Légère (Google Nest Hub)",
-  "helper_animation_quality": "Légère : 20 images/s et effets simplifiés, pour les écrans peu puissants"
+  "helper_animation_quality": "Légère : 20 images/s et effets simplifiés, pour les écrans peu puissants",
+  "field_cost_fullscreen": "Afficher le coût en mode plein écran"
 }

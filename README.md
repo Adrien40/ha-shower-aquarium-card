@@ -124,6 +124,7 @@ Tracking water consumption with plain gauges or raw numbers can quickly become m
 | `night_entity` | Entity | `-` | Night mode trigger: `sun.sun` (night = below horizon), a binary sensor / boolean (`on` = night) or an illuminance sensor. |
 | `night_lux_threshold` | Number | `20` | Illuminance (lx) below which it counts as night (illuminance sensors only). |
 | `show_cost` | Boolean | `false` | Show the estimated shower cost (water + heating energy). |
+| `cost_in_fullscreen` | Boolean | `false` | Also show the cost bubble in fullscreen mode (hidden by default). |
 | `water_price_per_m3` | Number | `4.5` | Water price in €/m³. |
 | `energy_price_per_kwh` | Number | `0.25` | Energy price in €/kWh. |
 | `cold_water_temp` | Number | `15` | Cold water inlet temperature (°C), used to estimate the heating energy. |
@@ -156,6 +157,8 @@ Tracking water consumption with plain gauges or raw numbers can quickly become m
 | Dead plants and corals | gradual grey-brown wilt | gradual grey-brown wilt | gradual fade |
 | Night mode | moon glow | moon glow | flat blue tint, plain moon |
 | Knock shock wave | double ring | double ring | single ring |
+| Water surface and anemone motion | every frame | every frame | refreshed ~8 times per second |
+| Edge anti-aliasing | yes | yes | no (faster to draw) |
 
 Fish, food, trophy, gauges and cost are identical in every mode.
 

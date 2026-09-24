@@ -113,6 +113,8 @@ class AquariumShowerCard extends LitElement {
     this._lastTimestamp = 0;
     this._lastFrameTs = 0;
     this._animTime = 0;
+    this._ambientTime = 0;
+    this._lastAmbientTs = 0;
     this._cachedConsumedVolume = 0;
     this._cachedTemperature = 0;
     this._cachedTargetBudget = 50;
@@ -215,6 +217,7 @@ class AquariumShowerCard extends LitElement {
       fullscreen: false,
       night_lux_threshold: 20,
       show_cost: false,
+      cost_in_fullscreen: false,
       water_price_per_m3: 4.5,
       energy_price_per_kwh: 0.25,
       cold_water_temp: 15,
@@ -312,6 +315,12 @@ class AquariumShowerCard extends LitElement {
     const delta = Math.min(deltaMs / 16.66, maxPhysicsDelta(profile.fps));
     this._lastTimestamp = timestamp;
     this._animTime = timestamp * 0.0035;
+    // Slowly-moving ambient elements use a clock that ticks less often in
+    // the light profile, so they are repainted less often.
+    if (!profile.ambientHz || timestamp - this._lastAmbientTs >= 1000 / profile.ambientHz) {
+      this._ambientTime = this._animTime;
+      this._lastAmbientTs = timestamp;
+    }
 
     const metrics = {
       consumedVolume: this._cachedConsumedVolume,
@@ -658,7 +667,8 @@ class AquariumShowerCard extends LitElement {
     const flow = this._flowIntensity || 0;
     const amp = 3.5 + flow * 6.5;
     const wavelen = 90 - flow * 35;
-    const phase = this._animTime * (1.6 + flow * 2.4);
+    const surfaceClock = flow > 0.05 ? this._animTime : this._ambientTime;
+    const phase = surfaceClock * (1.6 + flow * 2.4);
     const rich = this._profile.richSurface;
     const step = rich ? 16 : 28;
     const chop = (x) => (rich ? Math.sin(x / 17 + phase * 2.3) * flow * 2.4 : 0);
@@ -700,7 +710,7 @@ class AquariumShowerCard extends LitElement {
           (layer.lenMin + (layer.lenMax - layer.lenMin) * (0.5 + 0.5 * Math.sin(t * Math.PI))) *
           (1 - 0.3 * deathProgress);
         const phase = li * 10 + i * 0.7;
-        const sway = Math.sin(this._animTime * layer.speed + phase) * 9 * (1 - deathProgress);
+        const sway = Math.sin(this._ambientTime * layer.speed + phase) * 9 * (1 - deathProgress);
         const rad = (baseAngle * Math.PI) / 180;
         const bx = Math.cos(rad) * layer.baseR;
         const by = Math.sin(rad) * layer.baseR;
@@ -952,7 +962,7 @@ class AquariumShowerCard extends LitElement {
     const bodyOpacity = (1.0 - p).toFixed(2);
     const mouthPulse = isDead
       ? 1
-      : (1 + Math.sin(this._animTime * 1.6) * 0.07).toFixed(3);
+      : (1 + Math.sin(this._ambientTime * 1.6) * 0.07).toFixed(3);
 
     const finColor = "#182026";
     const bodyColor = "#1e293b";
@@ -1425,6 +1435,7 @@ class AquariumShowerCard extends LitElement {
             @click=${(e) => this._onTankTap(e)}
             viewBox="0 0 1024 ${isFullscreen ? 600 : canvasH}"
             preserveAspectRatio="${isFullscreen ? "none" : "xMidYMid meet"}"
+            shape-rendering="${this._profile.antialias ? "auto" : "optimizeSpeed"}"
             style="${isFullscreen
               ? "width: 100%; height: 100%;"
               : `aspect-ratio: ${rWidth} /${rHeight};`}"
@@ -1581,7 +1592,7 @@ class AquariumShowerCard extends LitElement {
                     boilTemp
                   )
                 : ""}
-              ${isFullscreen ? this._renderCostPill(cost, 600) : ""}
+              ${isFullscreen && this._config.cost_in_fullscreen ? this._renderCostPill(cost, 600) : ""}
 
               ${this._renderNightOverlay(isFullscreen ? 600 : canvasH, tankTop)}
               ${this._renderCelebration(waterSurfaceY, tankTop, tankBottom)}

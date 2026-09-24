@@ -29,10 +29,10 @@ describe("card-editor.js render()", () => {
     expect(el.shadowRoot.querySelector("ha-form")).not.toBeNull();
   });
 
-  it("passes the full CARD_EDITOR_SCHEMA (24 fields) to ha-form", async () => {
+  it("passes the full CARD_EDITOR_SCHEMA (25 fields) to ha-form", async () => {
     const el = await mountEditor();
     const form = el.shadowRoot.querySelector("ha-form");
-    expect(form.schema).toHaveLength(24);
+    expect(form.schema).toHaveLength(25);
     expect(form.schema.map((f) => f.name)).toContain("entity");
     expect(form.schema.map((f) => f.name)).toContain("aspect_ratio_height");
   });
