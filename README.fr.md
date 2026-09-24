@@ -128,6 +128,7 @@ Suivre sa consommation d'eau sous forme de jauges ou de chiffres peut vite deven
 | `energy_price_per_kwh` | Nombre | `0.25` | Prix de l'énergie en €/kWh. |
 | `cold_water_temp` | Nombre | `15` | Température de l'eau froide (°C), pour estimer l'énergie de chauffe. |
 | `fullscreen` | Booléen | `false` | Mode plein écran immersif (sans bordures ni cartes de métriques). |
+| `animation_quality` | Sélection | `max` | Qualité d'animation : `max` (fréquence de l'écran), `balanced` (30 i/s), `light` (20 i/s, effets simplifiés — pour le Google Nest Hub et les écrans peu puissants). |
 | `aspect_ratio_width` | Nombre | `1024` | Ratio d'affichage - Largeur. |
 | `aspect_ratio_height` | Nombre | `600` | Ratio d'affichage - Hauteur. |
 
@@ -141,6 +142,22 @@ Suivre sa consommation d'eau sous forme de jauges ou de chiffres peut vite deven
 - **Fin de douche** : quand le débit retombe à zéro et que le total est resté sous l'objectif, une pluie de bulles dorées et un trophée célèbrent la performance.
 - **Mode nuit** (`night_entity`) : l'aquarium bascule en ambiance bleu nuit tamisée avec une lueur lunaire.
 - **Coût** (`show_cost`) : l'énergie de chauffe est estimée d'après le volume et la température de l'eau (`4,186 kJ/kg/K`), puis valorisée avec les deux tarifs ci-dessus. C'est une estimation, pas une facture.
+
+---
+
+## ⚙️ Qualité d'animation
+
+| | `max` | `balanced` | `light` (Google Nest Hub) |
+| :--- | :--- | :--- | :--- |
+| Images par seconde | fréquence de l'écran | 30 | 20 |
+| Bulles du débit d'eau | 36 | 24 | 12 |
+| Bulles de célébration | 42, avec reflets | 30, avec reflets | 15, sans reflets |
+| Surface de l'eau | agitation complète | complète | plus simple, sans clapotis fin |
+| Plantes et coraux morts | fanage progressif gris-brun | fanage progressif gris-brun | estompage progressif |
+| Mode nuit | halo de lune | halo de lune | teinte bleue unie, lune simple |
+| Onde de choc (coup sur la vitre) | double cercle | double cercle | un seul cercle |
+
+Poissons, nourriture, trophée, jauges et coût sont identiques dans tous les modes.
 
 ---
 

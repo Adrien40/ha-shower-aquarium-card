@@ -128,6 +128,7 @@ Tracking water consumption with plain gauges or raw numbers can quickly become m
 | `energy_price_per_kwh` | Number | `0.25` | Energy price in €/kWh. |
 | `cold_water_temp` | Number | `15` | Cold water inlet temperature (°C), used to estimate the heating energy. |
 | `fullscreen` | Boolean | `false` | Immersive fullscreen mode (removes borders and metric cards). |
+| `animation_quality` | Select | `max` | Animation quality: `max` (display frame rate), `balanced` (30 fps), `light` (20 fps, simplified effects — for the Google Nest Hub and other low-power screens). |
 | `aspect_ratio_width` | Number | `1024` | Aspect ratio - Width. |
 | `aspect_ratio_height` | Number | `600` | Aspect ratio - Height. |
 
@@ -141,6 +142,22 @@ Tracking water consumption with plain gauges or raw numbers can quickly become m
 - **End of shower**: when the flow stops and the total stayed within the target budget, golden bubbles and a trophy celebrate.
 - **Night mode** (`night_entity`): the tank fades to a dim blue moonlit ambience.
 - **Cost** (`show_cost`): the heating energy is estimated from the volume and the water temperature (`4.186 kJ/kg/K`), then priced with the two rates above. It is an estimate, not a bill.
+
+---
+
+## ⚙️ Animation quality
+
+| | `max` | `balanced` | `light` (Google Nest Hub) |
+| :--- | :--- | :--- | :--- |
+| Frames per second | display rate | 30 | 20 |
+| Water-flow bubbles | 36 | 24 | 12 |
+| Celebration bubbles | 42, with highlights | 30, with highlights | 15, no highlights |
+| Water surface | full choppy detail | full | simpler, no fine chop |
+| Dead plants and corals | gradual grey-brown wilt | gradual grey-brown wilt | gradual fade |
+| Night mode | moon glow | moon glow | flat blue tint, plain moon |
+| Knock shock wave | double ring | double ring | single ring |
+
+Fish, food, trophy, gauges and cost are identical in every mode.
 
 ---
 
