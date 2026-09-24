@@ -32,5 +32,10 @@
   "helper_show_cost": "Eau + énergie de chauffe, estimés d'après le volume et la température",
   "field_water_price": "Prix de l'eau (€/m³)",
   "field_energy_price": "Prix de l'énergie (€/kWh)",
-  "field_cold_water_temp": "Température de l'eau froide (°C)"
+  "field_cold_water_temp": "Température de l'eau froide (°C)",
+  "field_animation_quality": "Qualité d'animation",
+  "quality_max": "Maximale",
+  "quality_balanced": "Équilibrée",
+  "quality_light": "Légère (Google Nest Hub)",
+  "helper_animation_quality": "Légère : 20 images/s et effets simplifiés, pour les écrans peu puissants"
 }

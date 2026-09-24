@@ -32,5 +32,10 @@
   "helper_show_cost": "Water + heating energy, estimated from volume and temperature",
   "field_water_price": "Water price (€/m³)",
   "field_energy_price": "Energy price (€/kWh)",
-  "field_cold_water_temp": "Cold water temperature (°C)"
+  "field_cold_water_temp": "Cold water temperature (°C)",
+  "field_animation_quality": "Animation quality",
+  "quality_max": "Maximum",
+  "quality_balanced": "Balanced",
+  "quality_light": "Light (Google Nest Hub)",
+  "helper_animation_quality": "Light: 20 frames/s and simpler effects, for low-power screens"
 }
