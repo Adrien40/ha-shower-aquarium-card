@@ -414,3 +414,28 @@ describe("_startAnimation() / connectedCallback(): the rAF loop actually calls _
     }
   });
 });
+
+describe("_updatePhysics(): animation quality", () => {
+  const swim = (quality, stepMs) => {
+    const el = makeCard({ animation_quality: quality });
+    const fish = { species: 0, x: 500, y: 300, vx: 2, vy: 0, dir: 1, deathProgress: 0 };
+    el._fishes = [fish];
+    el._updatePhysics(1000);
+    el._updatePhysics(1000 + stepMs);
+    return fish.x - 500;
+  };
+
+  it("keeps the swimming speed constant at 20 fps (time step is not clamped)", () => {
+    // One 50 ms tick at 20 fps must travel about as far as three 16.66 ms
+    // ticks at 60 fps, instead of being cut to two thirds of it.
+    const light = swim("light", 50);
+    const max60 = swim("max", 16.66) * 3;
+    expect(light).toBeGreaterThan(max60 * 0.95);
+    expect(light).toBeLessThan(max60 * 1.05);
+  });
+
+  it("still clamps huge gaps (suspended tab) in every profile", () => {
+    expect(swim("light", 5000)).toBeLessThan(swim("light", 50) * 2);
+    expect(swim("max", 5000)).toBeLessThan(swim("max", 16.66) * 3);
+  });
+});

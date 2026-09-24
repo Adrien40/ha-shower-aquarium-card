@@ -455,3 +455,66 @@ export function formatEuro(amount, lang = "fr") {
     return `${amount.toFixed(2)} €`;
   }
 }
+
+// ---------------------------------------------------------------------------
+// Animation quality profiles (performance vs. visual richness).
+// ---------------------------------------------------------------------------
+
+export const ANIMATION_PROFILES = {
+  // Full experience; frame rate follows the display.
+  max: {
+    fps: 0,
+    flowBubbles: 36,
+    celebrationParticles: 42,
+    celebrationHighlights: true,
+    richSurface: true,
+    deathFilter: true,
+    nightGlow: true,
+    doubleRipple: true,
+  },
+  balanced: {
+    fps: 30,
+    flowBubbles: 24,
+    celebrationParticles: 30,
+    celebrationHighlights: true,
+    richSurface: true,
+    deathFilter: true,
+    nightGlow: true,
+    doubleRipple: true,
+  },
+  // Targeted at weak displays such as the Google Nest Hub.
+  light: {
+    fps: 20,
+    flowBubbles: 12,
+    celebrationParticles: 15,
+    celebrationHighlights: false,
+    richSurface: false,
+    deathFilter: false,
+    nightGlow: false,
+    doubleRipple: false,
+  },
+};
+
+export function getAnimationProfile(quality) {
+  return ANIMATION_PROFILES[quality] || ANIMATION_PROFILES.max;
+}
+
+/**
+ * Frame limiter: true when enough time has passed since the last rendered
+ * frame. `fps` of 0 means "every display frame". A small tolerance absorbs
+ * the jitter of 60 Hz timestamps so 20 fps really lands on every third frame.
+ */
+export function shouldRenderFrame(timestamp, lastFrameTs, fps) {
+  if (!fps || !lastFrameTs) return true;
+  return timestamp - lastFrameTs >= 1000 / fps - 2;
+}
+
+/**
+ * Upper bound for the physics time step (in 60 Hz frame units). It has to
+ * grow with the frame interval, otherwise a 20 fps card would clamp its own
+ * steps and make every animal swim slower.
+ */
+export function maxPhysicsDelta(fps) {
+  if (!fps) return 2.0;
+  return Math.max(2.0, ((1000 / fps) / 16.66) * 1.6);
+}

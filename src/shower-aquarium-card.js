@@ -25,6 +25,9 @@ import {
   celebrationOpacity,
   CELEBRATION_DURATION_MS,
   RIPPLE_DURATION_MS,
+  getAnimationProfile,
+  shouldRenderFrame,
+  maxPhysicsDelta,
   isNightFromEntity,
   estimateEnergyKwh,
   computeShowerCost,
@@ -108,6 +111,7 @@ class AquariumShowerCard extends LitElement {
       phase: 0,
     }));
     this._lastTimestamp = 0;
+    this._lastFrameTs = 0;
     this._animTime = 0;
     this._cachedConsumedVolume = 0;
     this._cachedTemperature = 0;
@@ -214,6 +218,7 @@ class AquariumShowerCard extends LitElement {
       water_price_per_m3: 4.5,
       energy_price_per_kwh: 0.25,
       cold_water_temp: 15,
+      animation_quality: "max",
       ...config,
     };
 
@@ -273,10 +278,18 @@ class AquariumShowerCard extends LitElement {
     this._stopAnimation();
   }
 
+  // Animation quality profile (frame cap + which effects are simplified).
+  get _profile() {
+    return getAnimationProfile(this._config?.animation_quality);
+  }
+
   _startAnimation() {
     if (!this._animationFrameId) {
       const loop = (timestamp) => {
-        this._updatePhysics(timestamp);
+        if (shouldRenderFrame(timestamp, this._lastFrameTs, this._profile.fps)) {
+          this._lastFrameTs = timestamp;
+          this._updatePhysics(timestamp);
+        }
         this._animationFrameId = requestAnimationFrame(loop);
       };
       this._animationFrameId = requestAnimationFrame(loop);
@@ -295,7 +308,8 @@ class AquariumShowerCard extends LitElement {
       this._lastTimestamp = timestamp;
     }
     const deltaMs = timestamp - this._lastTimestamp;
-    const delta = Math.min(deltaMs / 16.66, 2.0);
+    const profile = this._profile;
+    const delta = Math.min(deltaMs / 16.66, maxPhysicsDelta(profile.fps));
     this._lastTimestamp = timestamp;
     this._animTime = timestamp * 0.0035;
 
@@ -339,7 +353,7 @@ class AquariumShowerCard extends LitElement {
       if (qualifiesForCelebration(metrics.consumedVolume, metrics.targetBudget, isDead)) {
         this._celebration = {
           start: nowMs,
-          particles: createCelebrationParticles(),
+          particles: createCelebrationParticles(profile.celebrationParticles),
         };
       }
       this._flow = { ...this._flow, showerActive: false };
@@ -378,7 +392,7 @@ class AquariumShowerCard extends LitElement {
     }
 
     // --- Flow bubbles: continuous stream rising from the bottom ----------
-    const wantedBubbles = waterRatio > 0 && !isDead ? flowBubbleCount(this._flowIntensity) : 0;
+    const wantedBubbles = waterRatio > 0 && !isDead ? flowBubbleCount(this._flowIntensity, profile.flowBubbles) : 0;
     this._flowBubbles.forEach((b, i) => {
       if (!b.active) {
         if (i < wantedBubbles) {
@@ -645,8 +659,9 @@ class AquariumShowerCard extends LitElement {
     const amp = 3.5 + flow * 6.5;
     const wavelen = 90 - flow * 35;
     const phase = this._animTime * (1.6 + flow * 2.4);
-    const step = 16;
-    const chop = (x) => Math.sin(x / 17 + phase * 2.3) * flow * 2.4;
+    const rich = this._profile.richSurface;
+    const step = rich ? 16 : 28;
+    const chop = (x) => (rich ? Math.sin(x / 17 + phase * 2.3) * flow * 2.4 : 0);
 
     const topPts = [];
     const botPts = [];
@@ -706,7 +721,11 @@ class AquariumShowerCard extends LitElement {
     const bottomY = isFullscreen ? 600 : this._getCanvasHeight() - 35;
     // Living decor (plants, corals, anemone) fades to a dull, withered look
     // as the tank dies; rocks and sand are left untouched.
-    const lifeStyle = `filter: grayscale(${(deathProgress * 0.85).toFixed(2)}) sepia(${(deathProgress * 0.5).toFixed(2)}) brightness(${(1 - deathProgress * 0.45).toFixed(2)});`;
+    // The light profile fades the decor instead of using CSS filters, which
+    // are costly on weak displays.
+    const lifeStyle = this._profile.deathFilter
+      ? `filter: grayscale(${(deathProgress * 0.85).toFixed(2)}) sepia(${(deathProgress * 0.5).toFixed(2)}) brightness(${(1 - deathProgress * 0.45).toFixed(2)});`
+      : `opacity: ${(1 - deathProgress * 0.6).toFixed(2)};`;
 
     if (themeKey === "saltwater") {
       return svg`
@@ -1158,7 +1177,9 @@ class AquariumShowerCard extends LitElement {
           const fade = (1 - t).toFixed(2);
           return svg`
             <circle cx="${r.x.toFixed(1)}" cy="${r.y.toFixed(1)}" r="${(14 + t * 150).toFixed(1)}" fill="none" stroke="#ffffff" stroke-width="${(5 - t * 3).toFixed(1)}" stroke-opacity="${fade}" />
-            <circle cx="${r.x.toFixed(1)}" cy="${r.y.toFixed(1)}" r="${(6 + t * 90).toFixed(1)}" fill="#ffffff" fill-opacity="${(0.28 * (1 - t)).toFixed(2)}" />
+            ${this._profile.doubleRipple
+              ? svg`<circle cx="${r.x.toFixed(1)}" cy="${r.y.toFixed(1)}" r="${(6 + t * 90).toFixed(1)}" fill="#ffffff" fill-opacity="${(0.28 * (1 - t)).toFixed(2)}" />`
+              : ""}
           `;
         })}
       </g>
@@ -1186,7 +1207,9 @@ class AquariumShowerCard extends LitElement {
           const x = p.x + Math.sin(seconds * 2 + p.phase) * 12;
           return svg`
             <circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${p.r.toFixed(1)}" fill="${p.color}" fill-opacity="0.85" stroke="#ffffff" stroke-opacity="0.8" stroke-width="1" />
-            <circle cx="${(x - p.r * 0.3).toFixed(1)}" cy="${(y - p.r * 0.3).toFixed(1)}" r="${(p.r * 0.28).toFixed(1)}" fill="#ffffff" fill-opacity="0.9" />
+            ${this._profile.celebrationHighlights
+              ? svg`<circle cx="${(x - p.r * 0.3).toFixed(1)}" cy="${(y - p.r * 0.3).toFixed(1)}" r="${(p.r * 0.28).toFixed(1)}" fill="#ffffff" fill-opacity="0.9" />`
+              : ""}
           `;
         })}
         <g transform="translate(512, ${cy.toFixed(1)}) scale(${(scale * 2.2).toFixed(3)}) rotate(${(Math.sin(seconds * 2.5) * 4).toFixed(1)})">
@@ -1207,24 +1230,33 @@ class AquariumShowerCard extends LitElement {
     const p = this._nightProgress;
     if (!(p > 0.01)) return svg``;
     const moonY = tankTop + 46;
+    const glow = this._profile.nightGlow;
     return svg`
       <g id="night-overlay" opacity="${p.toFixed(3)}" pointer-events="none">
-        <defs>
-          <radialGradient id="moonGlow" cx="50%" cy="50%" r="50%">
-            <stop offset="0%" stop-color="#dbeafe" stop-opacity="0.55" />
-            <stop offset="100%" stop-color="#dbeafe" stop-opacity="0" />
-          </radialGradient>
-          <mask id="moonMask">
-            <rect x="-30" y="-30" width="60" height="60" fill="#ffffff" />
-            <circle cx="7" cy="-4" r="13" fill="#000000" />
-          </mask>
-        </defs>
+        ${glow
+          ? svg`
+              <defs>
+                <radialGradient id="moonGlow" cx="50%" cy="50%" r="50%">
+                  <stop offset="0%" stop-color="#dbeafe" stop-opacity="0.55" />
+                  <stop offset="100%" stop-color="#dbeafe" stop-opacity="0" />
+                </radialGradient>
+                <mask id="moonMask">
+                  <rect x="-30" y="-30" width="60" height="60" fill="#ffffff" />
+                  <circle cx="7" cy="-4" r="13" fill="#000000" />
+                </mask>
+              </defs>
+            `
+          : ""}
         <rect x="0" y="0" width="1024" height="${canvasH}" fill="#0b1740" fill-opacity="0.6" />
-        <ellipse cx="300" cy="${moonY}" rx="250" ry="200" fill="url(#moonGlow)" />
-        <g transform="translate(300, ${moonY})">
-          <circle r="26" fill="#e0f2fe" fill-opacity="0.22" />
-          <circle r="15" fill="#f1f5f9" mask="url(#moonMask)" />
-        </g>
+        ${glow
+          ? svg`
+              <ellipse cx="300" cy="${moonY}" rx="250" ry="200" fill="url(#moonGlow)" />
+              <g transform="translate(300, ${moonY})">
+                <circle r="26" fill="#e0f2fe" fill-opacity="0.22" />
+                <circle r="15" fill="#f1f5f9" mask="url(#moonMask)" />
+              </g>
+            `
+          : svg`<circle cx="300" cy="${moonY}" r="13" fill="#f1f5f9" fill-opacity="0.9" />`}
       </g>
     `;
   }

@@ -543,3 +543,60 @@ describe("cost estimation", () => {
     expect(formatEuro(0.7, "en")).toContain("0.70");
   });
 });
+
+import {
+  getAnimationProfile,
+  shouldRenderFrame,
+  maxPhysicsDelta,
+} from "./pure.js";
+
+describe("animation quality profiles", () => {
+  it("falls back to the maximum profile for unknown values", () => {
+    expect(getAnimationProfile(undefined)).toBe(getAnimationProfile("max"));
+    expect(getAnimationProfile("nope")).toBe(getAnimationProfile("max"));
+  });
+
+  it("caps frame rate at 30 (balanced) and 20 (light), uncapped for max", () => {
+    expect(getAnimationProfile("max").fps).toBe(0);
+    expect(getAnimationProfile("balanced").fps).toBe(30);
+    expect(getAnimationProfile("light").fps).toBe(20);
+  });
+
+  it("gets lighter with each level", () => {
+    const max = getAnimationProfile("max");
+    const bal = getAnimationProfile("balanced");
+    const light = getAnimationProfile("light");
+    expect(max.flowBubbles).toBeGreaterThan(bal.flowBubbles);
+    expect(bal.flowBubbles).toBeGreaterThan(light.flowBubbles);
+    expect(max.celebrationParticles).toBeGreaterThan(light.celebrationParticles);
+    expect(light.deathFilter).toBe(false);
+    expect(light.nightGlow).toBe(false);
+  });
+});
+
+describe("frame limiter", () => {
+  it("renders every frame when uncapped or on the first frame", () => {
+    expect(shouldRenderFrame(1000, 999, 0)).toBe(true);
+    expect(shouldRenderFrame(1000, 0, 20)).toBe(true);
+  });
+
+  it("lands on every third 60 Hz frame at 20 fps", () => {
+    let last = 1000;
+    const rendered = [];
+    for (let i = 1; i <= 12; i++) {
+      const t = 1000 + i * 16.667;
+      if (shouldRenderFrame(t, last, 20)) {
+        rendered.push(i);
+        last = t;
+      }
+    }
+    expect(rendered).toEqual([3, 6, 9, 12]);
+  });
+
+  it("lets the physics step grow with the frame interval", () => {
+    expect(maxPhysicsDelta(0)).toBe(2);
+    expect(maxPhysicsDelta(60)).toBe(2);
+    expect(maxPhysicsDelta(20)).toBeGreaterThan(3);
+    expect(maxPhysicsDelta(30)).toBeGreaterThan(2);
+  });
+});

@@ -88,6 +88,19 @@ export const CARD_EDITOR_SCHEMA = [
     default: 15,
     selector: { number: { min: 0, max: 30, unit_of_measurement: "°C", mode: "box" } },
   },
+  {
+    name: "animation_quality",
+    default: "max",
+    selector: {
+      select: {
+        options: [
+          { value: "max", label: "Maximale" },
+          { value: "balanced", label: "Équilibrée" },
+          { value: "light", label: "Légère (Google Nest Hub)" },
+        ],
+      },
+    },
+  },
   { name: "fullscreen", default: false, selector: { boolean: {} } },
   {
     name: "aspect_ratio_width",
@@ -126,6 +139,7 @@ const FIELD_LABEL_KEYS = {
   water_price_per_m3: "field_water_price",
   energy_price_per_kwh: "field_energy_price",
   cold_water_temp: "field_cold_water_temp",
+  animation_quality: "field_animation_quality",
   fullscreen: "field_fullscreen",
   aspect_ratio_width: "field_aspect_ratio_width",
   aspect_ratio_height: "field_aspect_ratio_height",
@@ -161,6 +175,8 @@ export class AquariumShowerCardEditor extends LitElement {
         return translate(lang, "helper_night_entity");
       case "show_cost":
         return translate(lang, "helper_show_cost");
+      case "animation_quality":
+        return translate(lang, "helper_animation_quality");
       default:
         return "";
     }
@@ -178,13 +194,34 @@ export class AquariumShowerCardEditor extends LitElement {
     );
   }
 
+  // Localised labels for the animation-quality choices.
+  _schema() {
+    const lang = this._lang();
+    return CARD_EDITOR_SCHEMA.map((field) =>
+      field.name === "animation_quality"
+        ? {
+            ...field,
+            selector: {
+              select: {
+                options: [
+                  { value: "max", label: translate(lang, "quality_max") },
+                  { value: "balanced", label: translate(lang, "quality_balanced") },
+                  { value: "light", label: translate(lang, "quality_light") },
+                ],
+              },
+            },
+          }
+        : field
+    );
+  }
+
   render() {
     if (!this.hass || !this._config) return html``;
     return html`
       <ha-form
         .hass=${this.hass}
         .data=${this._config}
-        .schema=${CARD_EDITOR_SCHEMA}
+        .schema=${this._schema()}
         .computeLabel=${(s) => this._computeLabel(s)}
         .computeHelper=${(s) => this._computeHelper(s)}
         @value-changed=${this._valueChanged}
