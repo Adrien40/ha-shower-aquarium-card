@@ -75,7 +75,7 @@ Suivre sa consommation d'eau sous forme de jauges ou de chiffres peut vite deven
 
 ### Conçue pour Hydrao Custom, ouverte à tout le reste
 
-Cette carte a été développée pour **[Hydrao Custom](https://github.com/Adrien40/ha-hydrao-custom)**, une intégration Home Assistant 100 % locale (Bluetooth) pour les pommeaux de douche connectés Hydrao, du même auteur. Elle lui fournit tout ce qu'elle affiche : le volume de la douche en cours, la température de l'eau, et même la température de confort minimale et les seuils en litres du pommeau.
+Cette carte a été développée pour **[Hydrao Custom](https://github.com/Adrien40/ha-hydrao-custom)**, une intégration Home Assistant 100 % locale (Bluetooth) pour les appareils de douche connectés Hydrao développé par moi-même. Elle lui fournit tout ce qu'elle affiche : le volume de la douche en cours, la température de l'eau, et même la température de confort minimale et les seuils en litres du pommeau.
 
 **Elle n'y est pas liée.** La carte ne lit que des entités Home Assistant : elle fonctionne donc avec toute source qui lui donne un nombre de litres.
 
