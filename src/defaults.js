@@ -1,0 +1,31 @@
+// The default of every option of the card, written once. The card, the visual
+// editor, the validation of the options and the starting configuration of the
+// card picker all read it from here, so they cannot drift apart.
+export const CONFIG_DEFAULTS = Object.freeze({
+  title: "",
+  theme: "freshwater",
+  aspect_ratio_width: 1024,
+  aspect_ratio_height: 600,
+  fish_count: 4,
+  target_budget: 50,
+  survival_volume: 5,
+  temp_boiling_threshold: 40,
+  temp_deadly_threshold: 45,
+  comfort_temp_min: 33,
+  algae_enabled: true,
+  algae_delay_hours: 12,
+  algae_age: 0,
+  fish_speed_multiplier: 1.2,
+  fullscreen: false,
+  show_cost: false,
+  water_price_per_m3: 4.5,
+  energy_price_per_kwh: 0.25,
+  cold_water_temp: 15,
+  animation_quality: "max",
+  creature_style: "flat",
+  bottom_design: "redrawn",
+  respect_reduced_motion: true,
+  show_fps: false,
+  gauge_style: "thermometer",
+  show_budget: false,
+});

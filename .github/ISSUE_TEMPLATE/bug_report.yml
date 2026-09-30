@@ -1,0 +1,63 @@
+name: Bug report
+description: Something does not work as expected
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to report a bug.
+        Please check the Troubleshooting section of the README first.
+  - type: input
+    id: card-version
+    attributes:
+      label: Card version
+      description: Shown in the browser console when the card loads, and in the card picker.
+      placeholder: "0.8.73"
+    validations:
+      required: true
+  - type: input
+    id: ha-version
+    attributes:
+      label: Home Assistant version
+      placeholder: "2026.9.0"
+    validations:
+      required: true
+  - type: dropdown
+    id: install-method
+    attributes:
+      label: Installation method
+      options:
+        - HACS
+        - Manual
+    validations:
+      required: true
+  - type: input
+    id: client
+    attributes:
+      label: Browser or device
+      description: For example Chrome on Windows, Companion app on Android, Nest Hub.
+    validations:
+      required: true
+  - type: textarea
+    id: description
+    attributes:
+      label: What happened?
+      description: Describe the problem and what you expected instead. Screenshots are welcome.
+    validations:
+      required: true
+  - type: textarea
+    id: config
+    attributes:
+      label: Card configuration (YAML)
+      description: Remove anything private before pasting.
+      render: yaml
+    validations:
+      required: false
+  - type: textarea
+    id: console
+    attributes:
+      label: Browser console output
+      description: Messages starting with [shower-aquarium-card] are especially useful.
+      render: text
+    validations:
+      required: false

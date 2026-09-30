@@ -1,0 +1,47 @@
+{
+  "name": "ha-shower-aquarium-card",
+  "private": true,
+  "type": "module",
+  "description": "Tooling for shower-aquarium-card.js: strict type-checking, unit, property and visual regression tests with enforced coverage, a linter, and the esbuild bundle that produces dist/shower-aquarium-card.js.",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Adrien40/ha-shower-aquarium-card.git"
+  },
+  "homepage": "https://github.com/Adrien40/ha-shower-aquarium-card#readme",
+  "bugs": {
+    "url": "https://github.com/Adrien40/ha-shower-aquarium-card/issues"
+  },
+  "scripts": {
+    "build": "node build.mjs",
+    "watch": "node build.mjs --watch",
+    "test": "vitest run",
+    "test:coverage": "vitest run --coverage",
+    "lint": "eslint .",
+    "test:dist": "vitest run --config vitest.dist.config.js",
+    "check": "npm run lint && npm run typecheck && npm run test:coverage && npm run build && npm run test:dist",
+    "typecheck": "tsc -p tsconfig.json",
+    "test:visual": "vitest run visual",
+    "visual:update": "cross-env UPDATE_VISUAL=1 vitest run visual",
+    "golden:update": "cross-env UPDATE_GOLDEN=1 vitest run src/physics-golden.test.js"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "@resvg/resvg-js": "^2.6.2",
+    "@vitest/coverage-v8": "^5.0.1",
+    "cross-env": "^10.1.0",
+    "dejavu-fonts-ttf": "^2.37.3",
+    "esbuild": "^0.28.0",
+    "eslint": "^10.10.0",
+    "fast-check": "^4.10.2",
+    "globals": "^17.12.0",
+    "happy-dom": "^20.14.5",
+    "pixelmatch": "^7.2.0",
+    "pngjs": "^7.0.0",
+    "typescript": "^7.0.2",
+    "vitest": "^5.0.1"
+  },
+  "dependencies": {
+    "lit": "^3.3.3"
+  },
+  "version": "0.8.80"
+}

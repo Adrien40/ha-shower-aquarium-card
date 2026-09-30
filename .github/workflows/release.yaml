@@ -1,0 +1,82 @@
+name: Release
+
+# Publishes a GitHub release when a version tag is pushed:
+#
+#   git tag v1.0.0
+#   git push origin v1.0.0
+#
+# HACS looks for the card in dist/ of the tagged commit FIRST, then in the release,
+# then at the root of the repository. So a release is only useful if dist/ at the tag
+# is the file the sources really build. This workflow refuses to publish otherwise:
+# tag the commit that the "Build dist/" workflow made ("chore: rebuild dist/"),
+# not the one before it.
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    name: Publish the release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+
+      - name: Setup Node
+        uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: "npm"
+
+      - name: The tag must match the version of the card
+        run: |
+          version=$(node -p "require('./package.json').version")
+          if [ "${GITHUB_REF_NAME}" != "v${version}" ]; then
+            echo "::error::The tag is ${GITHUB_REF_NAME} but package.json says version ${version}."
+            exit 1
+          fi
+          if ! grep -q "CARD_VERSION = \"${version}\"" src/version.js; then
+            echo "::error::src/version.js does not say ${version}."
+            exit 1
+          fi
+          echo "VERSION=${version}" >> "$GITHUB_ENV"
+
+      - name: The changelog must describe this version
+        run: node scripts/release-notes.mjs "${VERSION}" > "${RUNNER_TEMP}/release-notes.md"
+
+      - name: The tagged commit must contain dist/
+        run: |
+          if [ ! -f dist/shower-aquarium-card.js ]; then
+            echo "::error::dist/shower-aquarium-card.js is missing at this tag. Tag the commit made by the Build dist workflow."
+            exit 1
+          fi
+          cp dist/shower-aquarium-card.js "${RUNNER_TEMP}/committed.js"
+
+      - name: Install dependencies
+        run: npm ci
+
+      # Lint, type check, tests with coverage thresholds, build, test of the bundle.
+      - name: Run the whole check
+        run: npm run check
+
+      - name: The committed dist/ must be what the sources build
+        run: |
+          if ! cmp -s "${RUNNER_TEMP}/committed.js" dist/shower-aquarium-card.js; then
+            echo "::error::dist/shower-aquarium-card.js at this tag is out of date. Wait for the Build dist workflow to finish, then tag the commit it made."
+            exit 1
+          fi
+
+      - name: Create the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          flags=""
+          case "${VERSION}" in 0.*) flags="--prerelease" ;; esac
+          gh release create "${GITHUB_REF_NAME}" dist/shower-aquarium-card.js \
+            --title "${GITHUB_REF_NAME}" \
+            --notes-file "${RUNNER_TEMP}/release-notes.md" \
+            ${flags}
