@@ -55,7 +55,7 @@ describe("dist/shower-aquarium-card.js", () => {
 
   it("contains both translations", () => {
     expect(source).toContain("field_entity");
-    expect(source).toContain("Shower volume entity");
+    expect(source).toContain("Comfort shower volume entity");
   });
 });
 
@@ -99,7 +99,7 @@ describe("dist bundle evaluated like Home Assistant does", () => {
     document.body.appendChild(el);
     await el.updateComplete;
     const form = el.shadowRoot.querySelector("ha-form");
-    expect(form.computeLabel({ name: "entity" })).toBe("Shower volume entity");
+    expect(form.computeLabel({ name: "entity" })).toBe("Comfort shower volume entity");
     el.remove();
   });
 });

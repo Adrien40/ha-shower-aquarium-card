@@ -333,9 +333,31 @@ describe("the option in the editor", () => {
     expect(frTranslations[HELPER_KEYS.algae_age]).toContain("0");
   });
 
-  it("the style of the gauges comes right after the fullscreen option", () => {
+  it("the gauge options come right after the fullscreen option, the style of the gauges last", () => {
     const names = fields.map((f) => f.name);
-    expect(names.indexOf("gauge_style")).toBe(names.indexOf("fullscreen") + 1);
+    expect(names.indexOf("show_gauges")).toBe(names.indexOf("fullscreen") + 1);
+    expect(names.indexOf("gauge_style")).toBe(names.indexOf("fullscreen") + 2);
+  });
+
+  it("the tiles and the gauges can be switched on and off, with a label and a helper in both languages", () => {
+    for (const name of ["show_gauges", "show_tiles"]) {
+      const field = fields.find((f) => f.name === name);
+      expect(field.selector).toEqual({ boolean: {} });
+      for (const t of [enTranslations, frTranslations]) {
+        expect(t[FIELD_LABEL_KEYS[name]], name).toBeTruthy();
+        expect(t[HELPER_KEYS[name]], name).toBeTruthy();
+      }
+    }
+    expect(fields.find((f) => f.name === "show_gauges").default).toBe(false);
+    expect(fields.find((f) => f.name === "show_tiles").default).toBe(true);
+  });
+
+  it("the volume entity is the comfort one, and the algae age no longer says right now", () => {
+    expect(frTranslations.field_entity).toMatch(/confort$/);
+    expect(enTranslations.field_entity).toBe("Comfort shower volume entity");
+    expect(frTranslations.field_algae_age).not.toContain("maintenant");
+    expect(enTranslations.field_algae_age).toBe("Current algae age");
+    expect(enTranslations.field_gauge_style).toBe("Gauge style");
   });
 });
 
@@ -353,6 +375,7 @@ describe("finding the Hydrao Custom entities", () => {
       entity: "sensor.hydrao_ab12_shower_volume",
       temperature_entity: "sensor.hydrao_ab12_temperature",
       comfort_temp_entity: "number.hydrao_ab12_minimum_comfort_temperature",
+      target_budget_entity: "",
     });
   });
 

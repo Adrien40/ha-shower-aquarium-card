@@ -1006,9 +1006,13 @@ const HYDRAO_PLATFORM = "hydrao_custom";
  * Assistant had when the device was added. Without it, the id is matched on the
  * English and French names of the entities. Each field is "" when nothing fits.
  *
+ * The volume is the "Comfort Shower Volume" (only the water that was hot enough),
+ * or the plain "Shower Volume" when the device has no such entity. The target
+ * budget is the "Threshold 4" entity, the last level of the showerhead.
+ *
  * @param {{ entities?: Record<string, { platform?: string, translation_key?: string }>, states?: Record<string, unknown> } | null | undefined} hass
  * @param {...(string[] | null | undefined)} entityIdLists  the lists of entity ids Home Assistant hands to the card picker
- * @returns {{ entity: string, temperature_entity: string, comfort_temp_entity: string }}
+ * @returns {{ entity: string, temperature_entity: string, comfort_temp_entity: string, target_budget_entity: string }}
  */
 export function detectHydraoEntities(hass, ...entityIdLists) {
   const registry = hass && typeof hass.entities === "object" && hass.entities ? hass.entities : {};
@@ -1019,24 +1023,32 @@ export function detectHydraoEntities(hass, ...entityIdLists) {
 
   /**
    * @param {string} domain
-   * @param {string} translationKey
+   * @param {string[]} translationKeys  the keys the registry may know the entity by
    * @param {RegExp} idPattern  used when the registry does not know the entity
+   * @param {RegExp} [exclude]  ids that look alike but are another entity
    * @returns {string}
    */
-  const find = (domain, translationKey, idPattern) => {
+  const find = (domain, translationKeys, idPattern, exclude) => {
     const inDomain = ids.filter((id) => id.startsWith(`${domain}.`));
-    const registered = inDomain.find((id) => registry[id]?.platform === HYDRAO_PLATFORM && registry[id]?.translation_key === translationKey);
+    const registered = inDomain.find((id) => registry[id]?.platform === HYDRAO_PLATFORM && translationKeys.includes(registry[id]?.translation_key ?? ""));
     if (registered) return registered;
-    // The cumulative, comfort and wasted volumes end like the shower volume does.
-    const other = /(total|cumul|comfort|confort|wasted|perdu|gaspill)/;
-    return inDomain.find((id) => id.includes("hydrao") && idPattern.test(id) && !other.test(id.replace(/_minimum_comfort_temperature|_temperature_de_confort_minimum|_temperature_confort_minimum/, ""))) || "";
+    return inDomain.find((id) => id.includes("hydrao") && idPattern.test(id) && !(exclude && exclude.test(id))) || "";
   };
 
+  // The cumulative, comfort and wasted volumes end like the shower volume does.
+  const otherVolume = /(total|cumul|comfort|confort|wasted|perdu|gaspill)/;
+  // The comfort temperature is a number entity, but its id also says "comfort".
+  const comfortTemperature = /_minimum_comfort_temperature|_temperature_de_confort_minimum|_temperature_confort_minimum/;
+
   return {
-    // "Shower Volume": the volume of the current shower. The cumulative,
-    // comfort, wasted and threshold volumes have other ids and are not taken.
-    entity: find("sensor", "shower_volume_raw", /_(shower_volume|volume_douche)(_\d+)?$/),
-    temperature_entity: find("sensor", "temperature", /_temperature(_\d+)?$/),
-    comfort_temp_entity: find("number", "comfort_temperature", /_(minimum_comfort_temperature|temperature_de_confort_minimum|temperature_confort_minimum)(_\d+)?$/),
+    // "Comfort Shower Volume", else "Shower Volume": the volume of the current shower.
+    // The cumulative, wasted and threshold volumes have other ids and are not taken.
+    entity:
+      find("sensor", ["comfort_shower_volume", "shower_volume_comfort", "comfort_volume", "shower_comfort_volume"], /_(comfort_shower_volume|shower_comfort_volume|volume_douche_confort|volume_confort_douche|douche_confort)(_\d+)?$/, /(total|cumul|wasted|perdu|gaspill)/) ||
+      find("sensor", ["shower_volume_raw"], /_(shower_volume|volume_douche)(_\d+)?$/, otherVolume),
+    temperature_entity: find("sensor", ["temperature"], /_temperature(_\d+)?$/),
+    comfort_temp_entity: find("number", ["comfort_temperature"], /_(minimum_comfort_temperature|temperature_de_confort_minimum|temperature_confort_minimum)(_\d+)?$/),
+    // "Threshold 4": the last level in litres of the showerhead.
+    target_budget_entity: find("sensor", ["threshold_4", "seuil_4"], /_(threshold|seuil)_4(_\d+)?$/, comfortTemperature),
   };
 }

@@ -52,6 +52,8 @@ export function renderTankSvg(host, view) {
     lang,
     sensorLost,
     biotopeNotice,
+    showGauges,
+    showCostLabel,
   } = view;
   return html`
     <svg
@@ -121,7 +123,7 @@ export function renderTankSvg(host, view) {
         ${host._renderRipples()}
 
         <!-- Modern Frosted Glass HUD Gauges -->
-        ${isFullscreen && showReadings
+        ${showGauges && showReadings
           ? renderStatusPanel({
               style: gaugeStyle,
               currentTemp: displayedTemp,
@@ -135,11 +137,11 @@ export function renderTankSvg(host, view) {
               lang,
             })
           : ""}
-        ${isFullscreen && showReadings ? host._renderCostLabel(cost) : ""}
+        ${showCostLabel && showReadings ? host._renderCostLabel(cost) : ""}
 
         ${renderBiotopeNotice(biotopeNotice, canvasH)}
         ${host._renderFpsBadge()}
-        ${renderSensorBadge(host, sensorLost, isFullscreen && showReadings)}
+        ${renderSensorBadge(host, sensorLost, showGauges && showReadings)}
       </g>
 
       ${renderTankGlass(isFullscreen, canvasBottom)}

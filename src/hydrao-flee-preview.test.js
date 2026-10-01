@@ -24,6 +24,9 @@ describe("detectHydraoEntities()", () => {
     "sensor.hydrao_ab12_shower_volume",
     "sensor.hydrao_ab12_temperature",
     "sensor.hydrao_ab12_comfort_shower_volume",
+    "sensor.hydrao_ab12_wasted_shower_volume",
+    "sensor.hydrao_ab12_threshold_3",
+    "sensor.hydrao_ab12_threshold_4",
     "number.hydrao_ab12_minimum_comfort_temperature",
     "sensor.room_temperature",
   ];
@@ -32,42 +35,68 @@ describe("detectHydraoEntities()", () => {
     const hass = {
       entities: {
         "sensor.douche_vol": { platform: "hydrao_custom", translation_key: "shower_volume_raw" },
+        "sensor.douche_confort": { platform: "hydrao_custom", translation_key: "comfort_shower_volume" },
         "sensor.douche_temp": { platform: "hydrao_custom", translation_key: "temperature" },
         "sensor.other_temp": { platform: "other", translation_key: "temperature" },
-        "number.douche_confort": { platform: "hydrao_custom", translation_key: "comfort_temperature" },
+        "number.douche_confort_min": { platform: "hydrao_custom", translation_key: "comfort_temperature" },
+        "sensor.douche_palier": { platform: "hydrao_custom", translation_key: "threshold_4" },
       },
     };
     expect(detectHydraoEntities(hass, Object.keys(hass.entities))).toEqual({
-      entity: "sensor.douche_vol",
+      entity: "sensor.douche_confort",
       temperature_entity: "sensor.douche_temp",
-      comfort_temp_entity: "number.douche_confort",
+      comfort_temp_entity: "number.douche_confort_min",
+      target_budget_entity: "sensor.douche_palier",
     });
   });
 
-  it("falls back to the english ids, without taking the cumulative or comfort volumes", () => {
+  it("takes the comfort shower volume, not the shower volume, and the threshold 4 as the target", () => {
     expect(detectHydraoEntities(null, ids)).toEqual({
-      entity: "sensor.hydrao_ab12_shower_volume",
+      entity: "sensor.hydrao_ab12_comfort_shower_volume",
       temperature_entity: "sensor.hydrao_ab12_temperature",
       comfort_temp_entity: "number.hydrao_ab12_minimum_comfort_temperature",
+      target_budget_entity: "sensor.hydrao_ab12_threshold_4",
     });
+  });
+
+  it("never takes the cumulative or the wasted volume, nor another threshold", () => {
+    const some = ids.filter((id) => !id.includes("comfort_shower") && !id.includes("threshold_4") && !id.endsWith("_shower_volume"));
+    const out = detectHydraoEntities(null, some);
+    expect(out.entity).toBe("");
+    expect(out.target_budget_entity).toBe("");
+  });
+
+  it("falls back to the shower volume when the device has no comfort volume", () => {
+    const out = detectHydraoEntities(null, ids.filter((id) => !id.includes("comfort_shower")));
+    expect(out.entity).toBe("sensor.hydrao_ab12_shower_volume");
   });
 
   it("falls back to the french ids", () => {
-    const fr = ["sensor.hydrao_ab12_volume_douche", "sensor.hydrao_ab12_temperature", "number.hydrao_ab12_temperature_de_confort_minimum"];
+    const fr = [
+      "sensor.hydrao_ab12_volume_douche",
+      "sensor.hydrao_ab12_volume_douche_confort",
+      "sensor.hydrao_ab12_seuil_4",
+      "sensor.hydrao_ab12_temperature",
+      "number.hydrao_ab12_temperature_de_confort_minimum",
+    ];
     const out = detectHydraoEntities({}, fr);
-    expect(out.entity).toBe("sensor.hydrao_ab12_volume_douche");
+    expect(out.entity).toBe("sensor.hydrao_ab12_volume_douche_confort");
+    expect(out.target_budget_entity).toBe("sensor.hydrao_ab12_seuil_4");
     expect(out.comfort_temp_entity).toBe("number.hydrao_ab12_temperature_de_confort_minimum");
+    expect(detectHydraoEntities({}, fr.filter((id) => !id.includes("confort_douche") && !id.endsWith("douche_confort"))).entity).toBe("sensor.hydrao_ab12_volume_douche");
   });
 
   it("returns empty strings when nothing fits", () => {
-    expect(detectHydraoEntities(undefined, [])).toEqual({ entity: "", temperature_entity: "", comfort_temp_entity: "" });
+    expect(detectHydraoEntities(undefined, [])).toEqual({ entity: "", temperature_entity: "", comfort_temp_entity: "", target_budget_entity: "" });
   });
 
-  it("feeds the starting configuration of the card", () => {
+  it("feeds the starting configuration of the card, with the target entity when there is one", () => {
     const stub = Card().getStubConfig({}, ids);
-    expect(stub.entity).toBe("sensor.hydrao_ab12_shower_volume");
+    expect(stub.entity).toBe("sensor.hydrao_ab12_comfort_shower_volume");
     expect(stub.temperature_entity).toBe("sensor.hydrao_ab12_temperature");
     expect(stub.comfort_temp_entity).toBe("number.hydrao_ab12_minimum_comfort_temperature");
+    expect(stub.target_budget_entity).toBe("sensor.hydrao_ab12_threshold_4");
+    expect(Card().getStubConfig({}, ["sensor.other"])).not.toHaveProperty("target_budget_entity");
   });
 });
 

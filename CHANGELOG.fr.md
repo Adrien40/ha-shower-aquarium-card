@@ -13,15 +13,20 @@ Le format suit [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/).
 - Le crabe parcourt tout le récif, depuis une nouvelle grotte de pierres vivantes au milieu de l'aquarium, sur le sable puis en montant le tas de pierres jusqu'à sa pierre plate, et se cache dans les deux grottes (la grotte du milieu et une cavité du tas) : il rétrécit dans le noir jusqu'à ne montrer que ses yeux. Un coup sur la vitre l'envoie dans la grotte la plus proche.
 - Plus de pierres vivantes dans le récif : une grotte au milieu de l'aquarium et quelques roches posées sur le sable.
 - Explication sous l'option « Âge actuel des algues » : 0 veut dire automatique.
+- La nouvelle option `show_gauges` dessine aussi les jauges (température et volume) sur l'aquarium hors du plein écran. Sans les tuiles, le coût s'écrit entre les jauges.
+- La nouvelle option `show_tiles` supprime les tuiles sous l'aquarium en mode normal (activée par défaut).
+- Une nouvelle carte prend aussi l'entité « Seuil 4 » de Hydrao Custom comme entité d'objectif.
 - Le crabe et la crevette bougent leurs pattes quand ils marchent : elles se balancent depuis les hanches l'une après l'autre (en opposition des deux côtés du crabe), au rythme de la distance parcourue pour ne jamais glisser sur le sol, et les pinces du crabe se balancent. Elles s'arrêtent quand l'animal s'arrête, et les pléopodes de la crevette frémissent en permanence.
 - Points blancs de stress : un coup sur la vitre fait apparaître des points blancs sur les poissons (plus nombreux sur ceux qui sont près du coup) et sur l'ancistrus, la crevette, le crabe et le gobi ; ils s'estompent un à un en trois secondes et demie environ.
 
 ### Modifié
+- Une nouvelle carte prend le « Volume Douche Confort » de Hydrao Custom comme entité de volume (le « Volume Douche » simple quand l'appareil n'en a pas). L'option devient « Entité de volume de douche confort ».
+- « Style des jauges (plein écran) » devient « Style des jauges » : il s'applique aux jauges où qu'elles soient dessinées.
 - L'ancistrus reste dans l'eau : seul le bout de sa queue peut en sortir. La hauteur qu'il peut atteindre dépend de son orientation (un long corps dressé demande plus de place), et il est ramené dans l'eau quand elle descend.
 - Un coup sur la vitre fait fuir l'ancistrus le long d'une paroi quand le coup vient de l'autre côté (il ne bougeait que de quelques unités quand il était contre la vitre de gauche). La crevette court aussi plus loin.
 - La boule du thermomètre du plein écran est plus petite et raccordée au tube.
 - La recherche des entités Hydrao Custom regarde maintenant aussi toutes les entités connues de Home Assistant, pas seulement celles que propose le sélecteur de cartes (qui écarte celles déjà sur un tableau de bord) ; à défaut, un capteur est pris plutôt que de laisser la carte sans entité.
-- « Âge des algues » devient « Âge actuel des algues (maintenant) ».
+- « Âge des algues » devient « Âge actuel des algues ».
 - L'option « Style des jauges » passe juste après « Mode plein écran » dans l'éditeur.
 - Le texte d'aide de l'option de mouvement réduit est plus clair.
 

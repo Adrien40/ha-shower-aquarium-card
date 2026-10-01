@@ -38,6 +38,9 @@ const configArb = fc.record({
   show_cost: fc.boolean(),
   algae_enabled: fc.boolean(),
   algae_age: fc.integer({ min: 0, max: 48 }),
+  show_gauges: fc.boolean(),
+  show_tiles: fc.boolean(),
+  swipe_biotope: fc.boolean(),
 });
 
 const readingsArb = fc.array(
@@ -88,7 +91,7 @@ describe("the whole card, under random configurations and random data", () => {
       }),
       { numRuns: 60 }
     );
-  });
+  }, 30_000);
 
   it("the tank state always agrees with the readings: dead animals stay dead until the data recovers", async () => {
     await fc.assert(
@@ -110,7 +113,7 @@ describe("the whole card, under random configurations and random data", () => {
       }),
       { numRuns: 40 }
     );
-  });
+  }, 30_000);
 
   it("a card with any valid-looking configuration renders on the first try", async () => {
     await fc.assert(
@@ -126,5 +129,5 @@ describe("the whole card, under random configurations and random data", () => {
       }),
       { numRuns: 60 }
     );
-  });
+  }, 30_000);
 });

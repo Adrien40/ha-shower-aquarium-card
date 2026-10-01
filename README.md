@@ -95,10 +95,10 @@ Hydrao Custom names its entities after the device (`Hydrao` followed by the end 
 
 | Card option | Hydrao Custom entity | Note |
 | :--- | :--- | :--- |
-| `entity` | **Shower Volume** (L) | The volume of the current shower. You can use **Comfort Shower Volume** instead to count only the water that was warm enough. |
+| `entity` | **Comfort Shower Volume** (L) | Found automatically in a new card: only the water that was warm enough counts. You can take **Shower Volume** instead to count all the water (it is also the one a new card takes when the device has no comfort volume). |
 | `temperature_entity` | **Temperature** (°C) | |
 | `comfort_temp_entity` | **Minimum Comfort Temperature** (number, 0 to 50 °C) | The green zone of the thermometer then follows the setting you change in Home Assistant. |
-| `target_budget_entity` | **Threshold 4** (L) | Optional: the last liter tier of the showerhead becomes the target budget. |
+| `target_budget_entity` | **Threshold 4** (L) | Found automatically in a new card: the last liter tier of the showerhead becomes the target budget. |
 
 The *Total Cumulative* volumes only ever go up: do not use them as `entity`.
 
@@ -177,7 +177,9 @@ The card is not limited to showers: it can show any consumption you want to keep
 | `cold_water_temp` | Number | `15` | Cold water inlet temperature (°C), used to estimate the heating energy. |
 | `fullscreen` | Boolean | `false` | Immersive fullscreen mode (removes borders and metric cards). The drawing takes the exact shape of your screen (portrait, 4:3, ultra-wide...): nothing is stretched. |
 | `creature_style` | Select | `flat` | Look of the fish and the other living things: `flat` (flat colours with small details), `cartoon` (outlines, big eyes, rosy cheeks) or `realistic` (soft shading, scales, translucent fins). |
-| `gauge_style` | Select | `thermometer` | Fullscreen gauges: `thermometer` (glass thermometer + volume bar) or `arc` (two open arcs with a marker dot). |
+| `show_gauges` | Boolean | `false` | Also draw the gauges (temperature and volume) on the aquarium outside fullscreen mode, where they are always drawn. Like in fullscreen, they appear with the first litre (always shown in the preview of the editor). With the tiles removed, the cost is written between the gauges. |
+| `show_tiles` | Boolean | `true` | The tiles under the aquarium in the normal mode (Consumed, Remaining, Target, Temperature, Cost). Set to `false` to keep only the aquarium. Fullscreen mode has no tiles. |
+| `gauge_style` | Select | `thermometer` | Gauges: `thermometer` (glass thermometer + volume bar) or `arc` (two open arcs with a marker dot). |
 | `swipe_biotope` | Boolean | `true` | A sideways swipe on the aquarium changes the biotope (freshwater → saltwater → coldwater). The choice is kept on the device; changing `theme` in the editor starts over from the new one. Set to `false` to turn it off. |
 | `show_budget` | Boolean | `false` | Write the target budget on the volume gauge (for example `18.0 / 50 L`). |
 | `respect_reduced_motion` | Boolean | `true` | Freeze the animation when the device asks for reduced motion (accessibility setting). Set to `false` to always animate. |
@@ -212,7 +214,7 @@ They follow one another as `fish_count` grows, so ten fish show every species of
 
 ## 🌡️ Fullscreen gauges
 
-In fullscreen mode the temperature is shown top left and the consumed volume top right, in one of two styles (`gauge_style`). The gauges, and the cost when it is enabled, appear with the first litre consumed and disappear when the volume is back to 0. If the temperature sensor falls back to 0 after a shower, the thermometer keeps the last temperature measured.
+In fullscreen mode (or with `show_gauges` in the normal mode) the temperature is shown top left and the consumed volume top right, in one of two styles (`gauge_style`). The gauges, and the cost when it is enabled, appear with the first litre consumed and disappear when the volume is back to 0. If the temperature sensor falls back to 0 after a shower, the thermometer keeps the last temperature measured.
 
 **Temperature.** The thermometer goes from 10 °C to the deadly threshold plus 5 °C, rounded up to a multiple of 10 (10 to 50 °C with the default thresholds). Its liquid, or the arc, takes the colour of the zone:
 

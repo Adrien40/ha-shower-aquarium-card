@@ -144,6 +144,7 @@ export class AquariumShowerCard extends LitElement {
       entity: defaultEntity,
       temperature_entity: tempEntity,
       ...(hydrao.comfort_temp_entity ? { comfort_temp_entity: hydrao.comfort_temp_entity } : {}),
+      ...(hydrao.target_budget_entity ? { target_budget_entity: hydrao.target_budget_entity } : {}),
       title: d.title,
       theme: d.theme,
       aspect_ratio_width: d.aspect_ratio_width,
@@ -1082,6 +1083,11 @@ export class AquariumShowerCard extends LitElement {
       ? "#f59e0b"
       : "var(--primary-text-color, #111827)";
 
+    // The gauges are the fullscreen look; with `show_gauges` they are also drawn on the picture of the normal mode.
+    const showGauges = isFullscreen || Boolean(this._config.show_gauges);
+    const showTiles = !isFullscreen && this._config.show_tiles !== false;
+    // The cost is written on the picture next to the gauges, unless a tile already shows it.
+    const showCostLabel = showGauges && !showTiles;
     const cost = this._config.show_cost
       ? computeShowerCost({
           volumeL: currentVolume,
@@ -1130,6 +1136,8 @@ export class AquariumShowerCard extends LitElement {
             lang,
             sensorLost,
             biotopeNotice: this._biotopeNotice,
+            showGauges,
+            showCostLabel,
           })}
 
           <!-- The same two actions as a tap on the tank, for the keyboard and screen readers. -->
@@ -1147,7 +1155,7 @@ export class AquariumShowerCard extends LitElement {
           <div class="sr-only" role="status" aria-live="polite">${this._announcement}</div>
         </div>
 
-        ${!isFullscreen
+        ${showTiles
           ? renderMetricsGrid({
               currentVolume,
               displayedRemaining,

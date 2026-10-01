@@ -95,10 +95,10 @@ Hydrao Custom nomme ses entités d'après l'appareil (`Hydrao` suivi de la fin d
 
 | Option de la carte | Entité Hydrao Custom | Remarque |
 | :--- | :--- | :--- |
-| `entity` | **Volume Douche** (L) | Le volume de la douche en cours. Tu peux prendre à la place **Volume Douche Confort** pour ne compter que l'eau assez chaude. |
+| `entity` | **Volume Douche Confort** (L) | Trouvé automatiquement dans une nouvelle carte : seule l'eau assez chaude est comptée. Tu peux prendre **Volume Douche** à la place pour compter toute l'eau (c'est aussi celui que prend une nouvelle carte quand l'appareil n'a pas de volume confort). |
 | `temperature_entity` | **Température** (°C) | |
 | `comfort_temp_entity` | **Température de confort minimum** (number, 0 à 50 °C) | La zone verte du thermomètre suit alors le réglage que tu changes dans Home Assistant. |
-| `target_budget_entity` | **Seuil 4** (L) | Optionnel : le dernier palier en litres du pommeau devient le budget cible. |
+| `target_budget_entity` | **Seuil 4** (L) | Trouvé automatiquement dans une nouvelle carte : le dernier palier en litres du pommeau devient le budget cible. |
 
 Les volumes *cumulés totaux* ne font que monter : ne les utilise pas comme `entity`.
 
@@ -177,7 +177,9 @@ La carte n'est pas limitée aux douches : elle peut afficher toute consommation 
 | `cold_water_temp` | Nombre | `15` | Température de l'eau froide (°C), pour estimer l'énergie de chauffe. |
 | `fullscreen` | Booléen | `false` | Mode plein écran immersif (sans bordures ni cartes de métriques). Le dessin prend exactement la forme de votre écran (portrait, 4:3, ultra-large...) : rien n'est étiré. |
 | `creature_style` | Sélection | `flat` | Style des poissons et des autres êtres vivants : `flat` (aplats de couleur avec de petits détails), `cartoon` (contours, gros yeux, joues roses) ou `realistic` (ombrages doux, écailles, nageoires translucides). |
-| `gauge_style` | Sélection | `thermometer` | Jauges du plein écran : `thermometer` (thermomètre en verre + barre de volume) ou `arc` (deux arcs ouverts avec un repère). |
+| `show_gauges` | Booléen | `false` | Dessine aussi les jauges (température et volume) sur l'aquarium hors du plein écran, où elles sont toujours dessinées. Comme en plein écran, elles apparaissent dès le premier litre (toujours visibles dans l'aperçu de l'éditeur). Sans les tuiles, le coût s'écrit entre les jauges. |
+| `show_tiles` | Booléen | `true` | Les tuiles sous l'aquarium en mode normal (Consommé, Restant, Objectif, Température, Coût). Mettre `false` pour ne garder que l'aquarium. Le plein écran n'a pas de tuiles. |
+| `gauge_style` | Sélection | `thermometer` | Jauges : `thermometer` (thermomètre en verre + barre de volume) ou `arc` (deux arcs ouverts avec un repère). |
 | `swipe_biotope` | Booléen | `true` | Un glissement horizontal sur l'aquarium change le biotope (eau douce → eau de mer → eau froide). Le choix est gardé sur l'appareil ; changer `theme` dans l'éditeur repart du nouveau. Mettre `false` pour le désactiver. |
 | `show_budget` | Booléen | `false` | Écrit le budget cible sur la jauge de volume (par exemple `18.0 / 50 L`). |
 | `respect_reduced_motion` | Booléen | `true` | Fige l'animation quand l'appareil demande une réduction des animations (réglage d'accessibilité). Mettre `false` pour toujours animer. |
@@ -212,7 +214,7 @@ Ils se suivent à mesure que `fish_count` augmente : dix poissons montrent toute
 
 ## 🌡️ Jauges du plein écran
 
-En mode plein écran, la température s'affiche en haut à gauche et le volume consommé en haut à droite, dans l'un des deux styles (`gauge_style`). Les jauges, et le coût s'il est activé, apparaissent dès le premier litre consommé et disparaissent quand le volume repasse à 0. Si le capteur de température retombe à 0 après une douche, le thermomètre garde la dernière température mesurée.
+En mode plein écran (ou avec `show_gauges` en mode normal), la température s'affiche en haut à gauche et le volume consommé en haut à droite, dans l'un des deux styles (`gauge_style`). Les jauges, et le coût s'il est activé, apparaissent dès le premier litre consommé et disparaissent quand le volume repasse à 0. Si le capteur de température retombe à 0 après une douche, le thermomètre garde la dernière température mesurée.
 
 **Température.** Le thermomètre va de 10 °C au seuil critique plus 5 °C, arrondi à la dizaine supérieure (10 à 50 °C avec les seuils par défaut). Son liquide, ou l'arc, prend la couleur de la zone :
 

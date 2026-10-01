@@ -147,6 +147,7 @@ export const CARD_EDITOR_SCHEMA = [
       { name: "show_budget", default: CONFIG_DEFAULTS.show_budget, selector: { boolean: {} } },
       { name: "respect_reduced_motion", default: CONFIG_DEFAULTS.respect_reduced_motion, selector: { boolean: {} } },
       { name: "fullscreen", default: CONFIG_DEFAULTS.fullscreen, selector: { boolean: {} } },
+      { name: "show_gauges", default: CONFIG_DEFAULTS.show_gauges, selector: { boolean: {} } },
       {
         name: "gauge_style",
         default: CONFIG_DEFAULTS.gauge_style,
@@ -159,6 +160,7 @@ export const CARD_EDITOR_SCHEMA = [
           },
         },
       },
+      { name: "show_tiles", default: CONFIG_DEFAULTS.show_tiles, selector: { boolean: {} } },
       { name: "swipe_biotope", default: CONFIG_DEFAULTS.swipe_biotope, selector: { boolean: {} } },
       { name: "show_fps", default: CONFIG_DEFAULTS.show_fps, selector: { boolean: {} } },
       {
@@ -230,6 +232,8 @@ export const FIELD_LABEL_KEYS = {
   gauge_style: "field_gauge_style",
   show_budget: "field_show_budget",
   swipe_biotope: "field_swipe_biotope",
+  show_gauges: "field_show_gauges",
+  show_tiles: "field_show_tiles",
   aspect_ratio_width: "field_aspect_ratio_width",
   aspect_ratio_height: "field_aspect_ratio_height",
 };
@@ -249,6 +253,8 @@ export const HELPER_KEYS = {
   respect_reduced_motion: "helper_respect_reduced_motion",
   show_fps: "helper_show_fps",
   swipe_biotope: "helper_swipe_biotope",
+  show_gauges: "helper_show_gauges",
+  show_tiles: "helper_show_tiles",
   algae_age: "helper_algae_age",
 };
 

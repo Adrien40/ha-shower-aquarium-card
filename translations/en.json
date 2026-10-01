@@ -3,7 +3,7 @@
   "label_remaining": "Remaining",
   "label_target": "Target",
   "label_temperature": "Temperature",
-  "field_entity": "Shower volume entity",
+  "field_entity": "Comfort shower volume entity",
   "field_temp_entity": "Water temperature entity (optional)",
   "field_title": "Card title (leave empty to hide)",
   "theme_freshwater": "Freshwater (Tropical)",
@@ -18,7 +18,7 @@
   "field_temp_deadly": "Deadly temperature threshold (°C)",
   "field_algae_enabled": "Enable dirty algae accumulation",
   "field_algae_delay": "Algae accumulation delay (hours)",
-  "field_algae_age": "Current algae age (right now)",
+  "field_algae_age": "Current algae age",
   "field_fish_speed": "Fish speed",
   "field_fullscreen": "Fullscreen mode",
   "helper_fullscreen": "Tablet, Nest Hub...",
@@ -55,7 +55,7 @@
   "field_comfort_temp_entity": "Minimum comfort temperature entity (optional)",
   "helper_comfort_temp_entity": "Minimum comfortable temperature, for example from a Hydrao showerhead. It replaces the value below.",
   "field_comfort_temp": "Minimum comfort temperature (°C)",
-  "field_gauge_style": "Gauge style (fullscreen)",
+  "field_gauge_style": "Gauge style",
   "field_show_budget": "Show the budget on the volume gauge",
   "option_gauge_thermometer": "Thermometer and bar",
   "option_gauge_arc": "Open arcs",
@@ -72,5 +72,9 @@
   "helper_swipe_biotope": "Swipe sideways on the aquarium to go to freshwater, saltwater or coldwater. The choice is kept on this device; changing the biotope in this editor replaces it.",
   "action_biotope": "Change biotope",
   "aria_biotope": "Biotope: {name}.",
-  "helper_algae_age": "0 = automatic: the age follows the time since the last shower. A higher value sets the age of the algae at this very moment, to see how they look."
+  "helper_algae_age": "0 = automatic: the age follows the time since the last shower. A higher value sets the age of the algae at this very moment, to see how they look.",
+  "field_show_gauges": "Show the gauges outside fullscreen mode",
+  "helper_show_gauges": "The thermometer and the volume of fullscreen mode are also drawn on the aquarium of the normal mode. Like in fullscreen, they only appear from the first litre (always shown in the preview of the editor).",
+  "field_show_tiles": "Show the tiles under the aquarium",
+  "helper_show_tiles": "The Consumed, Remaining, Target, Temperature (and Cost) tiles of the normal mode. Untick to keep only the aquarium. No effect in fullscreen mode."
 }

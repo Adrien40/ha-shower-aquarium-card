@@ -39,6 +39,8 @@
  * @property {string} gauge_style  "thermometer" or "arc"
  * @property {boolean} show_budget
  * @property {boolean} swipe_biotope  a horizontal swipe on the tank changes the biotope
+ * @property {boolean} show_gauges  the gauges of fullscreen mode are also drawn on the picture outside fullscreen mode
+ * @property {boolean} show_tiles  the tiles under the picture (outside fullscreen mode)
  * @property {string} creature_style  "flat", "cartoon" or "realistic"
  * @property {number} comfort_temp_min
  * @property {string} [comfort_temp_entity]
@@ -360,6 +362,8 @@ export {};
  * @property {{ total: number } | null} cost
  * @property {string} lang
  * @property {boolean} sensorLost
+ * @property {boolean} showGauges  the gauges (temperature and volume) are drawn on the picture
+ * @property {boolean} showCostLabel  the cost is written on the picture (when it is not in a tile)
  * @property {string} biotopeNotice  name of the biotope just picked with a swipe, "" when there is none
  */
 

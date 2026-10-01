@@ -3,7 +3,7 @@
   "label_remaining": "Restant",
   "label_target": "Objectif",
   "label_temperature": "Température",
-  "field_entity": "Entité de volume de douche",
+  "field_entity": "Entité de volume de douche confort",
   "field_temp_entity": "Entité température de l'eau (optionnel)",
   "field_title": "Titre de la carte (laisser vide pour masquer)",
   "theme_freshwater": "Eau douce (Tropical)",
@@ -18,7 +18,7 @@
   "field_temp_deadly": "Seuil mortel de température (°C)",
   "field_algae_enabled": "Activer l'accumulation d'algues",
   "field_algae_delay": "Délai d'apparition des algues (heures)",
-  "field_algae_age": "Âge actuel des algues (maintenant)",
+  "field_algae_age": "Âge actuel des algues",
   "field_fish_speed": "Vitesse des poissons",
   "field_fullscreen": "Mode plein écran",
   "helper_fullscreen": "Tablette, Nest Hub...",
@@ -55,7 +55,7 @@
   "field_comfort_temp_entity": "Entité de température de confort minimum (optionnel)",
   "helper_comfort_temp_entity": "Température minimale de confort, par exemple celle d'un pommeau Hydrao. Elle remplace la valeur ci-dessous.",
   "field_comfort_temp": "Température minimale de confort (°C)",
-  "field_gauge_style": "Style des jauges (plein écran)",
+  "field_gauge_style": "Style des jauges",
   "field_show_budget": "Afficher le budget sur la jauge de volume",
   "option_gauge_thermometer": "Thermomètre et barre",
   "option_gauge_arc": "Arcs ouverts",
@@ -72,5 +72,9 @@
   "helper_swipe_biotope": "Glissez horizontalement sur l'aquarium pour passer à l'eau douce, à l'eau de mer ou à l'eau froide. Le choix est gardé sur cet appareil ; changer le biotope dans cet éditeur le remplace.",
   "action_biotope": "Changer de biotope",
   "aria_biotope": "Biotope : {name}.",
-  "helper_algae_age": "0 = automatique : l'âge suit le temps écoulé depuis la dernière douche. Une valeur plus grande force l'âge des algues à cet instant, pour voir leur aspect."
+  "helper_algae_age": "0 = automatique : l'âge suit le temps écoulé depuis la dernière douche. Une valeur plus grande force l'âge des algues à cet instant, pour voir leur aspect.",
+  "field_show_gauges": "Afficher les jauges hors plein écran",
+  "helper_show_gauges": "Le thermomètre et le volume du plein écran s'affichent aussi sur l'aquarium du mode normal. Comme en plein écran, ils n'apparaissent qu'à partir du premier litre (toujours visibles dans l'aperçu de l'éditeur).",
+  "field_show_tiles": "Afficher les tuiles sous l'aquarium",
+  "helper_show_tiles": "Les tuiles Consommé, Restant, Objectif, Température (et Coût) du mode normal. Décochez pour ne garder que l'aquarium. Sans effet en plein écran."
 }

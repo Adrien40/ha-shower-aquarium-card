@@ -28,4 +28,6 @@ export const CONFIG_DEFAULTS = Object.freeze({
   gauge_style: "thermometer",
   show_budget: false,
   swipe_biotope: true,
+  show_gauges: false,
+  show_tiles: true,
 });

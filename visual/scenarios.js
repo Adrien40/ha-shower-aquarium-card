@@ -45,6 +45,7 @@ export const SCENARIOS = {
     volume: 18,
     temp: 38.4,
   },
+  "freshwater-gauges-no-tiles": { config: { theme: "freshwater", show_gauges: true, show_tiles: false, show_cost: true }, volume: 18, temp: 38 },
   "coldwater-fullscreen-arc": { config: { theme: "coldwater", fullscreen: true, gauge_style: "arc", show_budget: true }, volume: 30, temp: 39 },
   "saltwater-fullscreen-budget": { config: { theme: "saltwater", fullscreen: true, show_budget: true }, volume: 42, temp: 41.5 },
   "coldwater-fullscreen-no-consumption": { config: { theme: "coldwater", fullscreen: true, show_cost: true }, volume: 0, temp: 0 },

@@ -13,15 +13,20 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - The crab walks all over the reef, from a new grotto of live rock in the middle of the tank, over the sand and up the pile of rock to its flat rock, and hides in the two caves (the grotto and a cave in the pile): it shrinks into the dark until only its eyes show. A knock on the glass sends it to the nearest cave.
 - More live rock in the reef: a grotto in the middle of the tank and a few rocks lying on the sand.
 - Explanation under the "Current algae age" option: 0 means automatic.
+- The new `show_gauges` option draws the gauges (temperature and volume) on the aquarium outside fullscreen mode too. With the tiles removed, the cost is written between the gauges.
+- The new `show_tiles` option removes the tiles under the aquarium in the normal mode (on by default).
+- A new card also takes the Hydrao Custom "Threshold 4" entity as its target entity.
 - The crab and the shrimp move their legs when they walk: the legs swing from their hips one after the other (in opposition on the two sides of the crab), following the distance walked so they never slide, and the claws of the crab sway. They stop when the animal stops, and the swimmerets of the shrimp flutter all the time.
 - White dots of stress: a knock on the glass makes white dots appear on the fish (more of them on the ones near the knock) and on the Ancistrus, the shrimp, the crab and the goby, and they fade out one by one in about three and a half seconds.
 
 ### Changed
+- A new card takes the Hydrao Custom "Comfort Shower Volume" as its volume entity (the plain "Shower Volume" when the device has none). The option is renamed "Comfort shower volume entity".
+- "Gauge style (fullscreen)" is now "Gauge style": it applies to the gauges wherever they are drawn.
 - The Ancistrus stays in the water: only the tip of its tail may come out of it. How high or low it can be depends on its heading (a long body standing up needs more room), and it is brought back in when the water goes down.
 - A knock on the glass makes the Ancistrus flee along a wall when the knock is on the other side of it (it used to move a few units only when it was against the left glass). The shrimp runs farther too.
 - The bulb of the fullscreen thermometer is smaller and joined to the tube.
 - Looking for the Hydrao Custom entities now also looks at every entity Home Assistant knows, not only at the ones offered by the card picker (those already on a dashboard are left out of it); without any, a sensor is taken rather than leaving the card without an entity.
-- "Algae age" is now "Current algae age (right now)".
+- "Algae age" is now "Current algae age".
 - The "Gauge style" option comes right after "Fullscreen mode" in the editor.
 - The help text of the reduced-motion option is clearer.
 
