@@ -236,6 +236,10 @@
  * @property {number} [stressUntil]  epoch ms until which the white dots of stress show
  * @property {number} [stressPower]  0..1, how strong the stress is at the start
  * @property {number} [stress]  0..1, the stress now (worked out every frame)
+ * @property {number} [lift]  shrimp only: how high above the sand it is while it leaps
+ * @property {number} [pitch]  shrimp only: degrees its nose is raised (negative: lowered) while it leaps
+ * @property {number} [floorY]  shrimp only: the height of the sand it lands on
+ * @property {{ fromX: number, toX: number, ms: number, height: number, t: number }[]} [hops]  shrimp only: the bounds it still has to make
  */
 
 /**

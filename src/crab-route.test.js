@@ -6,7 +6,7 @@
 // glass sends it into the nearest cave.
 import { describe, it, expect, vi, afterEach, beforeEach } from "vitest";
 import "./shower-aquarium-card.js";
-import { createFrame, stepCrab, startleCrab, startleCrawler, CRAB_MOVE, FLEE } from "./physics.js";
+import { createFrame, stepCrab, startleCrab, CRAB_MOVE, FLEE } from "./physics.js";
 import { CRAB_ROUTE, CRAB_STOPS, CRAB_ROUTE_LENGTH, CRAB_CAVES, CRAB_START_S, REEF_PILE, crabPointAt } from "./reef-layout.js";
 import { createInitialScene } from "./scene.js";
 
@@ -391,37 +391,7 @@ describe("the crab in the card", () => {
   });
 });
 
-describe("startleCrawler() without a special run, and for a crab that has no idea where it is going", () => {
-  const lane = { minX: 100, maxX: 300, floorOffset: 20, speed: 1, firstIdle: [1, 1], nextIdle: [1, 1] };
-
-  it("ignores a knock that is too far away", () => {
-    const c = { x: 100, y: 500, targetX: 100, state: "idle", idleUntil: 0, dir: 1 };
-    expect(startleCrawler(c, 100 + FLEE.radius + 50, 500, NOW, lane)).toBe(false);
-    expect(c.state).toBe("idle");
-  });
-
-  it("runs along its whole lane when the specification has no longer run of its own", () => {
-    const c = { x: 200, y: 500, targetX: 200, state: "idle", idleUntil: 0, dir: 1 };
-    startleCrawler(c, 150, 500, NOW, lane);
-    expect(c.targetX).toBe(300);
-    const d = { x: 200, y: 500, targetX: 200, state: "idle", idleUntil: 0, dir: 1 };
-    startleCrawler(d, 250, 500, NOW, lane);
-    expect(d.targetX).toBe(100);
-  });
-
-  it("a knock exactly above a creature that has no direction yet sends it to the right", () => {
-    const c = { x: 200, y: 500, targetX: 200, state: "idle", idleUntil: 0 };
-    startleCrawler(c, 200, 500, NOW, lane);
-    expect(c.targetX).toBe(300);
-  });
-
-  it("at the left end of its lane, a creature knocked from its left turns back to the right", () => {
-    const c = { x: 100, y: 500, targetX: 100, state: "idle", idleUntil: 0, dir: 1 };
-    startleCrawler(c, 150, 500, NOW, { ...lane, minX: 100, maxX: 300 });
-    // Away from the knock is to the left, where the lane ends: so it goes the other way.
-    expect(c.targetX).toBe(300);
-  });
-
+describe("a crab that has no idea where it is going", () => {
   it("a crab that is told to move without a goal stays where it is, then rests", () => {
     const c = crab({ s: 250, state: "moving" });
     stepCrab(c, frame(), constant(0.5));

@@ -31,15 +31,14 @@ import {
   separateFish,
   stepSnail,
   stepAncistrus,
-  stepCrawler,
+  stepShrimp,
   stepCrab,
   stepGoby,
   markStressed,
   startleAncistrus,
-  startleCrawler,
   startleCrab,
+  startleShrimp,
   startleGoby,
-  SHRIMP_SPEC,
 } from "./physics.js";
 import {
   getTheme,
@@ -756,7 +755,7 @@ export class AquariumShowerCard extends LitElement {
       stateChanged = true;
     }
     if (this._shrimp) {
-      stepCrawler(this._shrimp, frame, SHRIMP_SPEC, randomSource);
+      stepShrimp(this._shrimp, frame, randomSource);
       stateChanged = true;
     }
     if (this._crab) {
@@ -916,8 +915,8 @@ export class AquariumShowerCard extends LitElement {
 
   // A knock on the glass at (x, y): a ripple, and the nearby fish dart away, with
   // white dots of stress on them and on the other animals that run. The
-  // Ancistrus and the shrimp run off too, much faster than they usually move,
-  // the crab runs into a cave to hide and the goby goes into the sand.
+  // Ancistrus dashes away, much faster than it usually moves, the shrimp leaps
+  // away, the crab runs into a cave to hide and the goby goes into the sand.
   /**
    * @param {number} x
    * @param {number} y
@@ -937,7 +936,7 @@ export class AquariumShowerCard extends LitElement {
       markStressed(fish, now, 0.5 + 0.5 * kick.scare);
     });
     if (this._ancistrus && startleAncistrus(this._ancistrus, x, y, now, tank, randomSource)) markStressed(this._ancistrus, now);
-    if (this._shrimp && startleCrawler(this._shrimp, x, y, now, SHRIMP_SPEC)) markStressed(this._shrimp, now);
+    if (this._shrimp && startleShrimp(this._shrimp, x, y, now)) markStressed(this._shrimp, now);
     if (this._crab && startleCrab(this._crab, x, y, now)) markStressed(this._crab, now);
     if (this._goby && startleGoby(this._goby, x, y, now)) markStressed(this._goby, now);
   }

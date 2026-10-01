@@ -3,6 +3,14 @@
 Toutes les modifications notables du projet sont documentées dans ce fichier.
 Le format suit [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/).
 
+## [0.8.88] — 2026-10-01
+
+### Modifié
+- Quand on tape sur la vitre, la crevette s'enfuit en bondissant : deux bonds, la tête devant, le premier long et haut (environ 110 unités, plus d'une demi-seconde), le second plus court et plus bas, soit environ une seconde en tout. En l'air elle suit un arc, son nez passe de relevé à baissé, et une ombre sur le sable rétrécit et pâlit à mesure qu'elle monte. Plus le coup est près, plus elle va loin (150 à 240 unités) ; au bout du sable où elle peut aller, elle bondit dans l'autre sens. Elle reste sous la surface (les bonds sont plus bas quand l'eau est basse), garde son bond si on retape pendant qu'elle est en l'air, retombe là où elle est quand l'aquarium meurt, et se repose un moment avant de remarcher.
+- L'ancistrus file beaucoup plus vite : 18 fois sa vitesse de glisse au lieu de 7 (environ 17 unités par image), et il tourne la tête de 16 degrés par image au lieu de 6. Il est le plus rapide au début de la course puis ralentit sur la fin, si bien qu'une fuite de plusieurs centaines d'unités dure environ une demi-seconde.
+- La crevette regarde maintenant dans le sens où elle marche : la tête devant. Son dessin a la tête à gauche, mais il était retourné à l'envers, si bien qu'elle marchait à reculons.
+- L'option qui affiche les images par seconde (`show_fps`) est maintenant la dernière de la section Affichage de l'éditeur, deux places plus bas, après les deux options de ratio.
+
 ## [0.8.87] — 2026-10-01
 
 ### Ajouté

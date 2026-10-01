@@ -166,7 +166,6 @@ export const CARD_EDITOR_SCHEMA = [
       },
       { name: "show_tiles", default: CONFIG_DEFAULTS.show_tiles, selector: { boolean: {} } },
       { name: "swipe_biotope", default: CONFIG_DEFAULTS.swipe_biotope, selector: { boolean: {} } },
-      { name: "show_fps", default: CONFIG_DEFAULTS.show_fps, selector: { boolean: {} } },
       {
         name: "aspect_ratio_width",
         default: CONFIG_DEFAULTS.aspect_ratio_width,
@@ -177,6 +176,7 @@ export const CARD_EDITOR_SCHEMA = [
         default: CONFIG_DEFAULTS.aspect_ratio_height,
         selector: { number: { min: 1, max: 4000, mode: "box" } },
       },
+      { name: "show_fps", default: CONFIG_DEFAULTS.show_fps, selector: { boolean: {} } },
     ],
   },
 ];

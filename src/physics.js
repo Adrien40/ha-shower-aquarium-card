@@ -497,7 +497,7 @@ export function stepSnail(snail, frame) {
 }
 
 /** How long (ms) the bottom dwellers keep running after a knock on the glass, and how much faster they go. */
-export const FLEE = { durationMs: 1800, radius: 520, ancistrusFactor: 7, crawlerFactor: 6, ancistrusTurn: 6 };
+export const FLEE = { durationMs: 1800, radius: 520, ancistrusFactor: 18, crawlerFactor: 6, ancistrusTurn: 16, ancistrusBrake: 140 };
 
 /** How the plecostomus moves: units per frame, degrees per frame it can turn, and how far it goes at a time. */
 export const ANCISTRUS_MOVE = { speed: 0.8, turn: 3, minTrip: 140, maxTrip: 420 };
@@ -661,7 +661,9 @@ export function stepAncistrus(anc, frame, rand = Math.random) {
     const wanted = (Math.atan2(dx, -dy) * 180) / Math.PI;
     const turn = (fleeing ? FLEE.ancistrusTurn : ANCISTRUS_MOVE.turn) * delta;
     anc.heading += Math.max(-turn, Math.min(turn, turnBetween(anc.heading, wanted)));
-    const step = Math.min(distance, ANCISTRUS_MOVE.speed * userSpeed * (fleeing ? FLEE.ancistrusFactor : 1) * delta);
+    // A dash is fastest at the start and slows down over the last stretch, so it does not stop dead.
+    const dash = fleeing ? FLEE.ancistrusFactor * Math.min(1, 0.25 + distance / FLEE.ancistrusBrake) : 1;
+    const step = Math.min(distance, ANCISTRUS_MOVE.speed * userSpeed * dash * delta);
     anc.x += (dx / (distance || 1)) * step;
     anc.y += (dy / (distance || 1)) * step;
     if (Math.hypot(anc.targetX - anc.x, anc.targetY - anc.y) < 1.5) {
@@ -688,32 +690,6 @@ export function stepAncistrus(anc, frame, rand = Math.random) {
   const range = ancistrusYRange(anc.heading, tank);
   const goal = range.minY > range.maxY ? (range.minY + range.maxY) / 2 : Math.min(range.maxY, Math.max(range.minY, anc.y));
   if (goal !== anc.y) anc.y += Math.sign(goal - anc.y) * Math.min(Math.abs(goal - anc.y), ANCISTRUS_WATER.rescue * delta);
-}
-
-/**
- * A knock on the glass startles a creature that walks on the sand (the
- * shrimp): it runs away from the knock, along its lane, much faster than
- * usual.
- *
- * @param {Crawler} creature
- * @param {number} tx
- * @param {number} ty
- * @param {number} nowMs
- * @param {CrawlerSpec} spec
- * @returns {boolean} whether it was startled
- */
-export function startleCrawler(creature, tx, ty, nowMs, spec) {
-  if (Math.hypot(creature.x - tx, creature.y - ty) > FLEE.radius) return false;
-  const minX = spec.fleeMinX ?? spec.minX;
-  const maxX = spec.fleeMaxX ?? spec.maxX;
-  const awayDir = creature.x === tx ? (creature.dir || 1) : Math.sign(creature.x - tx);
-  // Away from the knock; when it already stands at the end of its lane, the other way.
-  let target = awayDir > 0 ? maxX : minX;
-  if (Math.abs(target - creature.x) < 8) target = awayDir > 0 ? minX : maxX;
-  creature.targetX = target;
-  creature.state = "moving";
-  creature.fleeUntil = nowMs + FLEE.durationMs;
-  return true;
 }
 
 /** @type {CrawlerSpec} */
@@ -1015,5 +991,114 @@ export function startleGoby(goby, tx, ty, nowMs) {
   } else if (goby.state !== "hiding") {
     goby.state = "hiding";
   }
+  return true;
+}
+
+// ---------------------------------------------------------------------------
+// The shrimp: walks on the sand, and leaps away when the glass is knocked
+// ---------------------------------------------------------------------------
+
+/**
+ * How the shrimp leaps when the glass is knocked: how far it goes in all (units,
+ * the nearer the knock the farther), the share of that distance of each hop, the
+ * height of each hop, how long each lasts (ms), the angle its nose is raised
+ * at the start of a hop (and lowered at the end), the least it goes before it
+ * turns the other way (a wall), the room it keeps under the surface, and how
+ * long it rests after.
+ */
+export const SHRIMP_HOP = { distance: [150, 240], share: [0.6, 0.4], height: [110, 60], ms: [560, 440], pitch: 38, minTrip: 60, surfaceMargin: 25, minHeight: 8, rest: [1200, 1500] };
+
+/**
+ * The shrimp: it walks along the sand like any crawler (see stepCrawler()), and a
+ * knock on the glass makes it leap away, head first, in two bounds that get
+ * lower (see startleShrimp()). In the air it follows an arc and its nose goes
+ * from raised to lowered; it stays in the water, and lands on the sand. Dead, it
+ * lands where it is.
+ *
+ * @param {Crawler} shrimp
+ * @param {Frame} frame
+ * @param {RandomSource} [rand]
+ */
+export function stepShrimp(shrimp, frame, rand = Math.random) {
+  const hops = shrimp.hops;
+  if (frame.isDead || shrimp.state !== "jumping" || !hops || hops.length === 0) {
+    shrimp.lift = 0;
+    shrimp.pitch = 0;
+    shrimp.hops = undefined;
+    if (shrimp.state === "jumping") shrimp.state = "idle";
+    stepCrawler(shrimp, frame, SHRIMP_SPEC, rand);
+    shrimp.floorY = frame.tankBottom - SHRIMP_SPEC.floorOffset;
+    // On the sand, even if it was in the air when the tank died.
+    shrimp.y = shrimp.floorY;
+    return;
+  }
+
+  const { tankBottom, waterSurfaceY, delta, timestamp, nowMs } = frame;
+  const floorY = tankBottom - SHRIMP_SPEC.floorOffset;
+  shrimp.floorY = floorY;
+  shrimp.deathProgress = 0;
+  stressLevel(shrimp, nowMs);
+  const hop = hops[0];
+  hop.t = Math.min(1, (hop.t ?? 0) + (delta * DEFAULT_FRAME_MS) / hop.ms);
+  const u = hop.t;
+  // The arc: up and down in a parabola, never above the water.
+  const room = Math.max(SHRIMP_HOP.minHeight, floorY - (waterSurfaceY + SHRIMP_HOP.surfaceMargin));
+  shrimp.lift = 4 * Math.min(hop.height, room) * u * (1 - u);
+  shrimp.x = hop.fromX + (hop.toX - hop.fromX) * u;
+  shrimp.y = floorY - shrimp.lift;
+  shrimp.dir = hop.toX < hop.fromX ? -1 : 1;
+  shrimp.pitch = (0.5 - u) * 2 * SHRIMP_HOP.pitch;
+  shrimp.targetX = hop.toX;
+  stepLegs(shrimp, 0, false, delta);
+
+  if (u >= 1) {
+    hops.shift();
+    shrimp.x = hop.toX;
+    shrimp.lift = 0;
+    shrimp.pitch = 0;
+    shrimp.y = floorY;
+    if (hops.length > 0) {
+      hops[0].fromX = shrimp.x;
+    } else {
+      shrimp.hops = undefined;
+      shrimp.state = "idle";
+      shrimp.idleUntil = timestamp + SHRIMP_HOP.rest[0] + rand() * SHRIMP_HOP.rest[1];
+    }
+  }
+}
+
+/**
+ * A knock on the glass at (tx, ty) makes the shrimp leap away from it, in two
+ * bounds, the first one long and high, the second one shorter and lower, and the
+ * nearer the knock the farther it goes. It stays inside the part of the sand it
+ * may run to; at the end of it, it leaps the other way.
+ *
+ * @param {Crawler} shrimp
+ * @param {number} tx
+ * @param {number} ty
+ * @param {number} nowMs
+ * @returns {boolean} whether it was startled
+ */
+export function startleShrimp(shrimp, tx, ty, nowMs) {
+  const dist = Math.hypot(shrimp.x - tx, shrimp.y - ty);
+  if (dist > FLEE.radius) return false;
+  // Already in the air: it keeps its leap.
+  if (shrimp.state === "jumping" && shrimp.hops && shrimp.hops.length > 0) return true;
+  const minX = SHRIMP_SPEC.fleeMinX ?? SHRIMP_SPEC.minX;
+  const maxX = SHRIMP_SPEC.fleeMaxX ?? SHRIMP_SPEC.maxX;
+  const [near, far] = SHRIMP_HOP.distance;
+  const reach = near + (far - near) * (1 - dist / FLEE.radius);
+  const awayDir = shrimp.x === tx ? (shrimp.dir || 1) : Math.sign(shrimp.x - tx);
+  let target = Math.min(maxX, Math.max(minX, shrimp.x + awayDir * reach));
+  // Against the end of the lane, it leaps the other way (over the knock).
+  if (Math.abs(target - shrimp.x) < SHRIMP_HOP.minTrip) target = Math.min(maxX, Math.max(minX, shrimp.x - awayDir * reach));
+  const total = target - shrimp.x;
+  const first = shrimp.x + total * SHRIMP_HOP.share[0];
+  shrimp.hops = [
+    { fromX: shrimp.x, toX: first, ms: SHRIMP_HOP.ms[0], height: SHRIMP_HOP.height[0], t: 0 },
+    { fromX: first, toX: target, ms: SHRIMP_HOP.ms[1], height: SHRIMP_HOP.height[1], t: 0 },
+  ];
+  shrimp.state = "jumping";
+  shrimp.fleeUntil = nowMs + FLEE.durationMs;
   return true;
 }

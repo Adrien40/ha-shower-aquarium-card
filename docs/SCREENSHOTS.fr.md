@@ -59,7 +59,7 @@ Ce qui se passe quand on utilise la carte : l'eau qui coule, une pincée de nour
 <tr>
 <td align="center" width="33%"><img src="../visual/baseline/freshwater-water-running.png" alt="Aquarium d'eau douce pendant que l'eau coule" width="100%"><br><sub>**Eau qui coule** : tant que le volume augmente, la surface s'agite et des bulles montent du fond.</sub></td>
 <td align="center" width="33%"><img src="../visual/baseline/saltwater-fish-food.png" alt="Aquarium d'eau de mer avec de la nourriture" width="100%"><br><sub>**Nourriture** : un toucher près de la surface jette une pincée de flocons, et les poissons se précipitent.</sub></td>
-<td align="center" width="33%"><img src="../visual/baseline/saltwater-knock-on-the-glass.png" alt="Aquarium d'eau de mer avec des ondes de choc sur la vitre" width="100%"><br><sub>**Coup sur la vitre** : ondes de choc, les poissons s'écartent, le crabe court vers une grotte et le gobi s'enfonce dans le sable.</sub></td>
+<td align="center" width="33%"><img src="../visual/baseline/saltwater-knock-on-the-glass.png" alt="Aquarium d'eau de mer avec des ondes de choc sur la vitre" width="100%"><br><sub>**Coup sur la vitre** : ondes de choc, les poissons s'écartent, la crevette s'enfuit en bondissant, le crabe court vers une grotte et le gobi s'enfonce dans le sable.</sub></td>
 </tr>
 </table>
 

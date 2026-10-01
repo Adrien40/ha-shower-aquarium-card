@@ -3,6 +3,14 @@
 All notable changes to this project are documented in this file.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.8.88] — 2026-10-01
+
+### Changed
+- When the glass is knocked, the shrimp leaps away: two bounds, head first, the first long and high (about 110 units, over half a second), the second shorter and lower, so about a second in all. In the air it follows an arc, its nose goes from raised to lowered, and a shadow on the sand gets smaller and fainter the higher it is. The nearer the knock, the farther it goes (150 to 240 units); at the end of the sand it may run to, it leaps the other way. It stays under the surface (the bounds are lower when the water is low), keeps its leap if it is knocked again in the air, lands where it is when the tank dies, and rests a moment before it walks again.
+- The Ancistrus dashes away much faster: 18 times its gliding speed instead of 7 (about 17 units per frame), and it turns its head 16 degrees per frame instead of 6. It is fastest at the start of the dash and slows down over the last stretch, so a dash of several hundred units takes about half a second.
+- The shrimp now faces the way it walks: its head leads. Its drawing has its head to the left, but it used to be mirrored the wrong way round, so it walked backwards.
+- The option that shows the images per second (`show_fps`) is now the last one of the Display section of the editor, two places lower, after the two aspect ratio options.
+
 ## [0.8.87] — 2026-10-01
 
 ### Added

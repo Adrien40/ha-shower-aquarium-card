@@ -468,12 +468,13 @@ describe("the bottom dwellers", () => {
 
   it("a redrawn shrimp and crab still face the way they walk", async () => {
     const el = await mountCard({ theme: "saltwater" });
+    // The drawing of the shrimp has its head to the left: walking left it is as it is, walking right it is mirrored.
     el._shrimp.dir = -1;
     el._crab.dir = -1;
-    expect(html(el._renderShrimp(false))).toContain("scale(-1.5, 1.5)");
+    expect(html(el._renderShrimp(false))).toContain("scale(1.5, 1.5)");
     expect(html(el._renderCrab(false))).toContain("scale(-1.4, 1.4)");
     el._shrimp.dir = 1;
-    expect(html(el._renderShrimp(false))).toContain("scale(1.5, 1.5)");
+    expect(html(el._renderShrimp(false))).toContain("scale(-1.5, 1.5)");
   });
 });
 

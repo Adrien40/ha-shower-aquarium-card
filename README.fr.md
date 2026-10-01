@@ -240,7 +240,7 @@ Trois repères marquent le début des zones verte, orange et rouge : à droite d
 
 ## 🎮 Interactions et animations en direct
 
-- **Toucher l'eau** : un coup sur la vitre fait naître une onde de choc, les poissons proches s'écartent vivement puis reprennent leur nage, et des points blancs de stress apparaissent quelques secondes sur eux et sur les autres animaux.
+- **Toucher l'eau** : un coup sur la vitre fait naître une onde de choc, les poissons proches s'écartent vivement puis reprennent leur nage, et des points blancs de stress apparaissent quelques secondes sur eux et sur les autres animaux. La crevette s'enfuit en deux bonds, l'ancistrus file à toute vitesse, le crabe court à sa grotte et le gobi s'enfonce dans le sable.
 - **Glisser horizontalement** : change de biotope (`swipe_biotope`). Le nom du biotope s'affiche un instant.
 - **Toucher près de la surface** : la nourriture est jetée comme une pincée du bout des doigts, éparpillée de gauche à droite, et les poissons se précipitent pour attraper les flocons pendant leur descente.
 - **Clavier et lecteurs d'écran** : appuyez sur <kbd>Tab</kbd> pour atteindre les boutons **Nourrir les poissons**, **Taper sur la vitre** et **Changer de biotope** (ils apparaissent sur l'aquarium quand ils ont le focus), puis sur <kbd>Entrée</kbd> ou <kbd>Espace</kbd> ; un lecteur d'écran annonce le résultat. Les deux premiers sont désactivés quand les animaux sont morts, que le bac est vide, ou que votre système demande une réduction des animations.

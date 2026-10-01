@@ -153,13 +153,13 @@ describe("render() fallbacks", () => {
     expect(JSON.stringify(el._renderFishShape(fish, "freshwater", false).values)).toContain("-1.5");
   });
 
-  it("draws shrimp and crab mirrored when they walk left", async () => {
+  it("draws the crab mirrored when it walks left and the shrimp when it walks right (its head leads)", async () => {
     const el = await mount({ theme: "saltwater" });
-    el._shrimp.dir = -1;
+    el._shrimp.dir = 1;
     el._crab.dir = -1;
     expect(JSON.stringify(el._renderShrimp(false).values)).toContain("-1.5");
     expect(JSON.stringify(el._renderCrab(false).values)).toContain("-1.4");
-    el._shrimp.dir = 1;
+    el._shrimp.dir = -1;
     el._crab.dir = 1;
     expect(JSON.stringify(el._renderShrimp(false).values)).not.toContain("-1.5,");
   });

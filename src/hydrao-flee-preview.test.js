@@ -5,7 +5,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import "./shower-aquarium-card.js";
 import { detectHydraoEntities } from "./pure.js";
-import { startleAncistrus, startleCrawler, stepAncistrus, stepCrawler, createFrame, SHRIMP_SPEC, FLEE } from "./physics.js";
+import { startleAncistrus, stepAncistrus, createFrame, FLEE } from "./physics.js";
 
 const Card = () => customElements.get("shower-aquarium-card");
 
@@ -167,23 +167,6 @@ describe("a knock on the glass makes the bottom dwellers run", () => {
     expect(anc.state).toBe("idle");
   });
 
-  it.each([["shrimp", SHRIMP_SPEC, 650]])("the %s runs away from the knock, then calms down", (_n, spec, x) => {
-    const c = { x, y: 560, targetX: x, state: "idle", idleUntil: 1e9, dir: 1 };
-    expect(startleCrawler(c, x - 60, 560, 1000, spec)).toBe(true);
-    expect(c.state).toBe("moving");
-    expect(c.targetX).toBeGreaterThan(x);
-    const before = c.x;
-    stepCrawler(c, frameAt(1000), spec, () => 0.5);
-    const fast = c.x - before;
-    const normal = { x, y: 560, targetX: x + 100, state: "moving", idleUntil: 1e9, dir: 1 };
-    stepCrawler(normal, frameAt(1000), spec, () => 0.5);
-    expect(fast).toBeGreaterThan((normal.x - x) * 3);
-    // After the flee window, the speed is back to normal.
-    const later = { ...c, x, targetX: x + 100 };
-    stepCrawler(later, frameAt(1000 + FLEE.durationMs + 10), spec, () => 0.5);
-    expect(later.x - x).toBeCloseTo(normal.x - x, 5);
-  });
-
   it("tapping the glass of the card startles them", async () => {
     const el = new (Card())();
     el.setConfig({ entity: "sensor.v", theme: "saltwater" });
@@ -193,8 +176,9 @@ describe("a knock on the glass makes the bottom dwellers run", () => {
     el._crab.x = 600; el._crab.y = 560; el._shrimp.x = 640; el._shrimp.y = 560;
     el._knockAt(500, 560, el._tankState());
     expect(el._crab.fleeUntil).toBeGreaterThan(Date.now());
-    expect(el._shrimp.state).toBe("moving");
-    expect(el._shrimp.targetX).toBeGreaterThan(el._shrimp.x);
+    // The shrimp leaps away from the knock (see shrimp-hop.test.js).
+    expect(el._shrimp.state).toBe("jumping");
+    expect(el._shrimp.hops.at(-1).toX).toBeGreaterThan(el._shrimp.x);
     // The goby does not run: it goes into the sand.
     expect(el._goby.state).toBe("hiding");
   });
@@ -207,16 +191,6 @@ describe("edge cases of the flee", () => {
     const anc = { x: 400, y: 300, targetX: 400, targetY: 300, state: "idle", idleUntil: 0 };
     expect(startleAncistrus(anc, 400, 300, 0, tank, () => 0.25)).toBe(true);
     expect(Math.hypot(anc.targetX - 400, anc.targetY - 300)).toBeGreaterThan(100);
-  });
-
-  it("a crawler knocked exactly from above runs the way it faces; at the end of its lane it turns back", () => {
-    const c = { x: 600, y: 560, targetX: 600, state: "idle", idleUntil: 0, dir: -1 };
-    startleCrawler(c, 600, 560, 0, SHRIMP_SPEC);
-    expect(c.targetX).toBeLessThan(600);
-    // The shrimp runs farther than it walks; at the end of that run it turns back.
-    const edge = { x: SHRIMP_SPEC.fleeMaxX, y: 560, targetX: SHRIMP_SPEC.fleeMaxX, state: "idle", idleUntil: 0, dir: 1 };
-    startleCrawler(edge, SHRIMP_SPEC.fleeMaxX - 50, 560, 0, SHRIMP_SPEC);
-    expect(edge.targetX).toBeLessThan(SHRIMP_SPEC.fleeMaxX);
   });
 
   it("the Ancistrus rests longer after a flee, once it has arrived", () => {

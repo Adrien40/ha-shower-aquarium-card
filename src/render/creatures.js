@@ -57,7 +57,9 @@ export function renderAncistrus(ctx, isDead) {
 }
 
 /**
- * Shrimp.
+ * Shrimp. Its head leads: it faces the way it walks or leaps (the drawing has its
+ * head to the left). In the air its nose goes from raised to lowered, and a
+ * shadow on the sand shows how high it is.
  * @param {import("../types.js").RenderHost} ctx the card element
  * @param {boolean} isDead
  */
@@ -66,10 +68,17 @@ export function renderShrimp(ctx, isDead) {
   const s = ctx._shrimp;
   const p = s.deathProgress || 0;
   const bodyOpacity = (1.0 - p).toFixed(2);
-  const flip = s.dir === -1 ? -1 : 1;
+  // Walking left it faces left (the drawing as it is), walking right the drawing is mirrored.
+  const heading = s.dir === -1 ? -1 : 1;
+  const flip = -heading;
+  const pitch = isDead ? 0 : s.pitch || 0;
+  const lift = isDead ? 0 : s.lift || 0;
 
   return svg`
-    <g transform="translate(${s.x}, ${s.y}) scale(${flip * 1.5}, ${isDead ? -1.5 : 1.5})" opacity="${bodyOpacity}">
+    ${lift > 1.5
+      ? svg`<ellipse cx="${s.x.toFixed(1)}" cy="${((s.floorY ?? s.y + lift) + 7).toFixed(1)}" rx="${(26 - Math.min(lift, 120) * 0.1).toFixed(1)}" ry="3.5" fill="#0f172a" opacity="${(0.22 * (1 - Math.min(lift, 120) / 160)).toFixed(2)}" />`
+      : ""}
+    <g transform="translate(${s.x}, ${s.y}) rotate(${(-pitch * heading).toFixed(1)}) scale(${flip * 1.5}, ${isDead ? -1.5 : 1.5})" opacity="${bodyOpacity}">
       ${shrimpRedrawn(creatureStyle(ctx), shadingAllowed(ctx), gaitOf(s, isDead, ctx._ambientTime))}
       ${stressOf(s, isDead, [-4, -3, 24, 8], ctx._ambientTime)}
     </g>
