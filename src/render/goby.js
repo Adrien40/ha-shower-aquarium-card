@@ -1,5 +1,6 @@
 import { svg } from "lit";
 import { skinned, shapeEl, sh, C, E, OUTLINE, creatureStyle, shadingAllowed } from "./skin.js";
+import { renderStressDots } from "./stress.js";
 
 /** @typedef {import("./skin.js").CreatureStyle} CreatureStyle */
 
@@ -77,6 +78,7 @@ export function renderGoby(ctx, isDead) {
   return svg`
     <g transform="translate(${g.x}, ${g.y}) scale(1.3, ${isDead ? -1.3 : 1.3})" opacity="${bodyOpacity}">
       ${gobyDrawing(creatureStyle(ctx), shadingAllowed(ctx), sway, breath)}
+      ${renderStressDots(isDead ? 0 : g.stress || 0, [0, -3, 27, 6], ctx._ambientTime, 1.5)}
     </g>
   `;
 }

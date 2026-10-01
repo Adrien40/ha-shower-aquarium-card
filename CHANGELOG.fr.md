@@ -3,7 +3,7 @@
 Toutes les modifications notables du projet sont documentées dans ce fichier.
 Le format suit [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/).
 
-## [Non publié]
+## [0.8.82] — 2026-10-01
 
 ### Ajouté
 - Une nouvelle carte se remplit automatiquement avec les entités de Hydrao Custom : volume de la douche, température et température de confort minimum. Elles sont trouvées via le registre des entités (quelle que soit la langue de leurs identifiants), ou par leurs identifiants français ou anglais.
@@ -13,6 +13,8 @@ Le format suit [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/).
 - Le crabe parcourt tout le récif, depuis une nouvelle grotte de pierres vivantes au milieu de l'aquarium, sur le sable puis en montant le tas de pierres jusqu'à sa pierre plate, et se cache dans les deux grottes (la grotte du milieu et une cavité du tas) : il rétrécit dans le noir jusqu'à ne montrer que ses yeux. Un coup sur la vitre l'envoie dans la grotte la plus proche.
 - Plus de pierres vivantes dans le récif : une grotte au milieu de l'aquarium et quelques roches posées sur le sable.
 - Explication sous l'option « Âge actuel des algues » : 0 veut dire automatique.
+- Le crabe et la crevette bougent leurs pattes quand ils marchent : elles se balancent depuis les hanches l'une après l'autre (en opposition des deux côtés du crabe), au rythme de la distance parcourue pour ne jamais glisser sur le sol, et les pinces du crabe se balancent. Elles s'arrêtent quand l'animal s'arrête, et les pléopodes de la crevette frémissent en permanence.
+- Points blancs de stress : un coup sur la vitre fait apparaître des points blancs sur les poissons (plus nombreux sur ceux qui sont près du coup) et sur l'ancistrus, la crevette, le crabe et le gobi ; ils s'estompent un à un en trois secondes et demie environ.
 
 ### Modifié
 - L'ancistrus reste dans l'eau : seul le bout de sa queue peut en sortir. La hauteur qu'il peut atteindre dépend de son orientation (un long corps dressé demande plus de place), et il est ramené dans l'eau quand elle descend.

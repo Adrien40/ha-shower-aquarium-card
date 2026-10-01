@@ -231,7 +231,7 @@ Three notches mark where the green, orange and red zones begin: on the right of 
 
 ## 🎮 Interactions & live animations
 
-- **Tap the water** to knock on the glass: a shock wave ripples out and nearby fish dart away before resuming their swim.
+- **Tap the water** to knock on the glass: a shock wave ripples out, nearby fish dart away before resuming their swim, and white dots of stress appear on them and on the other animals for a few seconds.
 - **Swipe sideways** to change the biotope (`swipe_biotope`). The name of the biotope appears for a moment.
 - **Tap near the surface** to drop fish food: the fish rush to catch the flakes as they sink.
 - **Keyboard and screen readers**: press <kbd>Tab</kbd> to reach the **Feed the fish**, **Knock on the glass** and **Change biotope** buttons (they appear over the tank while focused) and <kbd>Enter</kbd> or <kbd>Space</kbd> to use them; a screen reader announces the result. The first two are disabled when the animals are dead, the tank is empty, or your system asks for reduced motion.

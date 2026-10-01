@@ -1,26 +1,26 @@
 {
  "freshwater, calm, 60 fps": {
   "trace": [
-   "c7497a03",
-   "ffe34213",
-   "ed79f533",
-   "1caf7ace",
-   "44e97310",
-   "c776dfb9",
-   "8198c208",
-   "88865100",
-   "ef1ba4c1",
-   "ebfb5686",
-   "5b4a5098",
-   "1e5c29cc",
-   "1d434434",
-   "8ae10336",
-   "3bd28d08",
-   "dbc7ac38",
-   "4026a4ed",
-   "cb19bd3d",
-   "08b9e83a",
-   "affe5d38"
+   "c030e06f",
+   "7da37a9d",
+   "97490e63",
+   "8b3cc0c8",
+   "927eecfa",
+   "320a6b33",
+   "3a41fd14",
+   "49141b89",
+   "4654d8d7",
+   "d21e3846",
+   "5ef3fae9",
+   "4a5e18af",
+   "59e9443d",
+   "7d4a23ff",
+   "a958fb7d",
+   "243f7375",
+   "1a60e60e",
+   "681bb2c2",
+   "fc355895",
+   "1f11f5d5"
   ],
   "final": {
    "deathProgress": 0,
@@ -37,7 +37,8 @@
      "vx": 1.463756,
      "vy": 0.365411,
      "dir": 1,
-     "deathProgress": 0
+     "deathProgress": 0,
+     "stress": 0
     },
     {
      "species": 1,
@@ -49,7 +50,8 @@
      "vx": 1.194345,
      "vy": 0.535766,
      "dir": 1,
-     "deathProgress": 0
+     "deathProgress": 0,
+     "stress": 0
     },
     {
      "species": 2,
@@ -61,7 +63,8 @@
      "vx": 0.711799,
      "vy": 0.303353,
      "dir": 1,
-     "deathProgress": 0
+     "deathProgress": 0,
+     "stress": 0
     },
     {
      "species": 3,
@@ -73,7 +76,8 @@
      "vx": 1.388037,
      "vy": 0.356977,
      "dir": 1,
-     "deathProgress": 0
+     "deathProgress": 0,
+     "stress": 0
     },
     {
      "species": 4,
@@ -85,7 +89,8 @@
      "vx": 1.499147,
      "vy": 0.380018,
      "dir": -1,
-     "deathProgress": 0
+     "deathProgress": 0,
+     "stress": 0
     },
     {
      "species": 5,
@@ -97,7 +102,8 @@
      "vx": 1.511601,
      "vy": -0.390104,
      "dir": -1,
-     "deathProgress": 0
+     "deathProgress": 0,
+     "stress": 0
     }
    ],
    "snails": [
@@ -137,7 +143,8 @@
     "heading": 102.497618,
     "state": "idle",
     "idleUntil": 9902.521929,
-    "deathProgress": 0
+    "deathProgress": 0,
+    "stress": 0
    },
    "shrimp": {
     "x": 692.12,
@@ -146,7 +153,10 @@
     "state": "moving",
     "idleUntil": 6507.945636,
     "dir": 1,
-    "deathProgress": 0
+    "deathProgress": 0,
+    "stress": 0,
+    "walk": 26.19,
+    "stride": 0.999987
    },
    "crab": {
     "x": 884,
@@ -158,6 +168,9 @@
     "idleUntil": 1700000010639.7656,
     "dir": 1,
     "deathProgress": 0,
+    "stress": 0,
+    "walk": 52.38,
+    "stride": 0.001502,
     "goalS": 512.085778
    },
    "bubbles": [
@@ -700,26 +713,26 @@
  },
  "saltwater, calm, 60 fps": {
   "trace": [
-   "e9f3c524",
-   "75b65cf5",
-   "233770b1",
-   "f9e7e727",
-   "0162b15b",
-   "04e9017d",
-   "841a0b16",
-   "d7a3829d",
-   "49e7f655",
-   "6c109b3f",
-   "e9a67236",
-   "e4a832ab",
-   "8aca1be0",
-   "45e4ed48",
-   "5c60c591",
-   "b2f296fa",
-   "58ee150b",
-   "78e44c49",
-   "024e607e",
-   "32b0902d"
+   "3e84a360",
+   "d4abfded",
+   "7b9511b9",
+   "5730ef55",
+   "aa4462d3",
+   "b8293d6d",
+   "d9b8f272",
+   "b36f71b4",
+   "b6acbff3",
+   "12bb4aa9",
+   "5466adc5",
+   "0aa2ca98",
+   "8ce46985",
+   "fb10d135",
+   "8cd94b34",
+   "35d133bb",
+   "209e9b02",
+   "16f474c4",
+   "27e444cf",
+   "cfefe51a"
   ],
   "final": {
    "deathProgress": 0,
@@ -736,7 +749,8 @@
      "vx": 1.463756,
      "vy": -0.365411,
      "dir": -1,
-     "deathProgress": 0
+     "deathProgress": 0,
+     "stress": 0
     },
     {
      "species": 0,
@@ -748,7 +762,8 @@
      "vx": 1.194345,
      "vy": 0.535766,
      "dir": -1,
-     "deathProgress": 0
+     "deathProgress": 0,
+     "stress": 0
     },
     {
      "species": 1,
@@ -760,7 +775,8 @@
      "vx": 1.186331,
      "vy": -0.505588,
      "dir": 1,
-     "deathProgress": 0
+     "deathProgress": 0,
+     "stress": 0
     },
     {
      "species": 3,
@@ -772,7 +788,8 @@
      "vx": 1.388037,
      "vy": 0.356977,
      "dir": 1,
-     "deathProgress": 0
+     "deathProgress": 0,
+     "stress": 0
     },
     {
      "species": 4,
@@ -784,7 +801,8 @@
      "vx": 1.499147,
      "vy": 0.380018,
      "dir": -1,
-     "deathProgress": 0
+     "deathProgress": 0,
+     "stress": 0
     },
     {
      "species": 2,
@@ -796,7 +814,8 @@
      "vx": 1.511601,
      "vy": -0.390104,
      "dir": -1,
-     "deathProgress": 0
+     "deathProgress": 0,
+     "stress": 0
     }
    ],
    "snails": [
@@ -836,7 +855,8 @@
     "heading": 102.497618,
     "state": "idle",
     "idleUntil": 9902.521929,
-    "deathProgress": 0
+    "deathProgress": 0,
+    "stress": 0
    },
    "shrimp": {
     "x": 692.12,
@@ -845,7 +865,10 @@
     "state": "moving",
     "idleUntil": 6507.945636,
     "dir": 1,
-    "deathProgress": 0
+    "deathProgress": 0,
+    "stress": 0,
+    "walk": 26.19,
+    "stride": 0.999987
    },
    "crab": {
     "x": 884,
@@ -857,6 +880,9 @@
     "idleUntil": 1700000010639.7656,
     "dir": 1,
     "deathProgress": 0,
+    "stress": 0,
+    "walk": 52.38,
+    "stride": 0.001502,
     "goalS": 512.085778
    },
    "bubbles": [
@@ -1399,26 +1425,26 @@
  },
  "coldwater, calm, 60 fps": {
   "trace": [
-   "12e981be",
-   "94f89bf9",
-   "7a8a1e8e",
-   "414e6523",
-   "d5909508",
-   "596e596b",
-   "44b85547",
-   "3819e1dd",
-   "c3c1bdc8",
-   "1b7c10d9",
-   "6ec3be6c",
-   "83b6ba8f",
-   "277af20a",
-   "4c1c72e9",
-   "700c6962",
-   "f05609ed",
-   "a8bb1876",
-   "44a7d46c",
-   "9984eeef",
-   "89ce9aa5"
+   "e0fc1092",
+   "ff4756d9",
+   "64b0debe",
+   "914684ed",
+   "6a94a7c4",
+   "a39f3047",
+   "0a5ead5b",
+   "f9d5e72c",
+   "e635d5d2",
+   "cfdb46c7",
+   "2ed8a165",
+   "f5945570",
+   "4d58d65d",
+   "0f15f47a",
+   "a98ec831",
+   "e7ddfeb6",
+   "59319797",
+   "bea3c31b",
+   "befd96ca",
+   "689fd500"
   ],
   "final": {
    "deathProgress": 0,
@@ -1435,7 +1461,8 @@
      "vx": 1.463756,
      "vy": 0.365411,
      "dir": 1,
-     "deathProgress": 0
+     "deathProgress": 0,
+     "stress": 0
     },
     {
      "species": 1,
@@ -1447,7 +1474,8 @@
      "vx": 1.194345,
      "vy": 0.535766,
      "dir": 1,
-     "deathProgress": 0
+     "deathProgress": 0,
+     "stress": 0
     },
     {
      "species": 2,
@@ -1459,7 +1487,8 @@
      "vx": 1.186331,
      "vy": -0.505588,
      "dir": 1,
-     "deathProgress": 0
+     "deathProgress": 0,
+     "stress": 0
     },
     {
      "species": 3,
@@ -1471,7 +1500,8 @@
      "vx": 1.388037,
      "vy": 0.356977,
      "dir": 1,
-     "deathProgress": 0
+     "deathProgress": 0,
+     "stress": 0
     },
     {
      "species": 4,
@@ -1483,7 +1513,8 @@
      "vx": 1.499147,
      "vy": 0.380018,
      "dir": -1,
-     "deathProgress": 0
+     "deathProgress": 0,
+     "stress": 0
     },
     {
      "species": 5,
@@ -1495,7 +1526,8 @@
      "vx": 1.511601,
      "vy": -0.390104,
      "dir": -1,
-     "deathProgress": 0
+     "deathProgress": 0,
+     "stress": 0
     }
    ],
    "snails": [
@@ -1535,7 +1567,8 @@
     "heading": 102.497618,
     "state": "idle",
     "idleUntil": 9902.521929,
-    "deathProgress": 0
+    "deathProgress": 0,
+    "stress": 0
    },
    "shrimp": {
     "x": 692.12,
@@ -1544,7 +1577,10 @@
     "state": "moving",
     "idleUntil": 6507.945636,
     "dir": 1,
-    "deathProgress": 0
+    "deathProgress": 0,
+    "stress": 0,
+    "walk": 26.19,
+    "stride": 0.999987
    },
    "crab": {
     "x": 884,
@@ -1556,6 +1592,9 @@
     "idleUntil": 1700000010639.7656,
     "dir": 1,
     "deathProgress": 0,
+    "stress": 0,
+    "walk": 52.38,
+    "stride": 0.001502,
     "goalS": 512.085778
    },
    "bubbles": [
@@ -2098,21 +2137,21 @@
  },
  "freshwater, boiling": {
   "trace": [
-   "0d2d225b",
-   "3db7e1f4",
-   "a0aa7f2d",
-   "69102c5e",
-   "e684551e",
-   "955b7090",
-   "3d751349",
-   "0c81dbcd",
-   "98ea6564",
-   "aae4a544",
-   "d90160b6",
-   "2b03efba",
-   "374fdecf",
-   "46156bfe",
-   "23e04b26"
+   "102348d7",
+   "b5b3586c",
+   "63dd1307",
+   "86d8dac2",
+   "facacd78",
+   "44664590",
+   "34aea92d",
+   "83910b22",
+   "d1321694",
+   "489f6572",
+   "55d5c979",
+   "42a8c43f",
+   "1c76c395",
+   "98c92fdc",
+   "2434c304"
   ],
   "final": {
    "deathProgress": 0,
@@ -2129,7 +2168,8 @@
      "vx": 1.463756,
      "vy": 0.365411,
      "dir": -1,
-     "deathProgress": 0
+     "deathProgress": 0,
+     "stress": 0
     },
     {
      "species": 1,
@@ -2141,7 +2181,8 @@
      "vx": 1.194345,
      "vy": -0.535766,
      "dir": 1,
-     "deathProgress": 0
+     "deathProgress": 0,
+     "stress": 0
     },
     {
      "species": 2,
@@ -2153,7 +2194,8 @@
      "vx": 0.711799,
      "vy": -0.303353,
      "dir": 1,
-     "deathProgress": 0
+     "deathProgress": 0,
+     "stress": 0
     },
     {
      "species": 3,
@@ -2165,7 +2207,8 @@
      "vx": 1.388037,
      "vy": 0.356977,
      "dir": 1,
-     "deathProgress": 0
+     "deathProgress": 0,
+     "stress": 0
     },
     {
      "species": 4,
@@ -2177,7 +2220,8 @@
      "vx": 1.499147,
      "vy": -0.380018,
      "dir": 1,
-     "deathProgress": 0
+     "deathProgress": 0,
+     "stress": 0
     },
     {
      "species": 5,
@@ -2189,7 +2233,8 @@
      "vx": 1.511601,
      "vy": -0.390104,
      "dir": 1,
-     "deathProgress": 0
+     "deathProgress": 0,
+     "stress": 0
     }
    ],
    "snails": [
@@ -2229,7 +2274,8 @@
     "heading": 42.070454,
     "state": "moving",
     "idleUntil": 2151.710846,
-    "deathProgress": 0
+    "deathProgress": 0,
+    "stress": 0
    },
    "shrimp": {
     "x": 606.8,
@@ -2238,7 +2284,10 @@
     "state": "idle",
     "idleUntil": 7801.78048,
     "dir": -1,
-    "deathProgress": 0
+    "deathProgress": 0,
+    "stress": 0,
+    "walk": 10.8,
+    "stride": 0
    },
    "crab": {
     "x": 861.898312,
@@ -2250,6 +2299,9 @@
     "idleUntil": 1700000002765.2983,
     "dir": 1,
     "deathProgress": 0,
+    "stress": 0,
+    "walk": 35.91,
+    "stride": 1,
     "goalS": 512.085778
    },
    "bubbles": [
@@ -4871,21 +4923,21 @@
  },
  "freshwater, water level drops": {
   "trace": [
-   "c7497a03",
-   "ffe34213",
-   "ed79f533",
-   "6b8fd3fc",
-   "4edef3f6",
-   "5535f538",
-   "bc4a4651",
-   "c9810a02",
-   "8f2cdeae",
-   "0c83d68e",
-   "45f6b654",
-   "3bcfcf1f",
-   "9da5c99c",
-   "395152d4",
-   "fa5d18d9"
+   "c030e06f",
+   "7da37a9d",
+   "97490e63",
+   "a2d8225e",
+   "df696c90",
+   "2930d20a",
+   "5c257e7d",
+   "855e2f17",
+   "34ecf584",
+   "ff379fe7",
+   "70728c82",
+   "1545360b",
+   "ea918fc1",
+   "eb7fcbce",
+   "cd079239"
   ],
   "final": {
    "deathProgress": 0,
@@ -4902,7 +4954,8 @@
      "vx": 1.463756,
      "vy": 0.365411,
      "dir": 1,
-     "deathProgress": 0
+     "deathProgress": 0,
+     "stress": 0
     },
     {
      "species": 1,
@@ -4914,7 +4967,8 @@
      "vx": 1.194345,
      "vy": 0.535766,
      "dir": 1,
-     "deathProgress": 0
+     "deathProgress": 0,
+     "stress": 0
     },
     {
      "species": 2,
@@ -4926,7 +4980,8 @@
      "vx": 0.711799,
      "vy": 0.303353,
      "dir": -1,
-     "deathProgress": 0
+     "deathProgress": 0,
+     "stress": 0
     },
     {
      "species": 3,
@@ -4938,7 +4993,8 @@
      "vx": 1.388037,
      "vy": -0.356977,
      "dir": -1,
-     "deathProgress": 0
+     "deathProgress": 0,
+     "stress": 0
     },
     {
      "species": 4,
@@ -4950,7 +5006,8 @@
      "vx": 1.499147,
      "vy": -0.380018,
      "dir": -1,
-     "deathProgress": 0
+     "deathProgress": 0,
+     "stress": 0
     },
     {
      "species": 5,
@@ -4962,7 +5019,8 @@
      "vx": 1.511601,
      "vy": -0.390104,
      "dir": -1,
-     "deathProgress": 0
+     "deathProgress": 0,
+     "stress": 0
     }
    ],
    "snails": [
@@ -5002,7 +5060,8 @@
     "heading": 101.127088,
     "state": "idle",
     "idleUntil": 6715.565292,
-    "deathProgress": 0
+    "deathProgress": 0,
+    "stress": 0
    },
    "shrimp": {
     "x": 732.08,
@@ -5011,7 +5070,10 @@
     "state": "idle",
     "idleUntil": 7716.298611,
     "dir": 1,
-    "deathProgress": 0
+    "deathProgress": 0,
+    "stress": 0,
+    "walk": 20.52,
+    "stride": 0
    },
    "crab": {
     "x": 861.898312,
@@ -5023,6 +5085,9 @@
     "idleUntil": 1700000002765.2983,
     "dir": 1,
     "deathProgress": 0,
+    "stress": 0,
+    "walk": 35.91,
+    "stride": 1,
     "goalS": 472.148753
    },
    "bubbles": [
@@ -5565,26 +5630,26 @@
  },
  "freshwater, fish food": {
   "trace": [
-   "c7497a03",
-   "e0972854",
-   "d730ad83",
-   "5a1c4a46",
-   "ada4110a",
-   "12e923c7",
-   "48faa5f9",
-   "c8896de5",
-   "b299f26f",
-   "4033039a",
-   "0b97c4c1",
-   "e077c8a7",
-   "ecdffa96",
-   "ac2fa41f",
-   "fa7b0687",
-   "90a7f01b",
-   "1b3420c9",
-   "06a059d6",
-   "f38948b4",
-   "9ae00f6d"
+   "c030e06f",
+   "a538874a",
+   "9df3d843",
+   "17808834",
+   "9687156a",
+   "a5538685",
+   "73c4d5ad",
+   "28bdd3ae",
+   "edbc7eb9",
+   "50ebbca4",
+   "cc1c2d04",
+   "7853a54a",
+   "a24cfddb",
+   "ad79226a",
+   "9428d132",
+   "f173d242",
+   "46bad328",
+   "b4a1f591",
+   "db00bee1",
+   "a1886260"
   ],
   "final": {
    "deathProgress": 0,
@@ -5602,6 +5667,7 @@
      "vy": 0.365411,
      "dir": -1,
      "deathProgress": 0,
+     "stress": 0,
      "_baseVy": 0.365411,
      "_seeking": false
     },
@@ -5616,6 +5682,7 @@
      "vy": 0.535766,
      "dir": 1,
      "deathProgress": 0,
+     "stress": 0,
      "_baseVy": 0.535766,
      "_seeking": false
     },
@@ -5630,6 +5697,7 @@
      "vy": 0.303353,
      "dir": 1,
      "deathProgress": 0,
+     "stress": 0,
      "_baseVy": 0.303353,
      "_seeking": false
     },
@@ -5644,6 +5712,7 @@
      "vy": 0.356977,
      "dir": -1,
      "deathProgress": 0,
+     "stress": 0,
      "_baseVy": 0.356977,
      "_seeking": false
     },
@@ -5658,6 +5727,7 @@
      "vy": 0.380018,
      "dir": -1,
      "deathProgress": 0,
+     "stress": 0,
      "_baseVy": 0.380018,
      "_seeking": false
     },
@@ -5671,7 +5741,8 @@
      "vx": 1.511601,
      "vy": -0.390104,
      "dir": -1,
-     "deathProgress": 0
+     "deathProgress": 0,
+     "stress": 0
     }
    ],
    "snails": [
@@ -5711,7 +5782,8 @@
     "heading": 102.497618,
     "state": "idle",
     "idleUntil": 9902.521929,
-    "deathProgress": 0
+    "deathProgress": 0,
+    "stress": 0
    },
    "shrimp": {
     "x": 692.12,
@@ -5720,7 +5792,10 @@
     "state": "moving",
     "idleUntil": 6507.945636,
     "dir": 1,
-    "deathProgress": 0
+    "deathProgress": 0,
+    "stress": 0,
+    "walk": 26.19,
+    "stride": 0.999987
    },
    "crab": {
     "x": 884,
@@ -5732,6 +5807,9 @@
     "idleUntil": 1700000010639.7656,
     "dir": 1,
     "deathProgress": 0,
+    "stress": 0,
+    "walk": 52.38,
+    "stride": 0.001502,
     "goalS": 512.085778
    },
    "bubbles": [
@@ -6274,16 +6352,16 @@
  },
  "saltwater, knock on the glass": {
   "trace": [
-   "e9f3c524",
-   "5619e1d0",
-   "a401671c",
-   "801afd49",
-   "b1af1a45",
-   "0e4a2184",
-   "3159e517",
-   "04aa2437",
-   "cabcd05c",
-   "33e2e32f"
+   "3e84a360",
+   "2af9fc5e",
+   "03b13432",
+   "2055b87f",
+   "276a6045",
+   "4b649650",
+   "2b983bf5",
+   "9fbb6b9a",
+   "69a12aae",
+   "97dcdc5b"
   ],
   "final": {
    "deathProgress": 0,
@@ -6301,6 +6379,7 @@
      "vy": 0.365411,
      "dir": -1,
      "deathProgress": 0,
+     "stress": 0,
      "kickX": 0,
      "kickY": 0,
      "scare": 0
@@ -6316,6 +6395,7 @@
      "vy": -0.535766,
      "dir": 1,
      "deathProgress": 0,
+     "stress": 0,
      "kickX": 0,
      "kickY": 0,
      "scare": 0
@@ -6331,6 +6411,7 @@
      "vy": 0.505588,
      "dir": -1,
      "deathProgress": 0,
+     "stress": 0,
      "kickX": 0,
      "kickY": 0,
      "scare": 0
@@ -6346,6 +6427,7 @@
      "vy": 0.356977,
      "dir": -1,
      "deathProgress": 0,
+     "stress": 0,
      "kickX": 0,
      "kickY": 0,
      "scare": 0
@@ -6361,6 +6443,7 @@
      "vy": 0.380018,
      "dir": -1,
      "deathProgress": 0,
+     "stress": 0,
      "kickX": 0,
      "kickY": 0,
      "scare": 0
@@ -6376,6 +6459,7 @@
      "vy": 0.390104,
      "dir": -1,
      "deathProgress": 0,
+     "stress": 0,
      "kickX": 0,
      "kickY": 0,
      "scare": 0
@@ -6418,7 +6502,8 @@
     "heading": 102.497618,
     "state": "moving",
     "idleUntil": 2151.710846,
-    "deathProgress": 0
+    "deathProgress": 0,
+    "stress": 0
    },
    "shrimp": {
     "x": 618.68,
@@ -6427,7 +6512,10 @@
     "state": "idle",
     "idleUntil": 6507.945636,
     "dir": -1,
-    "deathProgress": 0
+    "deathProgress": 0,
+    "stress": 0,
+    "walk": 7.83,
+    "stride": 0.001489
    },
    "crab": {
     "x": 877.830769,
@@ -6439,6 +6527,9 @@
     "idleUntil": 1700000002765.2983,
     "dir": -1,
     "deathProgress": 0,
+    "stress": 0,
+    "walk": 8.91,
+    "stride": 0.996017,
     "goalS": 512.085778
    },
    "bubbles": [
@@ -6981,56 +7072,56 @@
  },
  "freshwater, shower running then finished": {
   "trace": [
-   "fee75ca9",
-   "6b2d9277",
-   "6476d4d7",
-   "e69561ec",
-   "bc937740",
-   "b5c1588f",
-   "feaa647f",
-   "f35b39e0",
-   "d1bb8bc5",
-   "eea11497",
-   "58111ca5",
-   "51143b8f",
-   "0fce89f6",
-   "8f025ce3",
-   "3affb39d",
-   "3d37a1e5",
-   "7308c8cf",
-   "2b9acea7",
-   "a6a44c58",
-   "a9f0e0e5",
-   "f2276b3a",
-   "04492827",
-   "6e8b0e64",
-   "b836a777",
-   "15e5adf3",
-   "481fac66",
-   "feb15feb",
-   "2f181184",
-   "b373fc0d",
-   "0bc19d4a",
-   "eab03fef",
-   "255a09f8",
-   "bb775f91",
-   "d5ed9d1c",
-   "9c85ac3a",
-   "59a0b676",
-   "4d80a218",
-   "a0a310a4",
-   "65cab6f2",
-   "6f9d00d5",
-   "ad564ce5",
-   "01d9b374",
-   "cf586748",
-   "50223590",
-   "ea924874",
-   "912cc92b",
-   "90b65c73",
-   "0ea7e32d",
-   "38633eda",
-   "2b4e9e4b"
+   "ec89c23f",
+   "432c9fe9",
+   "52dab0ad",
+   "f2254940",
+   "6c1b1b04",
+   "72909cc5",
+   "781dcda3",
+   "2cf48685",
+   "88c96b11",
+   "d7f26482",
+   "c2933057",
+   "425868b7",
+   "c1c395d9",
+   "0ab4d60f",
+   "893493ff",
+   "0a0556ad",
+   "40b9f2e5",
+   "dfe9ab50",
+   "69b8e2b6",
+   "7bc61fbe",
+   "060f1696",
+   "b72117db",
+   "846e2b86",
+   "4875b0e3",
+   "7d2906c3",
+   "1a02ff11",
+   "a9858803",
+   "c6bef86f",
+   "4c701cf2",
+   "109be70f",
+   "97070a8a",
+   "e4f5ec55",
+   "a1e1feca",
+   "2749d9db",
+   "093f259d",
+   "c6a459ee",
+   "ecd98df7",
+   "7cda3cf9",
+   "e65dc32a",
+   "02ccbe43",
+   "7b13bacd",
+   "a0c320fc",
+   "aec3c9fd",
+   "0a1e9484",
+   "64308420",
+   "4389fbf6",
+   "38c777b0",
+   "7e2903d7",
+   "aa9166f7",
+   "947724e0"
   ],
   "final": {
    "deathProgress": 0,
@@ -7047,7 +7138,8 @@
      "vx": 1.463756,
      "vy": -0.365411,
      "dir": 1,
-     "deathProgress": 0
+     "deathProgress": 0,
+     "stress": 0
     },
     {
      "species": 1,
@@ -7059,7 +7151,8 @@
      "vx": 1.194345,
      "vy": -0.535766,
      "dir": -1,
-     "deathProgress": 0
+     "deathProgress": 0,
+     "stress": 0
     },
     {
      "species": 2,
@@ -7071,7 +7164,8 @@
      "vx": 0.711799,
      "vy": -0.303353,
      "dir": 1,
-     "deathProgress": 0
+     "deathProgress": 0,
+     "stress": 0
     },
     {
      "species": 3,
@@ -7083,7 +7177,8 @@
      "vx": 1.388037,
      "vy": -0.356977,
      "dir": -1,
-     "deathProgress": 0
+     "deathProgress": 0,
+     "stress": 0
     },
     {
      "species": 4,
@@ -7095,7 +7190,8 @@
      "vx": 1.499147,
      "vy": -0.380018,
      "dir": 1,
-     "deathProgress": 0
+     "deathProgress": 0,
+     "stress": 0
     },
     {
      "species": 5,
@@ -7107,7 +7203,8 @@
      "vx": 1.511601,
      "vy": -0.390104,
      "dir": -1,
-     "deathProgress": 0
+     "deathProgress": 0,
+     "stress": 0
     }
    ],
    "snails": [
@@ -7147,7 +7244,8 @@
     "heading": 68.354651,
     "state": "moving",
     "idleUntil": 15241.542094,
-    "deathProgress": 0
+    "deathProgress": 0,
+    "stress": 0
    },
    "shrimp": {
     "x": 688.88,
@@ -7156,7 +7254,10 @@
     "state": "moving",
     "idleUntil": 17143.208343,
     "dir": 1,
-    "deathProgress": 0
+    "deathProgress": 0,
+    "stress": 0,
+    "walk": 50.22,
+    "stride": 0.993514
    },
    "crab": {
     "x": 394.473409,
@@ -7168,6 +7269,9 @@
     "idleUntil": 1700000014005.595,
     "dir": -1,
     "deathProgress": 0,
+    "stress": 0,
+    "walk": 174.86316,
+    "stride": 1,
     "goalS": 0
    },
    "bubbles": [
@@ -7710,21 +7814,21 @@
  },
  "freshwater, balanced profile (30 fps)": {
   "trace": [
-   "c7497a03",
-   "d410dd87",
-   "32e8649c",
-   "4c0ddea0",
-   "b938be57",
-   "1e5fbb53",
-   "a672caa9",
-   "187ae4f4",
-   "6eb963ec",
-   "4be2cfb2",
-   "92fce4f4",
-   "e5d74314",
-   "8ea4dd06",
-   "925f4a51",
-   "83e41928"
+   "c030e06f",
+   "4ddf2fad",
+   "08754188",
+   "a7bc60da",
+   "ee37a3f1",
+   "34c917ec",
+   "7f341272",
+   "5f6bd4be",
+   "ea0ebe67",
+   "ebef9334",
+   "0fd416f9",
+   "1da9b477",
+   "1c0ec85e",
+   "e39dc2d2",
+   "af3e5ba7"
   ],
   "final": {
    "deathProgress": 0,
@@ -7741,7 +7845,8 @@
      "vx": 1.463756,
      "vy": 0.365411,
      "dir": -1,
-     "deathProgress": 0
+     "deathProgress": 0,
+     "stress": 0
     },
     {
      "species": 1,
@@ -7753,7 +7858,8 @@
      "vx": 1.194345,
      "vy": -0.535766,
      "dir": 1,
-     "deathProgress": 0
+     "deathProgress": 0,
+     "stress": 0
     },
     {
      "species": 2,
@@ -7765,7 +7871,8 @@
      "vx": 0.711799,
      "vy": -0.303353,
      "dir": 1,
-     "deathProgress": 0
+     "deathProgress": 0,
+     "stress": 0
     },
     {
      "species": 3,
@@ -7777,7 +7884,8 @@
      "vx": 1.388037,
      "vy": 0.356977,
      "dir": 1,
-     "deathProgress": 0
+     "deathProgress": 0,
+     "stress": 0
     },
     {
      "species": 4,
@@ -7789,7 +7897,8 @@
      "vx": 1.499147,
      "vy": 0.380018,
      "dir": 1,
-     "deathProgress": 0
+     "deathProgress": 0,
+     "stress": 0
     },
     {
      "species": 5,
@@ -7801,7 +7910,8 @@
      "vx": 1.511601,
      "vy": -0.390104,
      "dir": 1,
-     "deathProgress": 0
+     "deathProgress": 0,
+     "stress": 0
     }
    ],
    "snails": [
@@ -7841,7 +7951,8 @@
     "heading": 2.070454,
     "state": "moving",
     "idleUntil": 9915.341929,
-    "deathProgress": 0
+    "deathProgress": 0,
+    "stress": 0
    },
    "shrimp": {
     "x": 714.728914,
@@ -7850,7 +7961,10 @@
     "state": "idle",
     "idleUntil": 12408.685642,
     "dir": -1,
-    "deathProgress": 0
+    "deathProgress": 0,
+    "stress": 0,
+    "walk": 36.689912,
+    "stride": 0.08951
    },
    "crab": {
     "x": 884,
@@ -7862,6 +7976,9 @@
     "idleUntil": 1700000010668.7656,
     "dir": 1,
     "deathProgress": 0,
+    "stress": 0,
+    "walk": 52.348559,
+    "stride": 0,
     "goalS": 512.085778
    },
    "bubbles": [
@@ -8404,21 +8521,21 @@
  },
  "saltwater, light profile (20 fps)": {
   "trace": [
-   "e9f3c524",
-   "ed798ab4",
-   "b1e2aced",
-   "1a88b3e2",
-   "dd02b818",
-   "6ce5bf15",
-   "040f79a8",
-   "f9e18581",
-   "fb705009",
-   "5d4ed199",
-   "75535baf",
-   "01b2ae20",
-   "c4e7548a",
-   "66bcc344",
-   "8879457b"
+   "3e84a360",
+   "50e1cbcc",
+   "27e8fe27",
+   "524e64de",
+   "3e775674",
+   "69ee6d04",
+   "c78cde29",
+   "84060528",
+   "6e9abc30",
+   "300bba77",
+   "b7390d2a",
+   "59aba9e8",
+   "ba7d70cb",
+   "7281c51f",
+   "71ed1ae2"
   ],
   "final": {
    "deathProgress": 0,
@@ -8435,7 +8552,8 @@
      "vx": 1.463756,
      "vy": -0.365411,
      "dir": -1,
-     "deathProgress": 0
+     "deathProgress": 0,
+     "stress": 0
     },
     {
      "species": 0,
@@ -8447,7 +8565,8 @@
      "vx": 1.194345,
      "vy": -0.535766,
      "dir": 1,
-     "deathProgress": 0
+     "deathProgress": 0,
+     "stress": 0
     },
     {
      "species": 1,
@@ -8459,7 +8578,8 @@
      "vx": 1.186331,
      "vy": -0.505588,
      "dir": -1,
-     "deathProgress": 0
+     "deathProgress": 0,
+     "stress": 0
     },
     {
      "species": 3,
@@ -8471,7 +8591,8 @@
      "vx": 1.388037,
      "vy": 0.356977,
      "dir": -1,
-     "deathProgress": 0
+     "deathProgress": 0,
+     "stress": 0
     },
     {
      "species": 4,
@@ -8483,7 +8604,8 @@
      "vx": 1.499147,
      "vy": -0.380018,
      "dir": 1,
-     "deathProgress": 0
+     "deathProgress": 0,
+     "stress": 0
     },
     {
      "species": 2,
@@ -8495,7 +8617,8 @@
      "vx": 1.511601,
      "vy": -0.390104,
      "dir": -1,
-     "deathProgress": 0
+     "deathProgress": 0,
+     "stress": 0
     }
    ],
    "snails": [
@@ -8535,7 +8658,8 @@
     "heading": 2.070454,
     "state": "idle",
     "idleUntil": 16351.064437,
-    "deathProgress": 0
+    "deathProgress": 0,
+    "stress": 0
    },
    "shrimp": {
     "x": 711.393555,
@@ -8544,7 +8668,10 @@
     "state": "idle",
     "idleUntil": 16340.64231,
     "dir": -1,
-    "deathProgress": 0
+    "deathProgress": 0,
+    "stress": 0,
+    "walk": 37.539958,
+    "stride": 0
    },
    "crab": {
     "x": 692.833659,
@@ -8556,6 +8683,9 @@
     "idleUntil": 1700000011977.6743,
     "dir": -1,
     "deathProgress": 0,
+    "stress": 0,
+    "walk": 100.269878,
+    "stride": 1,
     "goalS": 0
    },
    "bubbles": [
@@ -9098,21 +9228,21 @@
  },
  "fullscreen, coldwater": {
   "trace": [
-   "f3c5c21e",
-   "be1620e9",
-   "14c3d686",
-   "d3a9091b",
-   "183513ec",
-   "7d74c7cf",
-   "e5ed74bf",
-   "9a2eed97",
-   "b4492f46",
-   "c461ed99",
-   "f61d1779",
-   "7f488251",
-   "947870c4",
-   "17e0b154",
-   "933af515"
+   "b15574a6",
+   "fac65b75",
+   "0e2bcd82",
+   "226b3f4d",
+   "2861a194",
+   "a9e796a7",
+   "3217f75f",
+   "31187d0e",
+   "5b6e57e4",
+   "15cad0d9",
+   "f3df7416",
+   "2833e4a6",
+   "48f9d073",
+   "566d667b",
+   "a788b55a"
   ],
   "final": {
    "deathProgress": 0,
@@ -9129,7 +9259,8 @@
      "vx": 1.463756,
      "vy": 0.365411,
      "dir": 1,
-     "deathProgress": 0
+     "deathProgress": 0,
+     "stress": 0
     },
     {
      "species": 1,
@@ -9141,7 +9272,8 @@
      "vx": 1.194345,
      "vy": 0.535766,
      "dir": 1,
-     "deathProgress": 0
+     "deathProgress": 0,
+     "stress": 0
     },
     {
      "species": 2,
@@ -9153,7 +9285,8 @@
      "vx": 1.186331,
      "vy": 0.505588,
      "dir": 1,
-     "deathProgress": 0
+     "deathProgress": 0,
+     "stress": 0
     },
     {
      "species": 3,
@@ -9165,7 +9298,8 @@
      "vx": 1.388037,
      "vy": 0.356977,
      "dir": 1,
-     "deathProgress": 0
+     "deathProgress": 0,
+     "stress": 0
     },
     {
      "species": 4,
@@ -9177,7 +9311,8 @@
      "vx": 1.499147,
      "vy": 0.380018,
      "dir": -1,
-     "deathProgress": 0
+     "deathProgress": 0,
+     "stress": 0
     },
     {
      "species": 5,
@@ -9189,7 +9324,8 @@
      "vx": 1.511601,
      "vy": 0.390104,
      "dir": -1,
-     "deathProgress": 0
+     "deathProgress": 0,
+     "stress": 0
     }
    ],
    "snails": [
@@ -9229,7 +9365,8 @@
     "heading": 102.497618,
     "state": "moving",
     "idleUntil": 2151.710846,
-    "deathProgress": 0
+    "deathProgress": 0,
+    "stress": 0
    },
    "shrimp": {
     "x": 618.68,
@@ -9238,7 +9375,10 @@
     "state": "idle",
     "idleUntil": 6507.945636,
     "dir": -1,
-    "deathProgress": 0
+    "deathProgress": 0,
+    "stress": 0,
+    "walk": 7.83,
+    "stride": 0
    },
    "crab": {
     "x": 861.898312,
@@ -9250,6 +9390,9 @@
     "idleUntil": 1700000002765.2983,
     "dir": 1,
     "deathProgress": 0,
+    "stress": 0,
+    "walk": 35.91,
+    "stride": 1,
     "goalS": 512.085778
    },
    "bubbles": [

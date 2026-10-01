@@ -156,6 +156,9 @@
  * @property {number} [kickY]
  * @property {number} [_baseVy]
  * @property {boolean} [_seeking]
+ * @property {number} [stressUntil]  epoch ms until which the white dots of stress show
+ * @property {number} [stressPower]  0..1, how strong the stress is at the start (a fish far from the knock is less stressed)
+ * @property {number} [stress]  0..1, the stress now (worked out every frame)
  */
 
 /**
@@ -182,6 +185,9 @@
  * @property {number} idleUntil
  * @property {number} [deathProgress]
  * @property {number} [fleeUntil]  epoch ms until which it runs away after a knock on the glass
+ * @property {number} [stressUntil]  epoch ms until which the white dots of stress show
+ * @property {number} [stressPower]  0..1, how strong the stress is at the start
+ * @property {number} [stress]  0..1, the stress now (worked out every frame)
  */
 
 /**
@@ -199,6 +205,11 @@
  * @property {number} [s]  crab only: distance walked along its route (see reef-layout.js)
  * @property {number} [goalS]  crab only: the distance along its route it is walking to
  * @property {number} [hide]  crab only: 0 = in sight, 1 = hidden in a cave
+ * @property {number} [walk]  phase of the legs, grows with the distance walked
+ * @property {number} [stride]  0..1, how wide the legs swing (0 at rest, 1 walking)
+ * @property {number} [stressUntil]  epoch ms until which the white dots of stress show
+ * @property {number} [stressPower]  0..1, how strong the stress is at the start
+ * @property {number} [stress]  0..1, the stress now (worked out every frame)
  */
 
 /**

@@ -52,6 +52,55 @@ export const FOOD_LIFETIME_MS = 6000;
 /** Time step (ms) assumed when the real one is unknown (first frame). */
 const DEFAULT_FRAME_MS = 16.66;
 
+/** How long (ms) the white dots of stress stay after a knock on the glass, fading out. */
+export const STRESS_MS = 3500;
+
+/**
+ * Marks an animal as frightened by a knock on the glass: it shows the white dots
+ * of stress for STRESS_MS. A new knock starts over.
+ *
+ * @param {{ stressUntil?: number, stressPower?: number }} creature
+ * @param {number} nowMs
+ * @param {number} [power]  0..1, how strong the stress is at the start
+ */
+export function markStressed(creature, nowMs, power = 1) {
+  creature.stressUntil = nowMs + STRESS_MS;
+  creature.stressPower = Math.max(0, Math.min(1, power));
+}
+
+/**
+ * The stress of an animal now, from 0 (calm) to 1, fading out linearly after the
+ * knock. It is kept on the animal (`stress`) for the drawing.
+ *
+ * @param {{ stressUntil?: number, stressPower?: number, stress?: number }} creature
+ * @param {number} nowMs
+ * @returns {number}
+ */
+export function stressLevel(creature, nowMs) {
+  const left = (creature.stressUntil ?? 0) - nowMs;
+  creature.stress = left <= 0 ? 0 : Math.min(1, left / STRESS_MS) * (creature.stressPower ?? 1);
+  return creature.stress;
+}
+
+/** How the legs go: phase added per unit walked, the most it may advance in one frame, and how fast the swing opens and closes (per frame). */
+export const WALK = { rate: 0.25, maxStep: 0.9, ease: 0.15 };
+
+/**
+ * Moves the legs of a walking animal: the phase follows the distance walked (so
+ * the legs never slide on the ground) and the swing opens while it walks and
+ * closes when it stops.
+ *
+ * @param {{ walk?: number, stride?: number }} creature
+ * @param {number} walked  distance walked this frame (any sign)
+ * @param {boolean} moving
+ * @param {number} delta
+ */
+function stepLegs(creature, walked, moving, delta) {
+  creature.walk = (creature.walk ?? 0) + Math.min(WALK.maxStep, Math.abs(walked) * WALK.rate);
+  const stride = creature.stride ?? 0;
+  creature.stride = stride + ((moving ? 1 : 0) - stride) * Math.min(1, WALK.ease * delta);
+}
+
 /**
  * Everything a step function needs to know about the current frame.
  *
@@ -325,6 +374,7 @@ export function stepFish(fish, frame, food) {
   }
 
   fish.deathProgress = 0;
+  stressLevel(fish, frame.nowMs);
 
   // Head for the nearest food flake (unless startled).
   const foodTarget = (fish.scare ?? 0) > 0.05 ? null : pickFoodTarget(fish.x, fish.y, food);
@@ -585,6 +635,7 @@ export function stepAncistrus(anc, frame, rand = Math.random) {
   }
 
   anc.deathProgress = 0;
+  stressLevel(anc, nowMs);
   anc.heading = anc.heading ?? 0;
   const tank = { tankBottom, waterSurfaceY };
 
@@ -704,7 +755,9 @@ export function stepCrawler(creature, frame, spec, rand = Math.random) {
   }
 
   creature.deathProgress = 0;
+  stressLevel(creature, nowMs);
   creature.y = tankBottom - spec.floorOffset;
+  let walked = 0;
 
   if (!creature.idleUntil) {
     creature.idleUntil = timestamp + spec.firstIdle[0] + rand() * spec.firstIdle[1];
@@ -715,6 +768,7 @@ export function stepCrawler(creature, frame, spec, rand = Math.random) {
     creature.dir = dx < 0 ? -1 : 1;
     const step = Math.sign(dx) * Math.min(Math.abs(dx), spec.speed * userSpeed * (fleeing ? FLEE.crawlerFactor : 1) * delta);
     creature.x += step;
+    walked = step;
     if (Math.abs(creature.targetX - creature.x) < 1.5) {
       creature.state = "idle";
       creature.idleUntil = timestamp + spec.nextIdle[0] + rand() * spec.nextIdle[1];
@@ -723,6 +777,7 @@ export function stepCrawler(creature, frame, spec, rand = Math.random) {
     creature.state = "moving";
     creature.targetX = spec.minX + rand() * (spec.maxX - spec.minX);
   }
+  stepLegs(creature, walked, creature.state === "moving", delta);
 }
 
 // ---------------------------------------------------------------------------
@@ -805,7 +860,9 @@ export function stepCrab(crab, frame, rand = Math.random) {
   }
 
   crab.deathProgress = 0;
+  stressLevel(crab, nowMs);
   placeCrab(crab, tankBottom);
+  let walked = 0;
 
   if (!crab.idleUntil) crab.idleUntil = nowMs + CRAB_MOVE.firstIdle[0] + rand() * CRAB_MOVE.firstIdle[1];
 
@@ -816,6 +873,7 @@ export function stepCrab(crab, frame, rand = Math.random) {
       const step = Math.sign(goal - s) * Math.min(Math.abs(goal - s), CRAB_MOVE.speed * userSpeed * (fleeing ? FLEE.crawlerFactor : 1) * delta);
       crab.s = s + step;
       const moved = placeCrab(crab, tankBottom);
+      walked = step;
       if (Math.abs(moved) > 0.01) crab.dir = moved < 0 ? -1 : 1;
       if (Math.abs(goal - crab.s) < 0.5) {
         crab.s = goal;
@@ -854,6 +912,7 @@ export function stepCrab(crab, frame, rand = Math.random) {
       }
   }
   crab.targetX = crabPointAt(crab.goalS ?? crabDistance(crab)).x;
+  stepLegs(crab, walked, crab.state === "moving", delta);
 }
 
 /**

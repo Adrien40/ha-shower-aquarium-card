@@ -1,6 +1,7 @@
 import { svg } from "lit";
 import { fishSpec } from "./fish-specs.js";
 import { OUTLINE, shapeEl, sh, E, creatureStyle, shadingAllowed } from "./skin.js";
+import { renderStressDots } from "./stress.js";
 
 /** @typedef {import("./skin.js").CreatureStyle} CreatureStyle */
 /** @typedef {import("./fish-specs.js").FishSpec} FishSpec */
@@ -91,8 +92,10 @@ function overBody(style, shading, f) {
  * @param {FishSpec} f
  * @param {number} tailWag
  * @param {number} finWag
+ * @param {number} [stress]  0..1: white dots of stress over the body
+ * @param {number} [time]  animation clock, for the twinkling of the dots
  */
-export function drawFish(style, shading, f, tailWag, finWag) {
+export function drawFish(style, shading, f, tailWag, finWag, stress = 0, time = 0) {
   const outline = style === "cartoon";
   const rays = style === "cartoon" ? [] : f.tail.rays;
   const rayOpacity = style === "realistic" ? 0.32 : 0.16;
@@ -106,6 +109,7 @@ export function drawFish(style, shading, f, tailWag, finWag) {
     ${f.marks.map((s) => shapeEl(s, outline))}
     ${overBody(style, shading, f)}
     ${f.over.map((s) => shapeEl(s, outline))}
+    ${renderStressDots(stress, f.area, time)}
     ${f.pec
       ? svg`<g transform="translate(${f.pec.at[0]}, ${f.pec.at[1]}) rotate(${finWag})">${f.pec.shapes.map((s) => shapeEl(s, outline))}</g>`
       : ""}
@@ -135,7 +139,8 @@ export function renderFishShape(ctx, fish, themeKey, isDead) {
     ? 0
     : Math.sin(ctx._animTime * (4.5 * fish.vx) + fish.phase) * 10;
 
-  const bodySvg = drawFish(creatureStyle(ctx), shadingAllowed(ctx), fishSpec(themeKey, fish), tailWag, finWag);
+  const stress = isDead ? 0 : fish.stress || 0;
+  const bodySvg = drawFish(creatureStyle(ctx), shadingAllowed(ctx), fishSpec(themeKey, fish), tailWag, finWag, stress, ctx._ambientTime);
 
   return svg`
     <g transform="scale(${isFlipped ? -s : s}, ${isDead ? -s : s})">

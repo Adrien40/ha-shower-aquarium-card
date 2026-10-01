@@ -1,6 +1,18 @@
 import { svg } from "lit";
 import { creatureStyle, shadingAllowed } from "./skin.js";
 import { ancistrusRedrawn, shrimpRedrawn, crabRedrawn } from "./redrawn.js";
+import { renderStressDots } from "./stress.js";
+
+/**
+ * The legs of a walking animal: where they are in their swing. Still while it is dead.
+ * @param {{ walk?: number, stride?: number }} creature
+ * @param {boolean} isDead
+ * @param {number} time
+ */
+const gaitOf = (creature, isDead, time) => ({ phase: creature.walk || 0, stride: isDead ? 0 : creature.stride || 0, time });
+
+/** White dots of stress, none on a dead animal. @param {{ stress?: number }} creature @param {boolean} isDead @param {number[]} area @param {number} time */
+const stressOf = (creature, isDead, area, time) => renderStressDots(isDead ? 0 : creature.stress || 0, area, time, 1.5);
 
 /** @typedef {import("./skin.js").CreatureStyle} CreatureStyle */
 
@@ -23,6 +35,7 @@ export function renderAncistrus(ctx, isDead) {
     <g transform="translate(${anc.x}, ${anc.y}) rotate(${isDead ? 0 : (anc.heading ?? 0).toFixed(1)}) scale(1.5,${isDead ? -1.5 : 1.5})">
       <g opacity="${bodyOpacity}">
         ${ancistrusRedrawn(style, shading, mouthPulse)}
+        ${stressOf(anc, isDead, [0, 30, 11, 38], ctx._ambientTime)}
       </g>
 
       ${p > 0
@@ -57,7 +70,8 @@ export function renderShrimp(ctx, isDead) {
 
   return svg`
     <g transform="translate(${s.x}, ${s.y}) scale(${flip * 1.5}, ${isDead ? -1.5 : 1.5})" opacity="${bodyOpacity}">
-      ${shrimpRedrawn(creatureStyle(ctx), shadingAllowed(ctx))}
+      ${shrimpRedrawn(creatureStyle(ctx), shadingAllowed(ctx), gaitOf(s, isDead, ctx._ambientTime))}
+      ${stressOf(s, isDead, [-4, -3, 24, 8], ctx._ambientTime)}
     </g>
   `;
 }
@@ -81,7 +95,8 @@ export function renderCrab(ctx, isDead) {
 
   return svg`
     <g transform="translate(${c.x}, ${c.y}) scale(${flip * size}, ${isDead ? -size : size})" opacity="${bodyOpacity}">
-      ${crabRedrawn(creatureStyle(ctx), shadingAllowed(ctx))}
+      ${crabRedrawn(creatureStyle(ctx), shadingAllowed(ctx), gaitOf(c, isDead, ctx._ambientTime))}
+      ${stressOf(c, isDead, [0, 2, 21, 11], ctx._ambientTime)}
     </g>
     ${eyes > 0
       ? svg`

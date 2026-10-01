@@ -50,6 +50,28 @@ function tools(style, shading, edge) {
   return { k, line };
 }
 
+/**
+ * How the legs move: `phase` grows with the distance walked, `stride` is how
+ * wide they swing (0 at rest, 1 walking), `time` is the animation clock.
+ * @typedef {{ phase?: number, stride?: number, time?: number }} Gait
+ */
+
+/** The four walking legs of the shrimp: the hip [x, y] and the line of the leg. @type {[number, number, string][]} */
+const SHRIMP_LEGS = [
+  [-24, 8, "M -24,8 L -27,16 L -31,21"],
+  [-16, 9, "M -16,9 L -17,17 L -20,22"],
+  [-8, 9, "M -8,9 L -8,17 L -10,22"],
+  [0, 9, "M 0,9 L 1,17 L 0,22"],
+];
+
+/** The four walking legs on each side of the crab: the hip [x, y], the line of the leg and its light edge. @type {[number, number, string, string][]} */
+const CRAB_LEGS = [
+  [22, -4, "M 22,-4 L 33,-11 L 42,-6", "M 22,-4 L 33,-11"],
+  [24, 1, "M 24,1 L 36,1 L 44,7", "M 24,1 L 36,1"],
+  [22, 7, "M 22,7 L 32,14 L 38,24", "M 22,7 L 32,14"],
+  [16, 12, "M 16,12 L 22,22 L 25,32", "M 16,12 L 22,22"],
+];
+
 /** The same content, drawn again on the other side of the line x = 0. @param {import("lit").SVGTemplateResult | import("lit").SVGTemplateResult[]} content */
 const pair = (content) => svg`${content}<g transform="scale(-1,1)">${content}</g>`;
 
@@ -122,8 +144,10 @@ export function ancistrusRedrawn(style, shading, pulse) {
  * that ends in a tail fan, walking legs, long white antennae, an eye.
  * @param {CreatureStyle} style
  * @param {boolean} shading
+ * @param {Gait} [gait]  the walking legs (the swimmerets under the abdomen always flutter)
  */
-export function shrimpRedrawn(style, shading) {
+export function shrimpRedrawn(style, shading, gait = {}) {
+  const { phase = 0, stride = 0, time = 0 } = gait;
   const cartoon = style === "cartoon";
   const { k, line } = tools(style, shading, { stroke: "#7f1d1d", sw: 0.8 });
   // The abdomen follows a gentle arch: an arc of a wide circle whose centre lies below the shrimp.
@@ -136,17 +160,23 @@ export function shrimpRedrawn(style, shading) {
     const half = 8 - i * 0.8;
     return svg`<g transform="rotate(${deg} ${x.toFixed(1)} ${y.toFixed(1)})">${k(E(Number(x.toFixed(1)), Number(y.toFixed(1)), half, 6.6 - i * 0.25), i % 2 ? "#c81e1e" : "#d42424")}</g>`;
   });
+  // The swimmerets flutter a little all the time, each one a little after the one before.
   const swimmerets = [0, 1, 2, 3, 4].map((i) => {
     const deg = -110 + i * 13;
     const half = 8 - i * 0.8;
     const [x1, y1] = at(deg, R - half);
     const [x2, y2] = at(deg, R - half - 4.5);
-    return `M${x1.toFixed(1)},${y1.toFixed(1)} L${x2.toFixed(1)},${y2.toFixed(1)}`;
+    const flutter = 0.3 * Math.sin(time * 6 + i * 1.1);
+    const [dx, dy] = [x2 - x1, y2 - y1];
+    const [fx, fy] = [x1 + dx * Math.cos(flutter) - dy * Math.sin(flutter), y1 + dx * Math.sin(flutter) + dy * Math.cos(flutter)];
+    return `M${x1.toFixed(1)},${y1.toFixed(1)} L${fx.toFixed(1)},${fy.toFixed(1)}`;
   }).join(" ");
+  // The four walking legs swing from their hips, one after the other.
+  const legs = SHRIMP_LEGS.map(([hx, hy, d], i) => svg`<g transform="rotate(${(stride * 16 * Math.sin(phase + i * 1.7)).toFixed(1)} ${hx} ${hy})">${line(d, 1.6, "#7f1d1d", 0.85)}</g>`);
   const [tx, ty] = at(-45);
   const fanAngle = -45 + 90;
   return svg`
-    ${line("M -24,8 L -27,16 L -31,21 M -16,9 L -17,17 L -20,22 M -8,9 L -8,17 L -10,22 M 0,9 L 1,17 L 0,22", 1.6, "#7f1d1d", 0.85)}
+    ${legs}
     ${line(swimmerets, 1.3, "#7f1d1d", 0.7)}
     <g transform="translate(${tx.toFixed(1)} ${ty.toFixed(1)}) rotate(${fanAngle})">
       ${k("M 0,-2.4 C 5,-9.5 11,-10.5 14,-7 C 11,-3.2 6,-1 0,0 Z", "#dc2626")}
@@ -176,20 +206,34 @@ export function shrimpRedrawn(style, shading) {
  * teeth, four walking legs on each side.
  * @param {CreatureStyle} style
  * @param {boolean} shading
+ * @param {Gait} [gait]  the walking legs and claws
  */
-export function crabRedrawn(style, shading) {
+export function crabRedrawn(style, shading, gait = {}) {
+  const { phase = 0, stride = 0 } = gait;
   const cartoon = style === "cartoon";
   const { k, line } = tools(style, shading, { stroke: "#7c2d12", sw: 0.9 });
-  const legs = (/** @type {number} */ w) => line("M 22,-4 L 33,-11 L 42,-6 M 24,1 L 36,1 L 44,7 M 22,7 L 32,14 L 38,24 M 16,12 L 22,22 L 25,32", w, "#7c2d12", 1);
+  // One side of the crab: four legs that swing from their hips, in turn, and the arm with its claw that sways a little.
+  // The two sides are in opposition, like a crab that walks sideways.
+  const side = (/** @type {number} */ n) => {
+    const swing = (/** @type {number} */ i) => (stride * 13 * Math.sin(phase + i * Math.PI + n * Math.PI)).toFixed(1);
+    const legs = CRAB_LEGS.map(([hx, hy, d, light], i) => svg`
+      <g transform="rotate(${swing(i)} ${hx} ${hy})">
+        ${line(d, cartoon ? 3.2 : 2.6, "#7c2d12", 1)}
+        ${cartoon ? "" : line(light, 0.8, "#f87171", 0.5)}
+      </g>
+    `);
+    return svg`
+      ${legs}
+      <g transform="rotate(${(stride * 5 * Math.sin(phase * 0.7 + n * 1.3)).toFixed(1)} 20 -8)">
+        ${line("M 20,-8 L 30,-17", cartoon ? 4 : 3.4, "#7c2d12", 1)}
+        ${k("M 27,-19 C 25,-30 34,-36 41,-33 C 46,-30 45,-25 41,-24 C 45,-21 43,-16 38,-16 C 33,-16 29,-17 27,-19 Z", "#ea580c")}
+        ${k("M 31,-31 C 33,-40 42,-42 46,-37 C 42,-38 38,-36 36,-32 Z", "#ea580c")}
+        ${style === "cartoon" ? "" : shapeEl(sh("M 36,-28 L 39,-31 L 40,-27 L 43,-29 M 34,-21 L 38,-22 L 38,-19 L 42,-20", undefined, { stroke: "#fef3c7", sw: 0.9, lc: "round", op: 0.8 }))}
+      </g>
+    `;
+  };
   return svg`
-    ${pair(svg`
-      ${legs(cartoon ? 3.2 : 2.6)}
-      ${cartoon ? "" : line("M 22,-4 L 33,-11 M 24,1 L 36,1 M 22,7 L 32,14 M 16,12 L 22,22", 0.8, "#f87171", 0.5)}
-      ${line("M 20,-8 L 30,-17", cartoon ? 4 : 3.4, "#7c2d12", 1)}
-      ${k("M 27,-19 C 25,-30 34,-36 41,-33 C 46,-30 45,-25 41,-24 C 45,-21 43,-16 38,-16 C 33,-16 29,-17 27,-19 Z", "#ea580c")}
-      ${k("M 31,-31 C 33,-40 42,-42 46,-37 C 42,-38 38,-36 36,-32 Z", "#ea580c")}
-      ${style === "cartoon" ? "" : shapeEl(sh("M 36,-28 L 39,-31 L 40,-27 L 43,-29 M 34,-21 L 38,-22 L 38,-19 L 42,-20", undefined, { stroke: "#fef3c7", sw: 0.9, lc: "round", op: 0.8 }))}
-    `)}
+    ${side(0)}<g transform="scale(-1,1)">${side(1)}</g>
     ${k("M 0,-15 C 10,-16 20,-14 26,-8 L 30,-2 L 27,4 C 24,12 14,18 0,18 C -14,18 -24,12 -27,4 L -30,-2 L -26,-8 C -20,-14 -10,-16 0,-15 Z", "#dc2626")}
     ${k("M 0,-11 C 9,-12 17,-10 22,-5 L 24,0 C 22,8 12,13 0,13 C -12,13 -22,8 -24,0 L -22,-5 C -17,-10 -9,-12 0,-11 Z", "#ef4444", 0.55)}
     ${style === "cartoon"

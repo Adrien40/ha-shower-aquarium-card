@@ -33,6 +33,7 @@ import {
   stepAncistrus,
   stepCrawler,
   stepCrab,
+  markStressed,
   startleAncistrus,
   startleCrawler,
   startleCrab,
@@ -904,7 +905,8 @@ export class AquariumShowerCard extends LitElement {
     this._food = [...this._food, ...createFlakes(column, waterSurfaceY + 2)].slice(-30);
   }
 
-  // A knock on the glass at (x, y): a ripple, and the nearby fish dart away. The
+  // A knock on the glass at (x, y): a ripple, and the nearby fish dart away, with
+  // white dots of stress on them and on the other animals that run. The
   // Ancistrus, the shrimp and the goby run off too, much faster than they
   // usually move, and the crab runs into a cave to hide.
   /**
@@ -922,11 +924,13 @@ export class AquariumShowerCard extends LitElement {
       fish.kickY = kick.ky;
       fish.scare = kick.scare;
       if (Math.abs(kick.kx) > 0.5) fish.dir = kick.kx < 0 ? -1 : 1;
+      // The nearer to the knock, the more white dots of stress.
+      markStressed(fish, now, 0.5 + 0.5 * kick.scare);
     });
-    if (this._ancistrus) startleAncistrus(this._ancistrus, x, y, now, tank, randomSource);
-    if (this._shrimp) startleCrawler(this._shrimp, x, y, now, SHRIMP_SPEC);
-    if (this._crab) startleCrab(this._crab, x, y, now);
-    if (this._goby) startleCrawler(this._goby, x, y, now, GOBY_SPEC);
+    if (this._ancistrus && startleAncistrus(this._ancistrus, x, y, now, tank, randomSource)) markStressed(this._ancistrus, now);
+    if (this._shrimp && startleCrawler(this._shrimp, x, y, now, SHRIMP_SPEC)) markStressed(this._shrimp, now);
+    if (this._crab && startleCrab(this._crab, x, y, now)) markStressed(this._crab, now);
+    if (this._goby && startleCrawler(this._goby, x, y, now, GOBY_SPEC)) markStressed(this._goby, now);
   }
 
   // Tap near the surface drops food; tap in the water knocks on the glass.
