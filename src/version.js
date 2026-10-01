@@ -1,7 +1,7 @@
 // shower-aquarium-card.js and card-editor.js both import CARD_VERSION from
 // here rather than each declaring their own copy, so there is exactly one
 // place to bump on release and no risk of the two drifting apart.
-export const CARD_VERSION = "0.8.80";
+export const CARD_VERSION = "0.8.81";
 
 // Where the card lives. The card picker of Home Assistant links to it (help
 // link of the card editor), and a test checks it against package.json.
