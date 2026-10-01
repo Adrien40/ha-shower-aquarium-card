@@ -25,6 +25,8 @@ describe("detectHydraoEntities()", () => {
     "sensor.hydrao_ab12_temperature",
     "sensor.hydrao_ab12_comfort_shower_volume",
     "sensor.hydrao_ab12_wasted_shower_volume",
+    "sensor.hydrao_ab12_threshold_1",
+    "sensor.hydrao_ab12_threshold_2",
     "sensor.hydrao_ab12_threshold_3",
     "sensor.hydrao_ab12_threshold_4",
     "number.hydrao_ab12_minimum_comfort_temperature",
@@ -41,6 +43,9 @@ describe("detectHydraoEntities()", () => {
         "sensor.other_temp": { platform: "other", translation_key: "temperature" },
         "number.douche_confort_min": { platform: "hydrao_custom", translation_key: "comfort_temperature" },
         "sensor.douche_palier": { platform: "hydrao_custom", translation_key: "threshold_4" },
+        "sensor.douche_p1": { platform: "hydrao_custom", translation_key: "threshold_1" },
+        "sensor.douche_p2": { platform: "hydrao_custom", translation_key: "threshold_2" },
+        "sensor.douche_p3": { platform: "hydrao_custom", translation_key: "threshold_3" },
       },
     };
     expect(detectHydraoEntities(hass, Object.keys(hass.entities))).toEqual({
@@ -48,6 +53,9 @@ describe("detectHydraoEntities()", () => {
       temperature_entity: "sensor.douche_temp",
       comfort_temp_entity: "number.douche_confort_min",
       target_budget_entity: "sensor.douche_palier",
+      threshold_1_entity: "sensor.douche_p1",
+      threshold_2_entity: "sensor.douche_p2",
+      threshold_3_entity: "sensor.douche_p3",
     });
   });
 
@@ -57,6 +65,9 @@ describe("detectHydraoEntities()", () => {
       temperature_entity: "sensor.hydrao_ab12_temperature",
       comfort_temp_entity: "number.hydrao_ab12_minimum_comfort_temperature",
       target_budget_entity: "sensor.hydrao_ab12_threshold_4",
+      threshold_1_entity: "sensor.hydrao_ab12_threshold_1",
+      threshold_2_entity: "sensor.hydrao_ab12_threshold_2",
+      threshold_3_entity: "sensor.hydrao_ab12_threshold_3",
     });
   });
 
@@ -119,7 +130,7 @@ describe("detectHydraoEntities()", () => {
   });
 
   it("returns empty strings when nothing fits", () => {
-    expect(detectHydraoEntities(undefined, [])).toEqual({ entity: "", temperature_entity: "", comfort_temp_entity: "", target_budget_entity: "" });
+    expect(detectHydraoEntities(undefined, [])).toEqual({ entity: "", temperature_entity: "", comfort_temp_entity: "", target_budget_entity: "", threshold_1_entity: "", threshold_2_entity: "", threshold_3_entity: "" });
   });
 
   it("feeds the starting configuration of the card, with the target entity when there is one", () => {

@@ -67,6 +67,16 @@ function renderThermometer(currentTemp, gauge, lang) {
 }
 
 /**
+ * The class that makes the volume blink: once the last threshold of the
+ * showerhead is passed, unless the device asks for reduced motion.
+ * @param {ReturnType<typeof computeGaugeState>} gauge
+ * @param {boolean} animate
+ */
+function blinkClass(gauge, animate) {
+  return gauge.volBlink && animate ? "threshold-blink" : "";
+}
+
+/**
  * The consumed volume as a large number over a thin bar that fills up to the
  * budget. With `showBudget` the budget is written after the number.
  * @param {number} currentVolume
@@ -74,8 +84,9 @@ function renderThermometer(currentTemp, gauge, lang) {
  * @param {boolean} showBudget
  * @param {ReturnType<typeof computeGaugeState>} gauge
  * @param {string} lang
+ * @param {boolean} animate  whether the bar may blink (once the last threshold is passed)
  */
-function renderVolumeBar(currentVolume, targetBudget, showBudget, gauge, lang) {
+function renderVolumeBar(currentVolume, targetBudget, showBudget, gauge, lang, animate) {
   const unit = showBudget
     ? svg`<tspan dx="12" font-size="30" font-weight="700">/ ${formatBudget(targetBudget, lang)}</tspan><tspan dx="6" font-size="28" font-weight="800">L</tspan>`
     : svg`<tspan dx="6" font-size="28" font-weight="800">L</tspan>`;
@@ -83,7 +94,7 @@ function renderVolumeBar(currentVolume, targetBudget, showBudget, gauge, lang) {
     <g pointer-events="none">
       <text x="${BAR_RIGHT}" y="86" text-anchor="end" font-family="${FONT}" font-size="58" font-weight="800" fill="${INK}" stroke="#ffffff" stroke-opacity="0.55" stroke-width="8" stroke-linejoin="round" paint-order="stroke">${formatNumber(currentVolume, lang)}${unit}</text>
       <rect x="${BAR_RIGHT - BAR_WIDTH}" y="104" width="${BAR_WIDTH}" height="9" rx="4.5" fill="${INK}" fill-opacity="0.18" />
-      <rect x="${BAR_RIGHT - BAR_WIDTH}" y="104" width="${(gauge.volFraction * BAR_WIDTH).toFixed(1)}" height="9" rx="4.5" fill="${gauge.volColor}" />
+      <rect class="${blinkClass(gauge, animate)}" x="${BAR_RIGHT - BAR_WIDTH}" y="104" width="${(gauge.volFraction * BAR_WIDTH).toFixed(1)}" height="9" rx="4.5" fill="${gauge.volColor}" />
     </g>
   `;
 }
@@ -96,8 +107,9 @@ function renderVolumeBar(currentVolume, targetBudget, showBudget, gauge, lang) {
  * @param {string} color
  * @param {ReturnType<typeof svg>} value  the text of the middle (already a template)
  * @param {{ fraction: number, color: string }[]} [marks]  notches outside the arc, where a zone begins
+ * @param {string} [blink]  class that makes the arc and its marker blink
  */
-function renderArc(cx, fraction, color, value, marks = []) {
+function renderArc(cx, fraction, color, value, marks = [], blink = "") {
   const circumference = 2 * Math.PI * ARC_RADIUS;
   const span = (ARC_SPAN / 360) * circumference;
   const angle = ((ARC_START + fraction * ARC_SPAN) * Math.PI) / 180;
@@ -107,13 +119,13 @@ function renderArc(cx, fraction, color, value, marks = []) {
     <g transform="translate(${cx}, ${ARC_CY})" pointer-events="none">
       <circle r="${ARC_RADIUS + 26}" fill="rgba(255, 255, 255, 0.55)" stroke="rgba(255, 255, 255, 0.9)" stroke-width="2" />
       <circle r="${ARC_RADIUS}" fill="none" stroke="rgba(15, 23, 42, 0.15)" stroke-width="${ARC_STROKE}" stroke-linecap="round" stroke-dasharray="${span.toFixed(1)} ${circumference.toFixed(1)}" transform="rotate(${ARC_START})" />
-      <circle r="${ARC_RADIUS}" fill="none" stroke="${color}" stroke-width="${ARC_STROKE}" stroke-linecap="round" stroke-dasharray="${(fraction * span).toFixed(1)} ${circumference.toFixed(1)}" transform="rotate(${ARC_START})" />
+      <circle class="${blink}" r="${ARC_RADIUS}" fill="none" stroke="${color}" stroke-width="${ARC_STROKE}" stroke-linecap="round" stroke-dasharray="${(fraction * span).toFixed(1)} ${circumference.toFixed(1)}" transform="rotate(${ARC_START})" />
       ${marks.map((mark) => {
         const a = ((ARC_START + mark.fraction * ARC_SPAN) * Math.PI) / 180;
         const [cos, sin] = [Math.cos(a), Math.sin(a)];
         return svg`<line x1="${((ARC_RADIUS + 8) * cos).toFixed(1)}" y1="${((ARC_RADIUS + 8) * sin).toFixed(1)}" x2="${((ARC_RADIUS + 18) * cos).toFixed(1)}" y2="${((ARC_RADIUS + 18) * sin).toFixed(1)}" stroke="${mark.color}" stroke-width="3.5" stroke-linecap="round" />`;
       })}
-      <circle cx="${dotX.toFixed(1)}" cy="${dotY.toFixed(1)}" r="8" fill="#ffffff" stroke="${color}" stroke-width="4" />
+      <circle class="${blink}" cx="${dotX.toFixed(1)}" cy="${dotY.toFixed(1)}" r="8" fill="#ffffff" stroke="${color}" stroke-width="4" />
       ${value}
     </g>
   `;
@@ -132,15 +144,17 @@ function renderArc(cx, fraction, color, value, marks = []) {
  * @param {number} input.boilTemp
  * @param {boolean} input.showBudget
  * @param {string} input.lang  language code, for the decimal separator
+ * @param {import("../types.js").VolumeTier | null} [input.volumeTier]  the colour of the threshold reached (showerhead with coloured thresholds)
+ * @param {boolean} [input.animate]  whether the volume may blink once the last threshold is passed
  */
-export function renderStatusPanel({ style, currentTemp, currentVolume, targetBudget, comfortMin, deadlyTemp, boilTemp, showBudget, forceTemp = false, lang }) {
-  const gauge = computeGaugeState({ currentTemp, currentVolume, targetBudget, comfortMin, deadlyTemp, boilTemp });
+export function renderStatusPanel({ style, currentTemp, currentVolume, targetBudget, comfortMin, deadlyTemp, boilTemp, showBudget, forceTemp = false, lang, volumeTier = null, animate = true }) {
+  const gauge = computeGaugeState({ currentTemp, currentVolume, targetBudget, comfortMin, deadlyTemp, boilTemp, tier: volumeTier });
   const showTemp = currentTemp > 0 || forceTemp;
 
   if (style !== "arc") {
     return svg`
       ${showTemp ? renderThermometer(currentTemp, gauge, lang) : ""}
-      ${renderVolumeBar(currentVolume, targetBudget, showBudget, gauge, lang)}
+      ${renderVolumeBar(currentVolume, targetBudget, showBudget, gauge, lang, animate)}
     `;
   }
 
@@ -153,6 +167,6 @@ export function renderStatusPanel({ style, currentTemp, currentVolume, targetBud
     : svg`<text y="13" font-family="${FONT}" font-size="34" font-weight="800" fill="${INK}" text-anchor="middle">${formatNumber(currentVolume, lang)}<tspan dx="3" font-size="20" font-weight="800">L</tspan></text>`;
   return svg`
     ${showTemp ? renderArc(102, gauge.tempFraction, gauge.tempColor, tempText, gauge.marks) : ""}
-    ${renderArc(922, gauge.volFraction, gauge.volColor, volumeText)}
+    ${renderArc(922, gauge.volFraction, gauge.volColor, volumeText, [], blinkClass(gauge, animate))}
   `;
 }

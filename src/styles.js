@@ -143,6 +143,19 @@ export const cardStyles = css`
     white-space: nowrap;
     border: 0;
   }
+  /* The volume blinks once the last coloured threshold of the showerhead is passed. */
+  .threshold-blink {
+    animation: threshold-blink 1s ease-in-out infinite;
+  }
+  @keyframes threshold-blink {
+    0%,
+    100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0.15;
+    }
+  }
   .metrics-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(75px, 1fr));

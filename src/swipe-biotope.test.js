@@ -376,6 +376,9 @@ describe("finding the Hydrao Custom entities", () => {
       temperature_entity: "sensor.hydrao_ab12_temperature",
       comfort_temp_entity: "number.hydrao_ab12_minimum_comfort_temperature",
       target_budget_entity: "",
+      threshold_1_entity: "",
+      threshold_2_entity: "",
+      threshold_3_entity: "",
     });
   });
 

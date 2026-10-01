@@ -1,7 +1,7 @@
 // The pictures recorded as baselines: every biotope in every state the card
 // can be in, plus the transient effects. Each scenario is played with a seeded
 // random generator and a fake clock, so it always draws the same tank.
-import { withFlakes, withRipples, withSensorLost, hassWith } from "./helpers.js";
+import { withFlakes, withRipples, withSensorLost, hassWith, THRESHOLD_STATES, THRESHOLD_CONFIG } from "./helpers.js";
 
 export const SCENARIOS = {
   // Biotopes at rest
@@ -46,6 +46,9 @@ export const SCENARIOS = {
     temp: 38.4,
   },
   "freshwater-gauges-no-tiles": { config: { theme: "freshwater", show_gauges: true, show_tiles: false, show_cost: true }, volume: 18, temp: 38 },
+  // The coloured thresholds of a Hydrao showerhead: the volume takes the colour of the threshold reached
+  "freshwater-fullscreen-threshold-pink": { config: { theme: "freshwater", fullscreen: true, ...THRESHOLD_CONFIG }, volume: 25, temp: 36, extraStates: THRESHOLD_STATES },
+  "coldwater-fullscreen-arc-threshold-red": { config: { theme: "coldwater", fullscreen: true, gauge_style: "arc", show_budget: true, ...THRESHOLD_CONFIG }, volume: 45, temp: 38, extraStates: THRESHOLD_STATES },
   "coldwater-fullscreen-arc": { config: { theme: "coldwater", fullscreen: true, gauge_style: "arc", show_budget: true }, volume: 30, temp: 39 },
   "saltwater-fullscreen-budget": { config: { theme: "saltwater", fullscreen: true, show_budget: true }, volume: 42, temp: 41.5 },
   "coldwater-fullscreen-no-consumption": { config: { theme: "coldwater", fullscreen: true, show_cost: true }, volume: 0, temp: 0 },

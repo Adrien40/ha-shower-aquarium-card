@@ -76,5 +76,11 @@
   "field_show_gauges": "Show the gauges outside fullscreen mode",
   "helper_show_gauges": "The thermometer and the volume of fullscreen mode are also drawn on the aquarium of the normal mode. Like in fullscreen, they only appear from the first litre (always shown in the preview of the editor).",
   "field_show_tiles": "Show the tiles under the aquarium",
-  "helper_show_tiles": "The Consumed, Remaining, Target, Temperature (and Cost) tiles of the normal mode. Untick to keep only the aquarium. No effect in fullscreen mode."
+  "helper_show_tiles": "The Consumed, Remaining, Target, Temperature (and Cost) tiles of the normal mode. Untick to keep only the aquarium. No effect in fullscreen mode.",
+  "field_use_threshold_colors": "The volume gauge takes the colours of the showerhead's thresholds",
+  "helper_use_threshold_colors": "The volume takes the colour of the threshold it has reached: each colour stays active until its threshold is passed, and after threshold 4 the colour of threshold 4 blinks. It needs the entities of thresholds 1 to 3 below and the target entity (threshold 4); without them the usual colours are used.",
+  "field_threshold_1_entity": "Threshold 1 entity (colour and litres)",
+  "field_threshold_2_entity": "Threshold 2 entity (colour and litres)",
+  "field_threshold_3_entity": "Threshold 3 entity (colour and litres)",
+  "helper_threshold_entities": "The \"Threshold 1 to 3\" sensors of Hydrao Custom: their state gives the litres and their color_hex attribute the colour. Threshold 4 is the target entity above."
 }

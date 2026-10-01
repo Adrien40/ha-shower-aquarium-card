@@ -93,6 +93,8 @@ Les jauges du plein écran (`fullscreen: true`), dans les deux styles (`gauge_st
 </tr>
 <tr>
 <td align="center" width="50%"><img src="../visual/baseline/freshwater-gauges-no-tiles.png" alt="Mode normal avec jauges et sans tuiles" width="100%"><br><sub>**Jauges hors plein écran** (`show_gauges: true`) avec les tuiles supprimées (`show_tiles: false`) : le coût s'écrit entre les jauges.</sub></td>
+<td align="center" width="50%"><img src="../visual/baseline/freshwater-fullscreen-threshold-pink.png" alt="Plein écran avec la barre de volume à la couleur du seuil 3" width="100%"><br><sub>**Seuils d'un pommeau Hydrao** (`use_threshold_colors`, activé par défaut) : la barre de volume prend la couleur du seuil atteint, ici le troisième, rose, à 25 L.</sub></td>
+<td align="center" width="50%"><img src="../visual/baseline/coldwater-fullscreen-arc-threshold-red.png" alt="Plein écran, arcs avec le volume à la couleur du seuil 4" width="100%"><br><sub>**Au-delà du seuil 4** : 45 L sur 40 L. L'arc a la couleur du seuil 4 et clignote (l'image le montre allumé).</sub></td>
 <td></td>
 </tr>
 </table>

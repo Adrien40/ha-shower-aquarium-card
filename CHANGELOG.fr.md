@@ -3,6 +3,13 @@
 Toutes les modifications notables du projet sont documentées dans ce fichier.
 Le format suit [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/).
 
+## [0.8.87] — 2026-10-01
+
+### Ajouté
+- Les quatre seuils colorés d'un pommeau Hydrao. La jauge de volume (barre, arc et tuile *Consommé*) prend la couleur du seuil atteint par le volume : chaque couleur est active tant que son seuil n'est pas dépassé (le seuil 1 jusqu'à ses litres, puis le 2, puis le 3, puis le 4), et une fois le seuil 4 dépassé sa couleur clignote, une fois par seconde (pas avec le mouvement réduit : la couleur reste alors allumée). Les couleurs et les litres sont lus sur les capteurs de seuil de Hydrao Custom (état et attribut `color_hex`) : ils suivent donc les couleurs choisies sur le pommeau.
+- Les nouvelles options `threshold_1_entity`, `threshold_2_entity` et `threshold_3_entity` (le quatrième seuil est l'entité d'objectif), remplies automatiquement dans une nouvelle carte, et `use_threshold_colors`, activée par défaut. Sans les quatre seuils, ou avec `use_threshold_colors: false`, les couleurs habituelles (bleu, ambre, rouge) sont utilisées, comme avant. Les derniers seuils lus sont gardés tant que les capteurs ne sont pas lisibles.
+- Deux images de cela dans la galerie.
+
 ## [0.8.86] — 2026-10-01
 
 ### Modifié

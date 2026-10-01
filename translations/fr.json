@@ -76,5 +76,11 @@
   "field_show_gauges": "Afficher les jauges hors plein écran",
   "helper_show_gauges": "Le thermomètre et le volume du plein écran s'affichent aussi sur l'aquarium du mode normal. Comme en plein écran, ils n'apparaissent qu'à partir du premier litre (toujours visibles dans l'aperçu de l'éditeur).",
   "field_show_tiles": "Afficher les tuiles sous l'aquarium",
-  "helper_show_tiles": "Les tuiles Consommé, Restant, Objectif, Température (et Coût) du mode normal. Décochez pour ne garder que l'aquarium. Sans effet en plein écran."
+  "helper_show_tiles": "Les tuiles Consommé, Restant, Objectif, Température (et Coût) du mode normal. Décochez pour ne garder que l'aquarium. Sans effet en plein écran.",
+  "field_use_threshold_colors": "La jauge de volume prend les couleurs des seuils du pommeau",
+  "helper_use_threshold_colors": "Le volume prend la couleur du seuil atteint : chaque couleur reste active tant que son seuil n'est pas dépassé, et après le seuil 4 la couleur du seuil 4 clignote. Il faut les entités des seuils 1 à 3 ci-dessous et l'entité d'objectif (seuil 4) ; sinon les couleurs habituelles sont utilisées.",
+  "field_threshold_1_entity": "Entité seuil 1 (couleur et litres)",
+  "field_threshold_2_entity": "Entité seuil 2 (couleur et litres)",
+  "field_threshold_3_entity": "Entité seuil 3 (couleur et litres)",
+  "helper_threshold_entities": "Les capteurs « Seuil 1 à 3 » de Hydrao Custom : leur état donne les litres et leur attribut color_hex la couleur. Le seuil 4 est l'entité d'objectif plus haut."
 }

@@ -93,6 +93,8 @@ The gauges of fullscreen mode (`fullscreen: true`), in the two styles (`gauge_st
 </tr>
 <tr>
 <td align="center" width="50%"><img src="../visual/baseline/freshwater-gauges-no-tiles.png" alt="Normal mode with gauges and no tiles" width="100%"><br><sub>**Gauges outside fullscreen** (`show_gauges: true`) with the tiles removed (`show_tiles: false`): the cost is written between the gauges.</sub></td>
+<td align="center" width="50%"><img src="../visual/baseline/freshwater-fullscreen-threshold-pink.png" alt="Fullscreen with the volume bar in the colour of threshold 3" width="100%"><br><sub>**Thresholds of a Hydrao showerhead** (`use_threshold_colors`, on by default): the volume bar takes the colour of the threshold reached, here the pink third one at 25 L.</sub></td>
+<td align="center" width="50%"><img src="../visual/baseline/coldwater-fullscreen-arc-threshold-red.png" alt="Fullscreen arcs with the volume in the colour of threshold 4" width="100%"><br><sub>**Past threshold 4**: 45 L of 40 L. The arc has the colour of threshold 4 and blinks (the picture shows it lit).</sub></td>
 <td></td>
 </tr>
 </table>

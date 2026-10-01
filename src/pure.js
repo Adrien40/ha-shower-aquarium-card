@@ -13,6 +13,8 @@ import { CONFIG_DEFAULTS } from "./defaults.js";
 /** @typedef {import("./types.js").CachedMetrics} CachedMetrics */
 /** @typedef {import("./types.js").LastReading} LastReading */
 /** @typedef {import("./types.js").TankState} TankState */
+/** @typedef {import("./types.js").ThresholdTier} ThresholdTier */
+/** @typedef {import("./types.js").VolumeTier} VolumeTier */
 /** @typedef {import("./types.js").FlowTracker} FlowTracker */
 /** @typedef {import("./types.js").Fish} Fish */
 /** @typedef {import("./types.js").Flake} Flake */
@@ -220,6 +222,7 @@ export function computeCachedMetrics(hass, config, previous = null) {
     comfortMin: Number(config?.comfort_temp_min) || DEFAULT_COMFORT_TEMP,
     sensorMissing: false,
     lastReading: null,
+    tiers: null,
   };
 
   if (!hass || !config) {
@@ -275,7 +278,72 @@ export function computeCachedMetrics(hass, config, previous = null) {
     }
   }
 
+  // The four coloured thresholds of the showerhead. A showerhead that talks only while water runs keeps
+  // its last thresholds: when they cannot be read for a moment, the last ones are kept.
+  metrics.tiers = config.use_threshold_colors === false ? null : readThresholdTiers(hass, config) ?? previous?.tiers ?? null;
+
   return metrics;
+}
+
+/**
+ * The colour of a threshold as the Hydrao Custom integration gives it, in the
+ * attributes of the threshold sensor: `color_hex` ("#00FF00"), else `color_rgb`
+ * ("0, 255, 0", or a list of three numbers). Null when there is none.
+ *
+ * @param {Record<string, unknown> | undefined} attributes
+ * @returns {string | null}
+ */
+export function parseThresholdColor(attributes) {
+  const hex = attributes?.color_hex;
+  if (typeof hex === "string" && /^#[0-9a-f]{6}$/i.test(hex.trim())) return hex.trim().toLowerCase();
+  const rgb = attributes?.color_rgb;
+  const parts = Array.isArray(rgb) ? rgb : typeof rgb === "string" ? rgb.split(",") : [];
+  if (parts.length !== 3) return null;
+  const channels = parts.map((p) => (typeof p === "string" && p.trim() === "" ? NaN : Number(p)));
+  if (!channels.every((c) => Number.isInteger(c) && c >= 0 && c <= 255)) return null;
+  return `#${channels.map((c) => c.toString(16).padStart(2, "0")).join("")}`;
+}
+
+/**
+ * The four coloured thresholds of the showerhead, from their sensors: the
+ * entities `threshold_1_entity` to `threshold_3_entity`, and the target entity
+ * for the fourth. Each one gives its litres (its state) and its colour (an
+ * attribute). Null unless all four are readable and go up from the first to the
+ * last: with fewer, the colours of the tiers cannot be told apart.
+ *
+ * @param {Hass} hass
+ * @param {Partial<CardConfig>} config
+ * @returns {ThresholdTier[] | null}
+ */
+export function readThresholdTiers(hass, config) {
+  const ids = [config.threshold_1_entity, config.threshold_2_entity, config.threshold_3_entity, config.target_budget_entity];
+  /** @type {ThresholdTier[]} */
+  const tiers = [];
+  for (const id of ids) {
+    const stateObj = id ? hass.states[id] : undefined;
+    const limit = stateObj ? parseFloat(stateObj.state) : NaN;
+    const color = stateObj ? parseThresholdColor(stateObj.attributes) : null;
+    if (!(limit > 0) || !color) return null;
+    tiers.push({ limit, color });
+  }
+  for (let i = 1; i < tiers.length; i++) if (!(tiers[i].limit > tiers[i - 1].limit)) return null;
+  return tiers;
+}
+
+/**
+ * The colour the volume has: the one of the first threshold that is not passed
+ * yet (a threshold is active as long as the volume has not gone beyond it), and
+ * once the last one is passed the colour of the last one, blinking.
+ *
+ * @param {number} volume
+ * @param {ThresholdTier[] | null | undefined} tiers
+ * @returns {VolumeTier | null}
+ */
+export function thresholdTier(volume, tiers) {
+  if (!tiers || tiers.length === 0) return null;
+  const index = tiers.findIndex((tier) => volume <= tier.limit);
+  if (index === -1) return { color: tiers[tiers.length - 1].color, blinking: true, index: tiers.length - 1 };
+  return { color: tiers[index].color, blinking: false, index };
 }
 
 /**
@@ -445,11 +513,13 @@ export function temperatureScale(deadlyTemp) {
  * What the two gauges of the fullscreen mode show. Temperature: blue below
  * the comfort minimum, green while comfortable, orange from the boiling
  * threshold, red from the deadly one. Volume: blue, amber above 70 % of the
- * budget, red above the budget.
+ * budget, red above the budget. With the coloured thresholds of the showerhead
+ * (`tier`), the volume takes the colour of the threshold it has reached and
+ * blinks once the last one is passed.
  *
- * @param {{ currentTemp: number, currentVolume: number, targetBudget: number, comfortMin: number, deadlyTemp: number, boilTemp: number }} input
+ * @param {{ currentTemp: number, currentVolume: number, targetBudget: number, comfortMin: number, deadlyTemp: number, boilTemp: number, tier?: VolumeTier | null }} input
  */
-export function computeGaugeState({ currentTemp, currentVolume, targetBudget, comfortMin, deadlyTemp, boilTemp }) {
+export function computeGaugeState({ currentTemp, currentVolume, targetBudget, comfortMin, deadlyTemp, boilTemp, tier = null }) {
   const scale = temperatureScale(deadlyTemp);
   const toFraction = (/** @type {number} */ t) => Math.max(0, Math.min(1, (t - scale.min) / (scale.max - scale.min)));
   const tempFraction = toFraction(currentTemp);
@@ -457,13 +527,14 @@ export function computeGaugeState({ currentTemp, currentVolume, targetBudget, co
     currentTemp >= deadlyTemp ? "#ef4444" : currentTemp >= boilTemp ? "#f97316" : currentTemp >= comfortMin ? "#16a34a" : "#0284c7";
 
   const volFraction = Math.max(0, Math.min(1, currentVolume / Math.max(1, targetBudget)));
-  const volColor = currentVolume > targetBudget ? "#ef4444" : currentVolume > targetBudget * 0.7 ? "#f59e0b" : "#0284c7";
+  const volColor = tier ? tier.color : currentVolume > targetBudget ? "#ef4444" : currentVolume > targetBudget * 0.7 ? "#f59e0b" : "#0284c7";
 
   return {
     tempFraction,
     tempColor,
     volFraction,
     volColor,
+    volBlink: Boolean(tier?.blinking),
     scale,
     marks: [
       { fraction: toFraction(comfortMin), color: "#16a34a" },
@@ -810,6 +881,7 @@ export function metricsSignature(metrics, lang) {
     metrics.comfortMin,
     metrics.sensorMissing ? 1 : 0,
     Math.floor(metrics.hoursSinceLastShower),
+    metrics.tiers ? metrics.tiers.map((tier) => `${tier.limit}${tier.color}`).join(",") : "",
     lang,
   ].join("|");
 }
@@ -1027,11 +1099,12 @@ const HYDRAO_PLATFORM = "hydrao_custom";
  *
  * The volume is the "Comfort Shower Volume" (only the water that was hot enough),
  * or the plain "Shower Volume" when the device has no such entity. The target
- * budget is the "Threshold 4" entity, the last level of the showerhead.
+ * budget is the "Threshold 4" entity, the last level of the showerhead; the
+ * "Threshold 1" to "Threshold 3" give the other levels and their colours.
  *
  * @param {{ entities?: Record<string, { platform?: string, translation_key?: string }>, states?: Record<string, unknown> } | null | undefined} hass
  * @param {...(string[] | null | undefined)} entityIdLists  the lists of entity ids Home Assistant hands to the card picker
- * @returns {{ entity: string, temperature_entity: string, comfort_temp_entity: string, target_budget_entity: string }}
+ * @returns {{ entity: string, temperature_entity: string, comfort_temp_entity: string, target_budget_entity: string, threshold_1_entity: string, threshold_2_entity: string, threshold_3_entity: string }}
  */
 export function detectHydraoEntities(hass, ...entityIdLists) {
   const registry = hass && typeof hass.entities === "object" && hass.entities ? hass.entities : {};
@@ -1069,5 +1142,9 @@ export function detectHydraoEntities(hass, ...entityIdLists) {
     comfort_temp_entity: find("number", ["comfort_temperature"], /_(minimum_comfort_temperature|temperature_de_confort_minimum|temperature_confort_minimum)(_\d+)?$/),
     // "Threshold 4": the last level in litres of the showerhead.
     target_budget_entity: find("sensor", ["threshold_4"], /_(threshold|seuil)_4(_\d+)?$/, comfortTemperature),
+    // "Threshold 1" to "Threshold 3": with the fourth, the coloured tiers of the showerhead.
+    threshold_1_entity: find("sensor", ["threshold_1"], /_(threshold|seuil)_1(_\d+)?$/),
+    threshold_2_entity: find("sensor", ["threshold_2"], /_(threshold|seuil)_2(_\d+)?$/),
+    threshold_3_entity: find("sensor", ["threshold_3"], /_(threshold|seuil)_3(_\d+)?$/),
   };
 }

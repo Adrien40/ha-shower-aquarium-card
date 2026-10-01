@@ -48,13 +48,24 @@ export function seeded(seed) {
   };
 }
 
-export const hassWith = (volume, temp) => ({
+export const hassWith = (volume, temp, extraStates = {}) => ({
   language: "en",
   states: {
     "sensor.shower_volume": { state: String(volume), last_changed: new Date(T0).toISOString() },
     "sensor.shower_temp": { state: String(temp), last_changed: new Date(T0).toISOString() },
+    ...extraStates,
   },
 });
+
+/** The four coloured thresholds of a Hydrao showerhead (green, blue, pink, red), as its sensors give them. */
+export const THRESHOLD_STATES = Object.fromEntries(
+  [[10, "#00FF00"], [20, "#0000FF"], [30, "#FF00B4"], [40, "#FF0000"]].map(([litres, hex], i) => [
+    `sensor.threshold_${i + 1}`,
+    { state: String(litres), last_changed: new Date(T0).toISOString(), attributes: { color_hex: hex, color_rgb: "" } },
+  ])
+);
+/** The options that point the card at them (the fourth threshold is the target entity). */
+export const THRESHOLD_CONFIG = { threshold_1_entity: "sensor.threshold_1", threshold_2_entity: "sensor.threshold_2", threshold_3_entity: "sensor.threshold_3", target_budget_entity: "sensor.threshold_4" };
 
 /** A scenario step: the volume sensor is gone and has been for more than a minute. */
 export function withSensorLost(el) {
@@ -81,7 +92,7 @@ export async function buildCard(spec) {
 
   const el = new (customElements.get("shower-aquarium-card"))();
   el.setConfig({ entity: "sensor.shower_volume", temperature_entity: "sensor.shower_temp", fish_count: 10, ...spec.config });
-  el.hass = hassWith(spec.volume ?? 12, spec.temp ?? 34);
+  el.hass = hassWith(spec.volume ?? 12, spec.temp ?? 34, spec.extraStates);
   document.body.appendChild(el);
   // A fullscreen scenario can give the shape of the screen it is shown on.
   if (spec.viewport) el._onResize(spec.viewport.width, spec.viewport.height);

@@ -427,14 +427,14 @@ describe("card-editor.js sections", () => {
   const ALL_OPTIONS = [
     "entity", "temperature_entity", "title", "theme", "target_budget_entity", "target_budget",
     "fish_count", "fish_speed_multiplier", "algae_enabled", "algae_delay_hours", "algae_age",
-    "survival_volume", "comfort_temp_entity", "comfort_temp_min", "temp_boiling_threshold", "temp_deadly_threshold",
+    "survival_volume", "comfort_temp_entity", "use_threshold_colors", "threshold_1_entity", "threshold_2_entity", "threshold_3_entity", "comfort_temp_min", "temp_boiling_threshold", "temp_deadly_threshold",
     "show_cost", "water_price_per_m3", "energy_price_per_kwh", "cold_water_temp",
     "animation_quality", "creature_style", "show_budget", "respect_reduced_motion", "fullscreen", "show_gauges", "gauge_style", "show_tiles", "swipe_biotope", "show_fps", "aspect_ratio_width", "aspect_ratio_height",
   ];
 
-  it("the form holds exactly the 32 options of the card, each once", () => {
+  it("the form holds exactly the 36 options of the card, each once", () => {
     expect(editorFields().map((f) => f.name).sort()).toEqual([...ALL_OPTIONS].sort());
-    expect(ALL_OPTIONS).toHaveLength(32);
+    expect(ALL_OPTIONS).toHaveLength(36);
   });
 
   it("keeps the essentials always visible and first: entity, temperature, title, theme, target", () => {

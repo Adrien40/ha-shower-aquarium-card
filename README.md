@@ -102,7 +102,8 @@ Hydrao Custom names its entities after the device (`Hydrao` followed by the end 
 | `entity` | **Comfort Shower Volume** (L) | Found automatically in a new card: only the water that was warm enough counts. You can take **Shower Volume** instead to count all the water (it is also the one a new card takes when the device has no comfort volume). |
 | `temperature_entity` | **Temperature** (°C) | |
 | `comfort_temp_entity` | **Minimum Comfort Temperature** (number, 0 to 50 °C) | The green zone of the thermometer then follows the setting you change in Home Assistant. |
-| `target_budget_entity` | **Threshold 4** (L) | Found automatically in a new card: the last liter tier of the showerhead becomes the target budget. |
+| `target_budget_entity` | **Threshold 4** (L) | Found automatically in a new card: the last liter tier of the showerhead becomes the target budget, and its colour is the fourth colour of the volume. |
+| `threshold_1_entity` to `threshold_3_entity` | **Threshold 1 to 3** (L) | Found automatically in a new card: their state gives the litres and their `color_hex` attribute the colour you picked on the showerhead. |
 
 The *Total Cumulative* volumes only ever go up: do not use them as `entity`.
 
@@ -165,7 +166,9 @@ The card is not limited to showers: it can show any consumption you want to keep
 | `theme` | Select | `freshwater` | Biotope: `freshwater` (Tropical), `saltwater` (Reef), `coldwater` (Goldfish). |
 | `fish_count` | Number | `4` | Number of fish in the aquarium (1 to 10). |
 | `target_budget` | Number | `50` | Shower target budget in liters. |
-| `target_budget_entity` | Entity | `-` | Dynamic entity defining the target water budget. |
+| `target_budget_entity` | Entity | `-` | Dynamic entity defining the target water budget. With Hydrao Custom, the **Threshold 4** sensor (the fourth coloured threshold). |
+| `threshold_1_entity`, `threshold_2_entity`, `threshold_3_entity` | Entity | `-` | The **Threshold 1 to 3** sensors of Hydrao Custom: litres (state) and colour (`color_hex` attribute). With the target entity, they give the four coloured thresholds of the showerhead. |
+| `use_threshold_colors` | Boolean | `true` | The volume gauge (bar, arc and *Consumed* tile) takes the colour of the threshold reached: each colour stays active until its threshold is passed, and after threshold 4 the colour of threshold 4 blinks (not with reduced motion). Needs the four thresholds above; without them, or set to `false`, the usual colours are used. |
 | `survival_volume` | Number | `5` | Reserve water volume before the tank runs completely dry. |
 | `temp_boiling_threshold` | Number | `40` | Threshold (°C) for hot water boiling bubble effects. |
 | `temp_deadly_threshold` | Number | `45` | Critical temperature threshold (°C). |
@@ -231,7 +234,7 @@ In fullscreen mode (or with `show_gauges` in the normal mode) the temperature is
 
 Three notches mark where the green, orange and red zones begin: on the right of the tube in the thermometer style, and outside the arc in the arc style.
 
-**Volume.** The bar (or arc) fills up to the target budget: blue below 70 % of it, amber up to 100 %, red beyond. The budget itself is only written when `show_budget` is on.
+**Volume.** The bar (or arc) fills up to the target budget: blue below 70 % of it, amber up to 100 %, red beyond. With the four coloured thresholds of a Hydrao showerhead (`use_threshold_colors`), it takes instead the colour of the threshold reached, like the showerhead does: the colour of threshold 1 up to its litres, then threshold 2, then 3, then 4, and once threshold 4 is passed its colour blinks. The budget itself is only written when `show_budget` is on.
 
 ---
 

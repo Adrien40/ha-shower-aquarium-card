@@ -60,6 +60,7 @@ describe("computeCachedMetrics", () => {
       comfortMin: 33,
       sensorMissing: false,
       lastReading: null,
+      tiers: null,
     });
     expect(computeCachedMetrics({ states: {} }, null)).toEqual({
       consumedVolume: 0,
@@ -70,6 +71,7 @@ describe("computeCachedMetrics", () => {
       comfortMin: 33,
       sensorMissing: false,
       lastReading: null,
+      tiers: null,
     });
   });
 

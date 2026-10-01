@@ -10,11 +10,11 @@ import { formatBudget, formatEuro, formatNumber } from "../pure.js";
  * @param {MetricsView} view
  */
 export function renderMetricsGrid(view) {
-  const { currentVolume, displayedRemaining, targetBudget, currentTemp, tempTileColor, cost, lang, t } = view;
+  const { currentVolume, displayedRemaining, targetBudget, currentTemp, tempTileColor, volumeTier, animate, cost, lang, t } = view;
   return html`
     <div class="metrics-grid">
       <div class="metric-box">
-        <div class="metric-value">${formatNumber(currentVolume, lang)} <span class="metric-unit">L</span></div>
+        <div class="metric-value ${volumeTier?.blinking && animate ? "threshold-blink" : ""}" style="${volumeTier ? `color: ${volumeTier.color};` : ""}">${formatNumber(currentVolume, lang)} <span class="metric-unit">L</span></div>
         <div class="metric-label">${t("label_consumed")}</div>
       </div>
       <div class="metric-box">

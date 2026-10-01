@@ -30,4 +30,5 @@ export const CONFIG_DEFAULTS = Object.freeze({
   swipe_biotope: true,
   show_gauges: false,
   show_tiles: true,
+  use_threshold_colors: true,
 });

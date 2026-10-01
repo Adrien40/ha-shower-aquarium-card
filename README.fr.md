@@ -102,7 +102,8 @@ Hydrao Custom nomme ses entités d'après l'appareil (`Hydrao` suivi de la fin d
 | `entity` | **Volume Douche Confort** (L) | Trouvé automatiquement dans une nouvelle carte : seule l'eau assez chaude est comptée. Tu peux prendre **Volume Douche** à la place pour compter toute l'eau (c'est aussi celui que prend une nouvelle carte quand l'appareil n'a pas de volume confort). |
 | `temperature_entity` | **Température** (°C) | |
 | `comfort_temp_entity` | **Température de confort minimum** (number, 0 à 50 °C) | La zone verte du thermomètre suit alors le réglage que tu changes dans Home Assistant. |
-| `target_budget_entity` | **Seuil 4** (L) | Trouvé automatiquement dans une nouvelle carte : le dernier palier en litres du pommeau devient le budget cible. |
+| `target_budget_entity` | **Seuil 4** (L) | Trouvé automatiquement dans une nouvelle carte : le dernier palier en litres du pommeau devient le budget cible, et sa couleur est la quatrième couleur du volume. |
+| `threshold_1_entity` à `threshold_3_entity` | **Seuil 1 à 3** (L) | Trouvés automatiquement dans une nouvelle carte : leur état donne les litres et leur attribut `color_hex` la couleur choisie sur le pommeau. |
 
 Les volumes *cumulés totaux* ne font que monter : ne les utilise pas comme `entity`.
 
@@ -165,7 +166,9 @@ La carte n'est pas limitée aux douches : elle peut afficher toute consommation 
 | `theme` | Choix | `freshwater` | Biotope : `freshwater` (Tropical), `saltwater` (Récif), `coldwater` (Poissons rouges). |
 | `fish_count` | Nombre | `4` | Nombre de poissons dans l'aquarium (1 à 10). |
 | `target_budget` | Nombre | `50` | Volume cible de la douche en litres. |
-| `target_budget_entity` | Entité | `-` | Entité dynamique pour définir le budget max. |
+| `target_budget_entity` | Entité | `-` | Entité dynamique pour définir le budget max. Avec Hydrao Custom, le capteur **Seuil 4** (le quatrième seuil coloré). |
+| `threshold_1_entity`, `threshold_2_entity`, `threshold_3_entity` | Entité | `-` | Les capteurs **Seuil 1 à 3** de Hydrao Custom : litres (état) et couleur (attribut `color_hex`). Avec l'entité d'objectif, ils donnent les quatre seuils colorés du pommeau. |
+| `use_threshold_colors` | Booléen | `true` | La jauge de volume (barre, arc et tuile *Consommé*) prend la couleur du seuil atteint : chaque couleur reste active tant que son seuil n'est pas dépassé, et après le seuil 4 la couleur du seuil 4 clignote (pas avec le mouvement réduit). Demande les quatre seuils ci-dessus ; sans eux, ou à `false`, les couleurs habituelles sont utilisées. |
 | `survival_volume` | Nombre | `5` | Volume d'eau de réserve avant disparition totale de l'eau. |
 | `temp_boiling_threshold` | Nombre | `40` | Seuil d'apparition des bulles d'eau très chaude (°C). |
 | `temp_deadly_threshold` | Nombre | `45` | Seuil critique de température (°C). |
@@ -231,7 +234,7 @@ En mode plein écran (ou avec `show_gauges` en mode normal), la température s'a
 
 Trois repères marquent le début des zones verte, orange et rouge : à droite du tube dans le style thermomètre, à l'extérieur de l'arc dans le style arc.
 
-**Volume.** La barre (ou l'arc) se remplit jusqu'au budget cible : bleue sous 70 % du budget, ambre jusqu'à 100 %, rouge au-delà. Le budget lui-même n'est écrit que si `show_budget` est activé.
+**Volume.** La barre (ou l'arc) se remplit jusqu'au budget cible : bleue sous 70 % du budget, ambre jusqu'à 100 %, rouge au-delà. Avec les quatre seuils colorés d'un pommeau Hydrao (`use_threshold_colors`), elle prend à la place la couleur du seuil atteint, comme le pommeau : la couleur du seuil 1 jusqu'à ses litres, puis le seuil 2, puis 3, puis 4, et une fois le seuil 4 dépassé sa couleur clignote. Le budget lui-même n'est écrit que si `show_budget` est activé.
 
 ---
 

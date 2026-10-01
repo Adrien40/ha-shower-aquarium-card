@@ -15,6 +15,9 @@
  * @property {string} entity
  * @property {string} [temperature_entity]
  * @property {string} [target_budget_entity]
+ * @property {string} [threshold_1_entity]  first coloured threshold of the showerhead (the fourth is the target entity)
+ * @property {string} [threshold_2_entity]
+ * @property {string} [threshold_3_entity]
  * @property {string} title
  * @property {string} theme
  * @property {number} aspect_ratio_width
@@ -41,6 +44,7 @@
  * @property {boolean} swipe_biotope  a horizontal swipe on the tank changes the biotope
  * @property {boolean} show_gauges  the gauges of fullscreen mode are also drawn on the picture outside fullscreen mode
  * @property {boolean} show_tiles  the tiles under the picture (outside fullscreen mode)
+ * @property {boolean} use_threshold_colors  the volume takes the colour of the threshold it has reached (showerhead with four coloured thresholds)
  * @property {string} creature_style  "flat", "cartoon" or "realistic"
  * @property {number} comfort_temp_min
  * @property {string} [comfort_temp_entity]
@@ -50,6 +54,7 @@
  * @typedef {object} HassState
  * @property {string} state
  * @property {string} [last_changed]
+ * @property {Record<string, unknown>} [attributes]
  */
 
 /**
@@ -81,7 +86,25 @@
  */
 
 /**
- * @typedef {TankMetrics & { hoursSinceLastShower: number, comfortMin: number, sensorMissing: boolean, lastReading: LastReading | null }} CachedMetrics
+ * @typedef {TankMetrics & { hoursSinceLastShower: number, comfortMin: number, sensorMissing: boolean, lastReading: LastReading | null, tiers: ThresholdTier[] | null }} CachedMetrics
+ */
+
+/**
+ * One of the four coloured thresholds of the showerhead: it is active until the
+ * volume goes beyond `limit` litres.
+ *
+ * @typedef {object} ThresholdTier
+ * @property {number} limit  litres
+ * @property {string} color  "#rrggbb"
+ */
+
+/**
+ * The colour the volume has now, and whether it blinks (the last threshold is passed).
+ *
+ * @typedef {object} VolumeTier
+ * @property {string} color
+ * @property {boolean} blinking
+ * @property {number} index  0 to 3
  */
 
 /**
@@ -360,6 +383,8 @@ export {};
  * @property {number} deadlyTemp
  * @property {number} boilTemp
  * @property {string} gaugeStyle
+ * @property {VolumeTier | null} volumeTier  the colour of the threshold reached, null when the thresholds are not used
+ * @property {boolean} animate  whether the blinking is allowed (not with reduced motion)
  * @property {boolean} showBudget
  * @property {{ total: number } | null} cost
  * @property {string} lang
@@ -378,6 +403,8 @@ export {};
  * @property {number} targetBudget
  * @property {number} currentTemp
  * @property {string} tempTileColor
+ * @property {VolumeTier | null} volumeTier  the colour of the threshold reached, null when the thresholds are not used
+ * @property {boolean} animate  whether the blinking is allowed (not with reduced motion)
  * @property {{ total: number } | null} cost
  * @property {string} lang
  * @property {(key: string) => string} t  translation of a key in the language of the card

@@ -54,6 +54,8 @@ export function renderTankSvg(host, view) {
     biotopeNotice,
     showGauges,
     showCostLabel,
+    volumeTier,
+    animate,
   } = view;
   return html`
     <svg
@@ -135,6 +137,8 @@ export function renderTankSvg(host, view) {
               showBudget,
               forceTemp,
               lang,
+              volumeTier,
+              animate,
             })
           : ""}
         ${showCostLabel && showReadings ? host._renderCostLabel(cost) : ""}

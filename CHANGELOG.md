@@ -3,6 +3,13 @@
 All notable changes to this project are documented in this file.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.8.87] — 2026-10-01
+
+### Added
+- The four coloured thresholds of a Hydrao showerhead. The volume gauge (bar, arc and the *Consumed* tile) takes the colour of the threshold the volume has reached: each colour is active until its threshold is passed (threshold 1 up to its litres, then 2, then 3, then 4), and once threshold 4 is passed its colour blinks, once a second (not with reduced motion: the colour then stays on). The colours and the litres are read from the Hydrao Custom threshold sensors (state and `color_hex` attribute), so they follow the colours picked on the showerhead.
+- The new options `threshold_1_entity`, `threshold_2_entity` and `threshold_3_entity` (the fourth threshold is the target entity), filled in automatically in a new card, and `use_threshold_colors`, on by default. Without the four thresholds, or with `use_threshold_colors: false`, the usual colours (blue, amber, red) are used, as before. The last thresholds read are kept while the sensors cannot be read.
+- Two pictures of it in the gallery.
+
 ## [0.8.86] — 2026-10-01
 
 ### Changed

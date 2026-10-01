@@ -66,6 +66,7 @@ import {
   detectHydraoEntities,
   formatNumber,
   isMotionAllowed,
+  thresholdTier,
   nextBiotope,
   classifySwipe,
   BIOTOPES,
@@ -146,6 +147,9 @@ export class AquariumShowerCard extends LitElement {
       temperature_entity: tempEntity,
       ...(hydrao.comfort_temp_entity ? { comfort_temp_entity: hydrao.comfort_temp_entity } : {}),
       ...(hydrao.target_budget_entity ? { target_budget_entity: hydrao.target_budget_entity } : {}),
+      ...(hydrao.threshold_1_entity ? { threshold_1_entity: hydrao.threshold_1_entity } : {}),
+      ...(hydrao.threshold_2_entity ? { threshold_2_entity: hydrao.threshold_2_entity } : {}),
+      ...(hydrao.threshold_3_entity ? { threshold_3_entity: hydrao.threshold_3_entity } : {}),
       title: d.title,
       theme: d.theme,
       aspect_ratio_width: d.aspect_ratio_width,
@@ -242,6 +246,8 @@ export class AquariumShowerCard extends LitElement {
     // between two showers. It only feeds the display, never the state of the tank.
     this._lastTemperature = 0;
     this._cachedHoursSinceLastShower = 0;
+    /** @type {import("./types.js").ThresholdTier[] | null} */
+    this._cachedTiers = null;
 
     this._fishes = generateDefaultFishes(4, "freshwater");
     const scene = createInitialScene();
@@ -381,6 +387,7 @@ export class AquariumShowerCard extends LitElement {
     this._cachedTargetBudget = metrics.targetBudget;
     this._cachedSurvivalVolume = metrics.survivalVolume;
     this._cachedComfortMin = metrics.comfortMin;
+    this._cachedTiers = metrics.tiers;
     if (metrics.consumedVolume <= 0) this._lastTemperature = 0;
     else if (metrics.temperature > 0) this._lastTemperature = metrics.temperature;
     this._trackSensor(metrics.sensorMissing);
@@ -1089,6 +1096,8 @@ export class AquariumShowerCard extends LitElement {
     const showTiles = !isFullscreen && this._config.show_tiles !== false;
     // The cost is written on the picture next to the gauges, unless a tile already shows it.
     const showCostLabel = showGauges && !showTiles;
+    // The colour of the threshold of the showerhead the volume has reached (null without thresholds).
+    const volumeTier = this._config.use_threshold_colors === false ? null : thresholdTier(currentVolume, this._cachedTiers);
     const cost = this._config.show_cost
       ? computeShowerCost({
           volumeL: currentVolume,
@@ -1139,6 +1148,8 @@ export class AquariumShowerCard extends LitElement {
             biotopeNotice: this._biotopeNotice,
             showGauges,
             showCostLabel,
+            volumeTier,
+            animate: this._motionAllowed,
           })}
 
           <!-- The same two actions as a tap on the tank, for the keyboard and screen readers. -->
@@ -1163,6 +1174,8 @@ export class AquariumShowerCard extends LitElement {
               targetBudget,
               currentTemp,
               tempTileColor,
+              volumeTier,
+              animate: this._motionAllowed,
               cost,
               lang,
               t: (/** @type {string} */ key) => this._t(key),
