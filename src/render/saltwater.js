@@ -1,6 +1,6 @@
 import { svg } from "lit";
 import { ifDefined } from "lit/directives/if-defined.js";
-import { skinned, shapeEl, sh, C, E, OUTLINE, creatureStyle, shadingAllowed, wilt } from "./skin.js";
+import { skinned, shapeEl, sh, C, E, OUTLINE, creatureStyle, shadingAllowed, wilt, memo } from "./skin.js";
 import { REEF_PILE } from "../reef-layout.js";
 
 /**
@@ -8,13 +8,40 @@ import { REEF_PILE } from "../reef-layout.js";
  * @param {number} [deathProgress]
  */
 export function renderAnemoneTentacles(ctx, deathProgress = 0) {
+  // The tentacles only change with the ambient clock (which ticks less often in the light profile),
+  // the death of the tank and the look: between two ticks the same drawing is given again.
+  const key = `${ctx._ambientTime}|${deathProgress}|${creatureStyle(ctx)}|${density(ctx)}`;
+  const known = TENTACLES.get(ctx);
+  if (known && known.key === key) return known.parts;
+  const parts = anemoneTentacles(ctx, deathProgress);
+  TENTACLES.set(ctx, { key, parts });
+  return parts;
+}
+
+/** The last tentacles drawn for each card. @type {WeakMap<object, { key: string, parts: import("lit").SVGTemplateResult[] }>} */
+const TENTACLES = new WeakMap();
+
+/**
+ * How many tentacles the anemone has, as a share of the full number: the light
+ * profile, for weak displays, draws fewer.
+ * @param {import("../types.js").RenderHost} ctx
+ */
+function density(ctx) {
+  return ctx._profile?.tentacles ?? 1;
+}
+
+/**
+ * @param {import("../types.js").RenderHost} ctx
+ * @param {number} deathProgress
+ */
+function anemoneTentacles(ctx, deathProgress) {
   // Fat round-tipped tentacles (cartoon), thin ones with a white glow at the tip (realistic).
   const look = creatureStyle(ctx);
   const widthFactor = look === "cartoon" ? 1.4 : look === "realistic" ? 0.65 : 1;
   const tipFactor = look === "cartoon" ? 1.5 : look === "realistic" ? 0.7 : 1;
   const layers = [
-    { count: 11, baseR: 20, lenMin: 60, lenMax: 95, spread: 160, width: 5, color: "#a21caf", tip: "#f0abfc", speed: 0.55 },
-    { count: 16, baseR: 22, lenMin: 50, lenMax: 88, spread: 190, width: 6.5, color: "#c026d3", tip: "#f5d0fe", speed: 0.68 },
+    { count: Math.max(2, Math.round(11 * density(ctx))), baseR: 20, lenMin: 60, lenMax: 95, spread: 160, width: 5, color: "#a21caf", tip: "#f0abfc", speed: 0.55 },
+    { count: Math.max(2, Math.round(16 * density(ctx))), baseR: 22, lenMin: 50, lenMax: 88, spread: 190, width: 6.5, color: "#c026d3", tip: "#f5d0fe", speed: 0.68 },
   ];
   /** @type {import("lit").SVGTemplateResult[]} */
   const parts = [];
@@ -55,6 +82,11 @@ export function renderAnemoneTentacles(ctx, deathProgress = 0) {
  * @returns {{ body: string, top: string }}
  */
 export function chunkPath(cx, cy, rx, ry, seed) {
+  return memo(`chunk|${cx}|${cy}|${rx}|${ry}|${seed}`, () => chunkShape(cx, cy, rx, ry, seed));
+}
+
+/** @param {number} cx @param {number} cy @param {number} rx @param {number} ry @param {number} seed */
+function chunkShape(cx, cy, rx, ry, seed) {
   const n = 8;
   const corners = Array.from({ length: n }, (_, i) => {
     const a = (i / n) * Math.PI * 2 + 0.18 * Math.sin(seed * 1.3 + i * 2.1);
@@ -147,6 +179,7 @@ export function saltwaterDecor(ctx, bottomY, lifeStyle, deathProgress) {
   return svg`
     <g id="reef-decor">
       <g style="${lifeStyle}">
+      ${memo(`corals|${style}|${shading}|${b}|${deathProgress > 0 ? deathProgress.toFixed(3) : 0}`, () => svg`
       <g transform="${ifDefined(wilt(88, b, -16, 0.6, deathProgress))}">
       ${k(`M 60 ${b} Q 40 ${b - 165}, 95 ${b - 225} Q 120 ${b - 275}, 85 ${b - 335} Q 135 ${b - 265}, 120 ${b - 195} Q 150 ${b - 135}, 115 ${b} Z`, "#f43f5e", 0.95)}
       ${dots([[88, b - 40], [80, b - 110], [98, b - 190], [105, b - 240], [92, b - 300]], "#ffe4e6", 3, 0.55)}
@@ -170,7 +203,10 @@ export function saltwaterDecor(ctx, bottomY, lifeStyle, deathProgress) {
         <circle cx="0" cy="0" r="5" fill="#60a5fa" />
         </g>
       </g>
+      
+      `)}
       </g>
+      ${memo(`live-rock|${style}|${shading}|${b}`, () => svg`
       <g id="live-rock">
         ${PILE.slice(0, 4).map((piece) => rock(style, shading, b, piece))}
         ${PILE.slice(4).map((piece) => rock(style, shading, b, piece))}
@@ -181,12 +217,16 @@ export function saltwaterDecor(ctx, bottomY, lifeStyle, deathProgress) {
         ${style === "cartoon" ? "" : [[850, 44, 16, 7], [942, 108, 18, 8], [976, 152, 11, 6], [812, 74, 12, 6], [1002, 200, 9, 7]].map(([x, up, rx, ry]) => shapeEl(sh(E(x, b - up, rx, ry), "#e879f9", { op: 0.32, stroke: "none" })))}
         ${style === "flat" ? [[846, 66], [972, 158]].map(([x, up]) => svg`${shapeEl(sh(`M ${x},${b - up} L ${x},${b - up - 9}`, undefined, { stroke: "#fb923c", sw: 1.2, lc: "round" }))}${shapeEl(sh(C(x, b - up - 11, 3.2), "#fb923c", { stroke: "none" }))}`) : ""}
       </g>
+      `)}
+      ${memo(`live-rock-scattered|${style}|${shading}|${b}`, () => svg`
       <g id="live-rock-scattered">
         ${SCATTERED_ROCKS.map((piece) => rock(style, shading, b, piece))}
       </g>
+      `)}
       <g id="anemone" style="${lifeStyle}" transform="translate(260, ${b - 17}) scale(1.4, 1.4)">
         <g transform="${ifDefined(wilt(0, 22, 0, 0.3, deathProgress))}">
         ${renderAnemoneTentacles(ctx, deathProgress)}
+        ${memo(`anemone-body|${style}|${shading}`, () => svg`
         ${k(E(0, -16, 30, 11), "#86198f", 0.9)}
         ${k("M -22,-5 C -26,3 -23,12 -15,17 C -7,21 7,21 15,17 C 23,12 26,3 22,-5 C 14,-14 -14,-14 -22,-5 Z", "#701a75")}
         ${k(E(0, 16, 26, 9), "#4a044e", 0.75)}
@@ -201,6 +241,7 @@ export function saltwaterDecor(ctx, bottomY, lifeStyle, deathProgress) {
               ${shapeEl(sh(E(14, 8, 3.4, 2), "#fb7185", { op: 0.75, stroke: "none" }))}
             `
           : ""}
+        `)}
         </g>
       </g>
     </g>

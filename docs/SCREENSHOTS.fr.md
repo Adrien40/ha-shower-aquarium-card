@@ -118,6 +118,7 @@ Le profil d'animation léger est prévu pour les écrans peu puissants comme le 
 
 <table>
 <tr>
+<td align="center" width="50%"><img src="../visual/baseline/saltwater-light-profile.png" alt="Aquarium d'eau de mer, profil léger" width="100%"><br><sub>**Léger** dans le récif (`animation_quality: light`) : l'anémone a moins de tentacules (17 au lieu de 27), le reste est identique.</sub></td>
 <td align="center" width="50%"><img src="../visual/baseline/freshwater-light-profile.png" alt="Aquarium d'eau douce, profil léger" width="100%"><br><sub>**Léger** (`animation_quality: light`) : le dessin est le même, les effets sont plus simples.</sub></td>
 <td></td>
 </tr>

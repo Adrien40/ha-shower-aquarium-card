@@ -719,6 +719,7 @@ export const ANIMATION_PROFILES = {
     deathFilter: true,
     doubleRipple: true,
     shading: true,
+    tentacles: 1,
   },
   balanced: {
     fps: 30,
@@ -729,6 +730,7 @@ export const ANIMATION_PROFILES = {
     deathFilter: true,
     doubleRipple: true,
     shading: true,
+    tentacles: 1,
   },
   // Targeted at weak displays such as the Google Nest Hub.
   light: {
@@ -744,6 +746,8 @@ export const ANIMATION_PROFILES = {
     doubleRipple: false,
     // The realistic look leaves its soft shading out.
     shading: false,
+    // The anemone has fewer tentacles: fewer shapes to move and to paint.
+    tentacles: 0.6,
   },
 };
 

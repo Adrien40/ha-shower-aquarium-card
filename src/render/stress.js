@@ -5,6 +5,9 @@ import { svg } from "lit";
 // ellipse of the body (the same layout every time, so they do not jump), they
 // twinkle a little, and they go away one by one as the stress fades.
 
+/** What is drawn for a calm animal: nothing (the same empty drawing every time). */
+const NO_DOTS = svg``;
+
 /** How many dots a stressed animal shows at most. */
 export const STRESS_DOTS = 11;
 
@@ -42,7 +45,7 @@ export function stressDotCount(stress) {
  */
 export function renderStressDots(stress, area, time, size = 1.7) {
   const count = stressDotCount(stress);
-  if (count === 0) return svg``;
+  if (count === 0) return NO_DOTS;
   const [cx, cy, rx, ry] = area;
   const strength = Math.min(1, 0.35 + stress);
   return svg`

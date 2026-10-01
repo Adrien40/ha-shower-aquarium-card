@@ -129,6 +129,7 @@
  * @property {boolean} deathFilter
  * @property {boolean} doubleRipple
  * @property {boolean} shading  soft shading of the realistic look
+ * @property {number} tentacles  share of the tentacles of the anemone that are drawn (1 = all)
  */
 
 /**

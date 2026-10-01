@@ -3,6 +3,16 @@
 All notable changes to this project are documented in this file.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.8.86] — 2026-10-01
+
+### Changed
+- Lighter on weak displays such as the Google Nest Hub 2. What does not move from one frame to the next is now built once and kept instead of being worked out again 20 to 60 times a second: the shape of every fish (and its fins, tail, body and eye, of which only the angles change), the rocks of the reef, the corals, the plants, the pebbles, the body of the anemone, and the fixed parts of the Ancistrus (only its breathing mouth moves), the shrimp (only its legs and swimmerets) and the crab (only its legs and its claws turning). The tentacles of the anemone and the water surface are not worked out again between two ticks of the ambient clock, which the light profile makes about 8 per second. Measured by building one frame of drawing, on the same machine: the reef takes 1.4 ms instead of 2.1 ms in the light profile and 1.1 ms instead of 2.1 ms in the full one, the freshwater tank 0.4 ms instead of 0.9 ms, the coldwater tank 0.3 ms instead of 0.6 ms. The pictures are exactly the same (the visual tests did not change for these).
+- The light profile draws 17 tentacles on the anemone instead of 27, which is 30 shapes less to move and to paint (`tentacles` in the animation profiles).
+- With the Nest Hub 2 in mind, `show_fps` is the way to see what a screen manages: it prints the frames the browser delivered and the frames drawn each second (README, Animation quality).
+
+### Documentation
+- The gallery shows the reef in the light profile too.
+
 ## [0.8.85] — 2026-10-01
 
 ### Changed

@@ -1,5 +1,5 @@
 import { svg } from "lit";
-import { skinned, shapeEl, sh, E } from "./skin.js";
+import { skinned, shapeEl, sh, E, memo } from "./skin.js";
 
 /** @type {[number, number, number, number, string, number][]} [cx, y above the bottom, rx, ry, fill, opacity] of the pebbles */
 const PEBBLES = [
@@ -19,6 +19,16 @@ const PEBBLES = [
  * @param {boolean} shading
  */
 export function coldwaterDecor(bottomY, style, shading) {
+  // The pebbles never change: the same drawing is given again.
+  return memo(`coldwater|${bottomY}|${style}|${shading}`, () => pebbles(bottomY, style, shading));
+}
+
+/**
+ * @param {number} bottomY
+ * @param {import("./skin.js").CreatureStyle} style
+ * @param {boolean} shading
+ */
+function pebbles(bottomY, style, shading) {
   return svg`
     <g id="coldwater-decor">
       ${PEBBLES.map(([cx, up, rx, ry, fill, op]) => {

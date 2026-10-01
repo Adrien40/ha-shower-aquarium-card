@@ -118,6 +118,7 @@ The light animation profile is meant for weak screens such as the Google Nest Hu
 
 <table>
 <tr>
+<td align="center" width="50%"><img src="../visual/baseline/saltwater-light-profile.png" alt="Saltwater tank, light profile" width="100%"><br><sub>**Light** in the reef (`animation_quality: light`): the anemone has fewer tentacles (17 instead of 27), the rest is the same.</sub></td>
 <td align="center" width="50%"><img src="../visual/baseline/freshwater-light-profile.png" alt="Freshwater tank, light profile" width="100%"><br><sub>**Light** (`animation_quality: light`): the drawing is the same, the effects are simpler.</sub></td>
 <td></td>
 </tr>

@@ -72,5 +72,6 @@ export const SCENARIOS = {
     viewport: { width: 300, height: 600 },
   },
   // Performance profile
+  "saltwater-light-profile": { config: { theme: "saltwater", animation_quality: "light" }, volume: 12, temp: 34 },
   "freshwater-light-profile": { config: { theme: "freshwater", animation_quality: "light" }, volume: 12, temp: 34 },
 };

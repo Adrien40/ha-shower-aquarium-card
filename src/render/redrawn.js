@@ -1,5 +1,5 @@
 import { svg } from "lit";
-import { skinned, shapeEl, sh, C, E, OUTLINE } from "./skin.js";
+import { skinned, shapeEl, sh, C, E, OUTLINE, memo } from "./skin.js";
 
 // The redrawn Ancistrus, shrimp and crab. Each function draws what goes inside
 // the group that positions, flips and fades the animal (see creatures.js), in
@@ -96,6 +96,17 @@ function bigEye(x, y, r) {
  * @param {number} pulse  breathing of the mouth, 1 = still
  */
 export function ancistrusRedrawn(style, shading, pulse) {
+  // Only the breathing of the mouth changes from one frame to the next: the rest is drawn once and kept.
+  const part = memo(`ancistrus|${style}|${shading}`, () => ancistrusParts(style, shading));
+  return svg`${part.before}<g transform="translate(0, 3) scale(${pulse},${pulse})">${part.mouth}</g>${part.after}`;
+}
+
+/**
+ * The Ancistrus in three parts: what is drawn before the mouth, the mouth itself and what is drawn after it.
+ * @param {CreatureStyle} style
+ * @param {boolean} shading
+ */
+function ancistrusParts(style, shading) {
   const cartoon = style === "cartoon";
   const { k, line } = tools(style, shading, { stroke: "#0a0f14", sw: 0.8 });
   // Short papillae round the lips of the sucker.
@@ -104,7 +115,7 @@ export function ancistrusRedrawn(style, shading, pulse) {
     const [c, s] = [Math.cos(a), Math.sin(a)];
     return `M${(c * 6.5).toFixed(1)},${(s * 5).toFixed(1)} L${(c * 8.6).toFixed(1)},${(s * 6.7).toFixed(1)}`;
   }).join(" ");
-  return svg`
+  const before = svg`
     ${k(symmetric([0, 73], [[3, 75, 8, 80, 9, 89], [6, 91, 2, 88, 0, 84]]), "#182026")}
     ${style === "cartoon" ? "" : pair(line("M 1,76 L 6,88 M 1,76 L 8,86", 0.7, "#64748b", 0.5))}
     ${pair(svg`
@@ -126,17 +137,20 @@ export function ancistrusRedrawn(style, shading, pulse) {
       ${line("M 10,-14 C 13,-15 15,-17 16,-20", 1.6, "#3b4a5f", 1)}
       ${line("M 2.5,-10 C 3.5,-14 3,-18 1.5,-21", 2.2, "#3b4a5f", 1)}
     `)}
-    <g transform="translate(0, 3) scale(${pulse},${pulse})">
+  `;
+  const mouth = svg`
       ${shapeEl(sh(E(0, 0, 9.2, 7.2), "#64748b", { stroke: "#0a0f14", sw: 0.9 }))}
       ${style === "cartoon" ? "" : line(papillae, 0.6, "#94a3b8", 0.7)}
       ${shapeEl(sh(E(0, 0, 6.3, 4.8), "#334155", { stroke: "#0a0f14", sw: 0.7 }))}
       ${shapeEl(sh(E(0, 0, 3.4, 2.5), "#0f172a", { stroke: "none" }))}
-    </g>
+  `;
+  const after = svg`
     ${cartoon
       ? svg`${bigEye(-9, -3, 3.8)}${bigEye(9, -3, 3.8)}${shapeEl(sh(E(-13, 9, 2.8, 1.8), "#fb7185", { op: 0.65, stroke: "none" }))}${shapeEl(sh(E(13, 9, 2.8, 1.8), "#fb7185", { op: 0.65, stroke: "none" }))}`
       : pair(svg`${shapeEl(sh(C(12.3, -3, 1.7), "#0a0f14", { stroke: "none" }))}${shapeEl(sh(C(12.7, -3.5, 0.5), "#f1f5f9", { stroke: "none" }))}`)}
     ${style === "realistic" ? shapeEl(sh(E(-4, 34, 2.4, 14), "#ffffff", { op: 0.1, stroke: "none" })) : ""}
   `;
+  return { before, mouth, after };
 }
 
 /**
@@ -148,18 +162,9 @@ export function ancistrusRedrawn(style, shading, pulse) {
  */
 export function shrimpRedrawn(style, shading, gait = {}) {
   const { phase = 0, stride = 0, time = 0 } = gait;
-  const cartoon = style === "cartoon";
-  const { k, line } = tools(style, shading, { stroke: "#7f1d1d", sw: 0.8 });
-  // The abdomen follows a gentle arch: an arc of a wide circle whose centre lies below the shrimp.
-  const [cx, cy, R] = [22, 28, 27];
-  const at = (/** @type {number} */ deg, /** @type {number} */ r = R) => [cx + r * Math.cos((deg * Math.PI) / 180), cy + r * Math.sin((deg * Math.PI) / 180)];
-  // The plate nearest the head lies over the next one.
-  const segments = [4, 3, 2, 1, 0].map((i) => {
-    const deg = -110 + i * 13;
-    const [x, y] = at(deg);
-    const half = 8 - i * 0.8;
-    return svg`<g transform="rotate(${deg} ${x.toFixed(1)} ${y.toFixed(1)})">${k(E(Number(x.toFixed(1)), Number(y.toFixed(1)), half, 6.6 - i * 0.25), i % 2 ? "#c81e1e" : "#d42424")}</g>`;
-  });
+  const { line } = tools(style, shading, { stroke: "#7f1d1d", sw: 0.8 });
+  const at = shrimpAt;
+  const R = SHRIMP_ARCH[2];
   // The swimmerets flutter a little all the time, each one a little after the one before.
   const swimmerets = [0, 1, 2, 3, 4].map((i) => {
     const deg = -110 + i * 13;
@@ -173,11 +178,46 @@ export function shrimpRedrawn(style, shading, gait = {}) {
   }).join(" ");
   // The four walking legs swing from their hips, one after the other.
   const legs = SHRIMP_LEGS.map(([hx, hy, d], i) => svg`<g transform="rotate(${(stride * 16 * Math.sin(phase + i * 1.7)).toFixed(1)} ${hx} ${hy})">${line(d, 1.6, "#7f1d1d", 0.85)}</g>`);
-  const [tx, ty] = at(-45);
-  const fanAngle = -45 + 90;
+  // The legs and the swimmerets move; the rest of the shrimp is drawn once and kept.
   return svg`
     ${legs}
     ${line(swimmerets, 1.3, "#7f1d1d", 0.7)}
+    ${memo(`shrimp|${style}|${shading}`, () => shrimpBody(style, shading))}
+  `;
+}
+
+/** The arch of the abdomen of the shrimp: the centre of the circle it follows and its radius. */
+const SHRIMP_ARCH = [22, 28, 27];
+
+/**
+ * A point of the abdomen of the shrimp: it follows a gentle arch, an arc of a wide circle whose centre lies below the shrimp.
+ * @param {number} deg
+ * @param {number} [r]
+ */
+function shrimpAt(deg, r = SHRIMP_ARCH[2]) {
+  const [cx, cy] = SHRIMP_ARCH;
+  return [cx + r * Math.cos((deg * Math.PI) / 180), cy + r * Math.sin((deg * Math.PI) / 180)];
+}
+
+/**
+ * What of the shrimp does not move: the tail fan, the plates of the abdomen, the shell, the antennae and the eye.
+ * @param {CreatureStyle} style
+ * @param {boolean} shading
+ */
+function shrimpBody(style, shading) {
+  const cartoon = style === "cartoon";
+  const { k, line } = tools(style, shading, { stroke: "#7f1d1d", sw: 0.8 });
+  const at = shrimpAt;
+  // The plate nearest the head lies over the next one.
+  const segments = [4, 3, 2, 1, 0].map((i) => {
+    const deg = -110 + i * 13;
+    const [x, y] = at(deg);
+    const half = 8 - i * 0.8;
+    return svg`<g transform="rotate(${deg} ${x.toFixed(1)} ${y.toFixed(1)})">${k(E(Number(x.toFixed(1)), Number(y.toFixed(1)), half, 6.6 - i * 0.25), i % 2 ? "#c81e1e" : "#d42424")}</g>`;
+  });
+  const [tx, ty] = at(-45);
+  const fanAngle = -45 + 90;
+  return svg`
     <g transform="translate(${tx.toFixed(1)} ${ty.toFixed(1)}) rotate(${fanAngle})">
       ${k("M 0,-2.4 C 5,-9.5 11,-10.5 14,-7 C 11,-3.2 6,-1 0,0 Z", "#dc2626")}
       ${k("M 0,2.4 C 5,9.5 11,10.5 14,7 C 11,3.2 6,1 0,0 Z", "#dc2626")}
@@ -212,6 +252,13 @@ export function crabRedrawn(style, shading, gait = {}) {
   const { phase = 0, stride = 0 } = gait;
   const cartoon = style === "cartoon";
   const { k, line } = tools(style, shading, { stroke: "#7c2d12", sw: 0.9 });
+  // The arm and the claw only turn as a whole: they are drawn once and kept.
+  const claw = memo(`crab-claw|${style}|${shading}`, () => svg`
+        ${line("M 20,-8 L 30,-17", cartoon ? 4 : 3.4, "#7c2d12", 1)}
+        ${k("M 27,-19 C 25,-30 34,-36 41,-33 C 46,-30 45,-25 41,-24 C 45,-21 43,-16 38,-16 C 33,-16 29,-17 27,-19 Z", "#ea580c")}
+        ${k("M 31,-31 C 33,-40 42,-42 46,-37 C 42,-38 38,-36 36,-32 Z", "#ea580c")}
+        ${style === "cartoon" ? "" : shapeEl(sh("M 36,-28 L 39,-31 L 40,-27 L 43,-29 M 34,-21 L 38,-22 L 38,-19 L 42,-20", undefined, { stroke: "#fef3c7", sw: 0.9, lc: "round", op: 0.8 }))}
+      `);
   // One side of the crab: four legs that swing from their hips, in turn, and the arm with its claw that sways a little.
   // The two sides are in opposition, like a crab that walks sideways.
   const side = (/** @type {number} */ n) => {
@@ -224,16 +271,24 @@ export function crabRedrawn(style, shading, gait = {}) {
     `);
     return svg`
       ${legs}
-      <g transform="rotate(${(stride * 5 * Math.sin(phase * 0.7 + n * 1.3)).toFixed(1)} 20 -8)">
-        ${line("M 20,-8 L 30,-17", cartoon ? 4 : 3.4, "#7c2d12", 1)}
-        ${k("M 27,-19 C 25,-30 34,-36 41,-33 C 46,-30 45,-25 41,-24 C 45,-21 43,-16 38,-16 C 33,-16 29,-17 27,-19 Z", "#ea580c")}
-        ${k("M 31,-31 C 33,-40 42,-42 46,-37 C 42,-38 38,-36 36,-32 Z", "#ea580c")}
-        ${style === "cartoon" ? "" : shapeEl(sh("M 36,-28 L 39,-31 L 40,-27 L 43,-29 M 34,-21 L 38,-22 L 38,-19 L 42,-20", undefined, { stroke: "#fef3c7", sw: 0.9, lc: "round", op: 0.8 }))}
-      </g>
+      <g transform="rotate(${(stride * 5 * Math.sin(phase * 0.7 + n * 1.3)).toFixed(1)} 20 -8)">${claw}</g>
     `;
   };
   return svg`
     ${side(0)}<g transform="scale(-1,1)">${side(1)}</g>
+    ${memo(`crab-body|${style}|${shading}`, () => crabBody(style, shading))}
+  `;
+}
+
+/**
+ * What of the crab does not move: the shell, the eyes on their stalks and the face.
+ * @param {CreatureStyle} style
+ * @param {boolean} shading
+ */
+function crabBody(style, shading) {
+  const cartoon = style === "cartoon";
+  const { k, line } = tools(style, shading, { stroke: "#7c2d12", sw: 0.9 });
+  return svg`
     ${k("M 0,-15 C 10,-16 20,-14 26,-8 L 30,-2 L 27,4 C 24,12 14,18 0,18 C -14,18 -24,12 -27,4 L -30,-2 L -26,-8 C -20,-14 -10,-16 0,-15 Z", "#dc2626")}
     ${k("M 0,-11 C 9,-12 17,-10 22,-5 L 24,0 C 22,8 12,13 0,13 C -12,13 -22,8 -24,0 L -22,-5 C -17,-10 -9,-12 0,-11 Z", "#ef4444", 0.55)}
     ${style === "cartoon"

@@ -1,6 +1,6 @@
 import { svg } from "lit";
 import { fishSpec } from "./fish-specs.js";
-import { OUTLINE, shapeEl, sh, E, creatureStyle, shadingAllowed } from "./skin.js";
+import { OUTLINE, shapeEl, sh, E, creatureStyle, shadingAllowed, memo } from "./skin.js";
 import { renderStressDots } from "./stress.js";
 
 /** @typedef {import("./skin.js").CreatureStyle} CreatureStyle */
@@ -12,6 +12,11 @@ import { renderStressDots } from "./stress.js";
  * @param {number[]} area
  */
 function scales(area) {
+  return memo(`scales|${area.join(",")}`, () => scalesPath(area));
+}
+
+/** @param {number[]} area */
+function scalesPath(area) {
   const [cx, cy, rx, ry] = area;
   const arcs = [];
   let row = 0;
@@ -96,26 +101,58 @@ function overBody(style, shading, f) {
  * @param {number} [time]  animation clock, for the twinkling of the dots
  */
 export function drawFish(style, shading, f, tailWag, finWag, stress = 0, time = 0) {
-  const outline = style === "cartoon";
-  const rays = style === "cartoon" ? [] : f.tail.rays;
-  const rayOpacity = style === "realistic" ? 0.32 : 0.16;
+  const part = fishParts(style, shading, f);
   return svg`
-    ${f.fins.map((s) => shapeEl(s, outline))}
+    ${part.fins}
     <g transform="translate(${f.tail.at[0]}, ${f.tail.at[1]}) rotate(${tailWag * f.tail.mul})">
-      ${f.tail.shapes.map((s) => shapeEl(s, outline))}
-      ${rays.map(([x, y]) => shapeEl(sh(`M0,0 L${x},${y}`, undefined, { stroke: "#0f172a", sw: 0.9, op: rayOpacity })))}
+      ${part.tail}
     </g>
-    ${shapeEl(f.body, outline)}
-    ${f.marks.map((s) => shapeEl(s, outline))}
-    ${overBody(style, shading, f)}
-    ${f.over.map((s) => shapeEl(s, outline))}
+    ${part.body}
     ${renderStressDots(stress, f.area, time)}
-    ${f.pec
-      ? svg`<g transform="translate(${f.pec.at[0]}, ${f.pec.at[1]}) rotate(${finWag})">${f.pec.shapes.map((s) => shapeEl(s, outline))}</g>`
-      : ""}
-    ${eye(style, f.eye)}
+    ${f.pec ? svg`<g transform="translate(${f.pec.at[0]}, ${f.pec.at[1]}) rotate(${finWag})">${part.pec}</g>` : ""}
+    ${part.eye}
   `;
 }
+
+/**
+ * What of a fish does not move from one frame to the next: its fins, its tail
+ * and pectoral fin (only the angle at which they are turned changes), its body
+ * and its eye. Drawn once per kind of fish and look, and kept.
+ * @param {CreatureStyle} style
+ * @param {boolean} shading
+ * @param {FishSpec} f
+ */
+function fishParts(style, shading, f) {
+  let byLook = FISH_PARTS.get(f);
+  if (!byLook) FISH_PARTS.set(f, (byLook = new Map()));
+  const look = `${style}|${shading}`;
+  let parts = byLook.get(look);
+  if (!parts) {
+    const outline = style === "cartoon";
+    const rays = style === "cartoon" ? [] : f.tail.rays;
+    const rayOpacity = style === "realistic" ? 0.32 : 0.16;
+    parts = {
+      fins: svg`${f.fins.map((s) => shapeEl(s, outline))}`,
+      tail: svg`
+        ${f.tail.shapes.map((s) => shapeEl(s, outline))}
+        ${rays.map(([x, y]) => shapeEl(sh(`M0,0 L${x},${y}`, undefined, { stroke: "#0f172a", sw: 0.9, op: rayOpacity })))}
+      `,
+      body: svg`
+        ${shapeEl(f.body, outline)}
+        ${f.marks.map((s) => shapeEl(s, outline))}
+        ${overBody(style, shading, f)}
+        ${f.over.map((s) => shapeEl(s, outline))}
+      `,
+      pec: f.pec ? svg`${f.pec.shapes.map((s) => shapeEl(s, outline))}` : svg``,
+      eye: eye(style, f.eye),
+    };
+    byLook.set(look, parts);
+  }
+  return parts;
+}
+
+/** The fixed parts of the fish already drawn, by description of the fish and by look. @type {WeakMap<FishSpec, Map<string, Record<"fins" | "tail" | "body" | "pec" | "eye", import("lit").SVGTemplateResult>>>} */
+const FISH_PARTS = new WeakMap();
 
 /**
  * One fish (or its skeleton once dead), chosen by biotope and species.

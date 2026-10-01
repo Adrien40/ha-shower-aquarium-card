@@ -1,6 +1,6 @@
 import { svg } from "lit";
 import { ifDefined } from "lit/directives/if-defined.js";
-import { skinned, shapeEl, sh, C, OUTLINE, wilt } from "./skin.js";
+import { skinned, shapeEl, sh, C, OUTLINE, wilt, memo } from "./skin.js";
 
 /**
  * Aquatic plants of the freshwater tank.
@@ -11,6 +11,18 @@ import { skinned, shapeEl, sh, C, OUTLINE, wilt } from "./skin.js";
  * @param {number} [deathProgress]  the plants shrink and fall over as the tank dies
  */
 export function freshwaterDecor(bottomY, lifeStyle, style, shading, deathProgress = 0) {
+  // The plants only change when the tank dies (see wilt()): the same drawing is given again.
+  return memo(`freshwater|${bottomY}|${lifeStyle}|${style}|${shading}|${deathProgress > 0 ? deathProgress.toFixed(3) : 0}`, () => plants(bottomY, lifeStyle, style, shading, deathProgress));
+}
+
+/**
+ * @param {number} bottomY
+ * @param {string} lifeStyle
+ * @param {import("./skin.js").CreatureStyle} style
+ * @param {boolean} shading
+ * @param {number} deathProgress
+ */
+function plants(bottomY, lifeStyle, style, shading, deathProgress) {
   const b = bottomY;
   /**
    * @param {string} d

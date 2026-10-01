@@ -280,8 +280,11 @@ Si le capteur de volume passe en `unavailable` ou `unknown` (ou disparaît), la 
 | Mouvement de la surface et de l'anémone | à chaque image | à chaque image | rafraîchi environ 8 fois par seconde |
 | Lissage des bords (anti-crénelage) | oui | oui | non (plus rapide à dessiner) |
 | Ombrage doux (style `realistic`) | oui | oui | non (les écailles et le reflet restent) |
+| Tentacules de l'anémone | 27 | 27 | 17 |
 
 Poissons, nourriture, jauges et coût sont identiques dans tous les modes.
+
+Quel que soit le mode, ce qui ne bouge pas d'une image à l'autre (la forme des poissons, les rochers, les plantes, les parties fixes des animaux) est dessiné une seule fois et gardé, et la surface de l'eau et l'anémone ne sont pas recalculées entre deux rafraîchissements : sur un écran peu puissant comme le Google Nest Hub 2, la carte fait environ moitié moins de travail qu'avant. Pour voir ce que fait ton propre écran, active `show_fps` (section Affichage) : il affiche chaque seconde les images livrées par le navigateur et les images dessinées.
 
 ---
 

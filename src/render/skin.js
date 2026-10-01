@@ -94,3 +94,36 @@ export function wilt(px, py, tilt, shrink, death) {
   const d = Math.min(1, death);
   return `translate(${px} ${py}) rotate(${(tilt * d).toFixed(1)}) scale(1 ${(1 - shrink * d).toFixed(3)}) translate(${-px} ${-py})`;
 }
+
+// Things that do not change from one frame to the next (the rocks, the plants,
+// the shape of a fish) are built once and kept: the card draws 20 to 60 times a
+// second, and building them again each time is wasted work on a weak display.
+const MEMO_LIMIT = 600;
+/** @type {Map<string, unknown>} */
+const memoStore = new Map();
+
+/**
+ * The value `build()` makes for `key`, made once and kept (the oldest entries go
+ * when there are too many, e.g. after many resizes of a fullscreen card). The key
+ * must say everything the value depends on.
+ *
+ * @template T
+ * @param {string} key
+ * @param {() => T} build
+ * @returns {T}
+ */
+export function memo(key, build) {
+  if (memoStore.has(key)) return /** @type {T} */ (memoStore.get(key));
+  const value = build();
+  memoStore.set(key, value);
+  // Building one thing may keep others (a group of rocks keeps each rock): the limit is checked afterwards.
+  while (memoStore.size > MEMO_LIMIT) memoStore.delete(/** @type {string} */ (memoStore.keys().next().value));
+  return value;
+}
+
+/** How many things are kept (for the tests). */
+export const memoSize = () => memoStore.size;
+/** Empties the memory (for the tests). */
+export const memoClear = () => memoStore.clear();
+/** The most things kept. */
+export const MEMO_MAX = MEMO_LIMIT;

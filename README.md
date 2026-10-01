@@ -280,8 +280,11 @@ If the volume sensor becomes `unavailable` or `unknown` (or disappears), the car
 | Water surface and anemone motion | every frame | every frame | refreshed ~8 times per second |
 | Edge anti-aliasing | yes | yes | no (faster to draw) |
 | Soft shading (`realistic` look) | yes | yes | no (scales and shine stay) |
+| Tentacles of the anemone | 27 | 27 | 17 |
 
 Fish, food, gauges and cost are identical in every mode.
+
+Whatever the mode, what does not move from one frame to the next (the shape of the fish, the rocks, the plants, the fixed parts of the animals) is drawn once and kept, and the surface of the water and the anemone are not worked out again between two refreshes: on a weak display such as the Google Nest Hub 2, the card does about half the work it used to. To see what your own screen manages, turn on `show_fps` (Display section): it prints the frames the browser delivered and the frames drawn each second.
 
 ---
 

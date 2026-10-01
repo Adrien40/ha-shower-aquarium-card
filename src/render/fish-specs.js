@@ -1,4 +1,4 @@
-import { E, C, P, L, sh } from "./skin.js";
+import { E, C, P, L, sh, memo } from "./skin.js";
 
 // Where every fish is described, once, as shapes: the three looks (see skin.js)
 // are drawn from these. The fish faces right, its head at +x, its tail at -x,
@@ -275,5 +275,6 @@ export function fishSpec(themeKey, fish) {
   const species = themeKey === "saltwater" ? SALTWATER : themeKey === "coldwater" ? COLDWATER : FRESHWATER;
   // A fish without a usable species number is drawn as the first species.
   const number = Math.abs(Math.trunc(Number(fish.species))) || 0;
-  return species[number % species.length](color);
+  // The same fish is asked for every frame: the description is made once (it is never changed afterwards).
+  return memo(`fish|${themeKey === "saltwater" || themeKey === "coldwater" ? themeKey : "freshwater"}|${number % species.length}|${color}`, () => species[number % species.length](color));
 }

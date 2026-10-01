@@ -3,6 +3,16 @@
 Toutes les modifications notables du projet sont documentées dans ce fichier.
 Le format suit [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/).
 
+## [0.8.86] — 2026-10-01
+
+### Modifié
+- Plus léger sur les écrans peu puissants comme le Google Nest Hub 2. Ce qui ne bouge pas d'une image à l'autre est maintenant construit une seule fois et gardé, au lieu d'être recalculé 20 à 60 fois par seconde : la forme de chaque poisson (et ses nageoires, sa queue, son corps et son œil, dont seuls les angles changent), les rochers du récif, les coraux, les plantes, les galets, le corps de l'anémone, et les parties fixes de l'ancistrus (seule sa bouche qui respire bouge), de la crevette (seulement ses pattes et ses pléopodes) et du crabe (seulement ses pattes et ses pinces qui tournent). Les tentacules de l'anémone et la surface de l'eau ne sont pas recalculés entre deux tops de l'horloge d'ambiance, que le profil léger ramène à 8 par seconde environ. Mesuré en construisant une image du dessin, sur la même machine : le récif prend 1,4 ms au lieu de 2,1 ms en profil léger et 1,1 ms au lieu de 2,1 ms en profil complet, l'eau douce 0,4 ms au lieu de 0,9 ms, l'eau froide 0,3 ms au lieu de 0,6 ms. Les images sont exactement les mêmes (les tests visuels n'ont pas changé pour cela).
+- Le profil léger dessine 17 tentacules à l'anémone au lieu de 27, soit 30 formes de moins à déplacer et à peindre (`tentacles` dans les profils d'animation).
+- Avec le Nest Hub 2 en tête, `show_fps` est le moyen de voir ce que fait un écran : il affiche chaque seconde les images livrées par le navigateur et les images dessinées (README, Qualité d'animation).
+
+### Documentation
+- La galerie montre aussi le récif en profil léger.
+
 ## [0.8.85] — 2026-10-01
 
 ### Modifié
