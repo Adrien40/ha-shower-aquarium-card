@@ -10,6 +10,7 @@
 // connectedCallback's real requestAnimationFrame loop never engages.
 import { describe, it, expect, vi, afterEach } from "vitest";
 import "./shower-aquarium-card.js";
+import { REEF_PILE } from "./reef-layout.js";
 
 function makeCard(config = {}) {
   const Card = customElements.get("shower-aquarium-card");
@@ -265,13 +266,14 @@ describe("_updatePhysics(): shrimp and crab (idle/moving state machines)", () =>
     expect(el._shrimp.x).toBe(840);
   });
 
-  it("crab: transitions to moving after idleUntil, picks a targetX on the flat rock of its pile (872-932)", () => {
+  it("crab: transitions to moving after idleUntil, picks a targetX on the flat rock of its pile (REEF_PILE.ledgeFrom to ledgeTo)", () => {
     const el = makeCard();
     el._crab = { x: 900, y: 418, targetX: 900, state: "idle", idleUntil: 1000, dir: 1 };
+    vi.spyOn(Math, "random").mockReturnValue(0.999);
     el._updatePhysics(1500);
     expect(el._crab.state).toBe("moving");
-    expect(el._crab.targetX).toBeGreaterThanOrEqual(872);
-    expect(el._crab.targetX).toBeLessThanOrEqual(932);
+    expect(el._crab.targetX).toBeGreaterThanOrEqual(REEF_PILE.ledgeFrom);
+    expect(el._crab.targetX).toBeLessThanOrEqual(REEF_PILE.ledgeTo);
   });
 
   it("crab: while already moving, steps toward targetX each frame", () => {
