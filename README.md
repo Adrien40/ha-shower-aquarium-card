@@ -54,6 +54,10 @@ If this project is useful to you, please consider supporting its development �
   <em>🔍 Full customization of thresholds, biotopes, and visual effects</em>
 </p>
 
+### 🖼️ Gallery
+
+Every biotope, every look, every state of the tank, fullscreen gauges and screen shapes: see the **[screenshot gallery](docs/SCREENSHOTS.md)**.
+
 ---
 
 A **custom Lovelace card for Home Assistant** that turns tracking your shower water volume (Hydrao showerhead, pulse counter, smart water meter) into a lively and interactive aquarium. 🛡️

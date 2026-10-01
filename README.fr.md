@@ -54,6 +54,10 @@ Si ce projet vous est utile, vous pouvez soutenir son développement 🙏
   <em>🔍 Personnalisation complète des seuils, des biotopes et des effets visuels</em>
 </p>
 
+### 🖼️ Galerie
+
+Chaque biotope, chaque style, chaque état de l'aquarium, les jauges du plein écran et les formes d'écran : voir la **[galerie de captures](docs/SCREENSHOTS.fr.md)**.
+
 ---
 
 Une **carte personnalisée Lovelace pour Home Assistant** qui transforme le suivi du volume de votre douche (pommeau Hydrao, capteur d'impulsion, compteur d'eau connecté) en un aquarium vivant et interactif. 🛡️

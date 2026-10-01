@@ -93,7 +93,8 @@ describe("the visual test itself is trustworthy", () => {
     expect(comparePng(fresh, salt).ratio).toBeGreaterThan(MAX_DIFF_RATIO * 10);
     expect(comparePng(fresh, cold).ratio).toBeGreaterThan(MAX_DIFF_RATIO * 10);
     expect(comparePng(salt, cold).ratio).toBeGreaterThan(MAX_DIFF_RATIO * 10);
-  });
+    // Three full renderings: slow when the whole suite runs at once (coverage), hence the longer limit.
+  }, 30_000);
 
   it("a dead tank does not look like a living one", async () => {
     const alive = await render(SCENARIOS["freshwater-calm"]);
