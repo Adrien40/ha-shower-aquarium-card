@@ -168,7 +168,7 @@ La carte n'est pas limitée aux douches : elle peut afficher toute consommation 
 | `target_budget` | Nombre | `50` | Volume cible de la douche en litres. |
 | `target_budget_entity` | Entité | `-` | Entité dynamique pour définir le budget max. Avec Hydrao Custom, le capteur **Seuil 4** (le quatrième seuil coloré). |
 | `threshold_1_entity`, `threshold_2_entity`, `threshold_3_entity` | Entité | `-` | Les capteurs **Seuil 1 à 3** de Hydrao Custom : litres (état) et couleur (attribut `color_hex`). Avec l'entité d'objectif, ils donnent les quatre seuils colorés du pommeau. |
-| `use_threshold_colors` | Booléen | `true` | La jauge de volume (barre, arc et tuile *Consommé*) prend la couleur du seuil atteint : chaque couleur reste active tant que son seuil n'est pas dépassé, et après le seuil 4 la couleur du seuil 4 clignote (pas avec le mouvement réduit). Demande les quatre seuils ci-dessus ; sans eux, ou à `false`, les couleurs habituelles sont utilisées. |
+| `use_threshold_colors` | Booléen | `true` | La jauge de volume (barre, arc et tuile *Consommé*) prend la couleur du seuil atteint (la tuile reste neutre tant qu'elle affiche 0,0 L) : chaque couleur reste active tant que son seuil n'est pas dépassé, et après le seuil 4 la couleur du seuil 4 clignote (pas avec le mouvement réduit). Demande les quatre seuils ci-dessus ; sans eux, ou à `false`, les couleurs habituelles sont utilisées. |
 | `survival_volume` | Nombre | `5` | Volume d'eau de réserve avant disparition totale de l'eau. |
 | `temp_boiling_threshold` | Nombre | `40` | Seuil d'apparition des bulles d'eau très chaude (°C). |
 | `temp_deadly_threshold` | Nombre | `45` | Seuil critique de température (°C). |

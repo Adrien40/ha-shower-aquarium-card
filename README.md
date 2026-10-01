@@ -168,7 +168,7 @@ The card is not limited to showers: it can show any consumption you want to keep
 | `target_budget` | Number | `50` | Shower target budget in liters. |
 | `target_budget_entity` | Entity | `-` | Dynamic entity defining the target water budget. With Hydrao Custom, the **Threshold 4** sensor (the fourth coloured threshold). |
 | `threshold_1_entity`, `threshold_2_entity`, `threshold_3_entity` | Entity | `-` | The **Threshold 1 to 3** sensors of Hydrao Custom: litres (state) and colour (`color_hex` attribute). With the target entity, they give the four coloured thresholds of the showerhead. |
-| `use_threshold_colors` | Boolean | `true` | The volume gauge (bar, arc and *Consumed* tile) takes the colour of the threshold reached: each colour stays active until its threshold is passed, and after threshold 4 the colour of threshold 4 blinks (not with reduced motion). Needs the four thresholds above; without them, or set to `false`, the usual colours are used. |
+| `use_threshold_colors` | Boolean | `true` | The volume gauge (bar, arc and *Consumed* tile) takes the colour of the threshold reached (the tile stays plain while it reads 0.0 L): each colour stays active until its threshold is passed, and after threshold 4 the colour of threshold 4 blinks (not with reduced motion). Needs the four thresholds above; without them, or set to `false`, the usual colours are used. |
 | `survival_volume` | Number | `5` | Reserve water volume before the tank runs completely dry. |
 | `temp_boiling_threshold` | Number | `40` | Threshold (°C) for hot water boiling bubble effects. |
 | `temp_deadly_threshold` | Number | `45` | Critical temperature threshold (°C). |

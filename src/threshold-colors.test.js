@@ -263,6 +263,22 @@ describe("in the card", () => {
     expect(over.shadowRoot.querySelectorAll(".metric-value")[1].getAttribute("style")).toBeFalsy();
   });
 
+  it("the Consumed tile has no threshold colour while it reads 0.0 L, and takes it as soon as it reads more", async () => {
+    const tile = async (volume) => (await mount({ fullscreen: false }, volume)).shadowRoot.querySelector(".metric-value");
+    for (const volume of [0, 0.01, 0.049]) {
+      const t = await tile(volume);
+      expect(t.textContent.trim().startsWith("0.0"), `${volume}`).toBe(true);
+      expect(t.getAttribute("style"), `${volume}`).toBeFalsy();
+      expect(t.className).not.toContain("threshold-blink");
+    }
+    for (const volume of [0.05, 0.1, 1]) expect((await tile(volume)).getAttribute("style"), `${volume}`).toContain(COLORS[0]);
+  });
+
+  it("the volume gauge still has the colour of the first threshold at 0 L (it is hidden then, but shown in the editor preview)", async () => {
+    const el = await mount({}, 0, {}, { preview: true });
+    expect(barOf(el).getAttribute("fill")).toBe(COLORS[0]);
+  });
+
   it("the gauge outside fullscreen mode follows too", async () => {
     const el = await mount({ fullscreen: false, show_gauges: true }, 15);
     expect(barOf(el).getAttribute("fill")).toBe(COLORS[1]);

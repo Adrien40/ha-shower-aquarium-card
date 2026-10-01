@@ -3,6 +3,9 @@ import { formatBudget, formatEuro, formatNumber } from "../pure.js";
 
 /** @typedef {import("../types.js").MetricsView} MetricsView */
 
+/** Below this many litres the tile reads 0.0, whatever the number of decimals. */
+const NOTHING_CONSUMED = 0.05;
+
 /**
  * The tiles under the picture in the normal mode: consumed, remaining, target,
  * and (when there is one) the temperature and the estimated cost.
@@ -10,7 +13,9 @@ import { formatBudget, formatEuro, formatNumber } from "../pure.js";
  * @param {MetricsView} view
  */
 export function renderMetricsGrid(view) {
-  const { currentVolume, displayedRemaining, targetBudget, currentTemp, tempTileColor, volumeTier, animate, cost, lang, t } = view;
+  const { currentVolume, displayedRemaining, targetBudget, currentTemp, tempTileColor, animate, cost, lang, t } = view;
+  // Nothing consumed (the tile reads 0.0): no colour yet, the first threshold is not "reached".
+  const volumeTier = currentVolume < NOTHING_CONSUMED ? null : view.volumeTier;
   return html`
     <div class="metrics-grid">
       <div class="metric-box">

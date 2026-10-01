@@ -3,6 +3,11 @@
 Toutes les modifications notables du projet sont documentées dans ce fichier.
 Le format suit [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/).
 
+## [0.9.0] — 2026-10-01
+
+### Modifié
+- La tuile *Consommé* ne prend plus la couleur d'un seuil tant qu'elle affiche 0,0 L (moins de 0,05 L) : rien n'a été consommé, donc aucun seuil n'est atteint. Elle prend la couleur du premier seuil dès qu'elle affiche davantage. Les jauges ne sont pas concernées : elles sont masquées à 0 L, sauf dans l'aperçu de l'éditeur, où elles gardent la couleur du premier seuil.
+
 ## [0.8.88] — 2026-10-01
 
 ### Modifié

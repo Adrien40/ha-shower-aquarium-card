@@ -3,6 +3,11 @@
 All notable changes to this project are documented in this file.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.9.0] — 2026-10-01
+
+### Changed
+- The *Consumed* tile no longer takes the colour of a threshold while it reads 0.0 L (under 0.05 L): nothing has been consumed, so no threshold is reached yet. It takes the colour of the first threshold as soon as it reads more. The gauges are not concerned: they are hidden at 0 L, except in the preview of the editor, where they keep the colour of the first threshold.
+
 ## [0.8.88] — 2026-10-01
 
 ### Changed
