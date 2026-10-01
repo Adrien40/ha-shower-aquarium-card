@@ -32,6 +32,8 @@ import {
   stepSnail,
   stepAncistrus,
   stepCrawler,
+  startleAncistrus,
+  startleCrawler,
   SHRIMP_SPEC,
   CRAB_SPEC,
   GOBY_SPEC,
@@ -58,6 +60,7 @@ import {
   metricsSignature,
   normalizeConfig,
   fillTemplate,
+  detectHydraoEntities,
   formatNumber,
   isMotionAllowed,
   CANVAS_WIDTH,
@@ -84,6 +87,8 @@ export class AquariumShowerCard extends LitElement {
       // change of the whole installation. The hass setter requests a redraw
       // itself, and only when a displayed value changed.
       _hass: { type: Object, hasChanged: () => false },
+      // Set by Home Assistant while the card is shown in the editor's preview.
+      preview: { type: Boolean },
       _config: { type: Object },
       _fishes: { type: Array },
       _snails: { type: Array },
@@ -111,20 +116,25 @@ export class AquariumShowerCard extends LitElement {
    * @returns {Record<string, unknown>}
    */
   static getStubConfig(hass, entities) {
+    const hydrao = detectHydraoEntities(/** @type {any} */ (hass), entities);
     const defaultEntity =
+      hydrao.entity ||
       entities.find((e) => e.includes("shower") || e.includes("hydrao")) ||
       entities[0] ||
       "";
     const tempEntity =
+      hydrao.temperature_entity ||
       entities.find(
         (e) =>
           e.includes("temperature") &&
           (e.includes("shower") || e.includes("hydrao"))
-      ) || "";
+      ) ||
+      "";
     const d = CONFIG_DEFAULTS;
     return {
       entity: defaultEntity,
       temperature_entity: tempEntity,
+      ...(hydrao.comfort_temp_entity ? { comfort_temp_entity: hydrao.comfort_temp_entity } : {}),
       title: d.title,
       theme: d.theme,
       aspect_ratio_width: d.aspect_ratio_width,
@@ -145,6 +155,7 @@ export class AquariumShowerCard extends LitElement {
   constructor() {
     super();
     this._animationFrameId = null;
+    this.preview = false;
     this._deathProgress = 0;
     this._flow = createFlowTracker();
     this._flowIntensity = 0;
@@ -715,6 +726,22 @@ export class AquariumShowerCard extends LitElement {
     return { x: p.x, y: p.y };
   }
 
+  // True while the card is shown in the preview of Home Assistant's card editor.
+  // Home Assistant sets `preview`; the ancestors are checked too, in case a
+  // version of Home Assistant does not pass it down.
+  _isEditorPreview() {
+    if (this.preview) return true;
+    /** @type {Node | null} */
+    let node = this;
+    while (node) {
+      const el = /** @type {Element} */ (node);
+      const tag = el.tagName ? el.tagName.toLowerCase() : "";
+      if (tag === "hui-card-preview" || tag === "hui-dialog-edit-card" || tag === "hui-dialog-suggest-card") return true;
+      node = el.parentNode || /** @type {ShadowRoot} */ (node).host || null;
+    }
+    return false;
+  }
+
   // The state of the tank right now, from the cached sensor values.
   /**
    * @returns {TankState | null}
@@ -756,13 +783,16 @@ export class AquariumShowerCard extends LitElement {
     this._food = [...this._food, ...createFlakes(column, waterSurfaceY + 2)].slice(-30);
   }
 
-  // A knock on the glass at (x, y): a ripple, and the nearby fish dart away.
+  // A knock on the glass at (x, y): a ripple, and the nearby fish dart away. The
+  // Ancistrus, the shrimp, the crab and the goby run off too, much faster than
+  // they usually move.
   /**
    * @param {number} x
    * @param {number} y
    */
   _knockAt(x, y) {
-    this._ripples = [...this._ripples, { x, y, born: Date.now() }];
+    const now = Date.now();
+    this._ripples = [...this._ripples, { x, y, born: now }];
     (this._fishes || []).forEach((fish) => {
       const kick = computeScareKick(fish.x, fish.y, x, y);
       if (!kick) return;
@@ -771,6 +801,12 @@ export class AquariumShowerCard extends LitElement {
       fish.scare = kick.scare;
       if (Math.abs(kick.kx) > 0.5) fish.dir = kick.kx < 0 ? -1 : 1;
     });
+    const tank = this._tankState();
+    if (!tank) return;
+    if (this._ancistrus) startleAncistrus(this._ancistrus, x, y, now, tank, randomSource);
+    if (this._shrimp) startleCrawler(this._shrimp, x, y, now, SHRIMP_SPEC);
+    if (this._crab) startleCrawler(this._crab, x, y, now, CRAB_SPEC);
+    if (this._goby) startleCrawler(this._goby, x, y, now, GOBY_SPEC);
   }
 
   // Tap near the surface drops food; tap in the water knocks on the glass.
@@ -951,7 +987,10 @@ export class AquariumShowerCard extends LitElement {
             waterSurfaceY,
             tankBottom,
             effectiveAlgaeHours,
-            showReadings: currentVolume > 0,
+            // The gauges hide while nothing flows, except when the card is being
+            // set up: the editor's preview shows them so they can be judged.
+            showReadings: currentVolume > 0 || this._isEditorPreview(),
+            forceTemp: currentVolume <= 0 && this._isEditorPreview(),
             displayedTemp: currentTemp > 0 ? currentTemp : this._lastTemperature,
             currentVolume,
             targetBudget,

@@ -98,7 +98,7 @@ describe("card-editor.js CARD_EDITOR_SCHEMA", () => {
     }
   });
 
-  it("OPTION_LABEL_KEYS covers exactly the options of the theme, animation_quality, creature_style, bottom_design and gauge_style selects", () => {
+  it("OPTION_LABEL_KEYS covers exactly the options of the theme, animation_quality, creature_style and gauge_style selects", () => {
     for (const [fieldName, keys] of Object.entries(OPTION_LABEL_KEYS)) {
       const field = editorFields().find((f) => f.name === fieldName);
       expect(field, fieldName).toBeDefined();
@@ -429,12 +429,12 @@ describe("card-editor.js sections", () => {
     "fish_count", "fish_speed_multiplier", "algae_enabled", "algae_delay_hours", "algae_age",
     "survival_volume", "comfort_temp_entity", "comfort_temp_min", "temp_boiling_threshold", "temp_deadly_threshold",
     "show_cost", "water_price_per_m3", "energy_price_per_kwh", "cold_water_temp",
-    "animation_quality", "creature_style", "bottom_design", "gauge_style", "show_budget", "respect_reduced_motion", "fullscreen", "show_fps", "aspect_ratio_width", "aspect_ratio_height",
+    "animation_quality", "creature_style", "show_budget", "respect_reduced_motion", "fullscreen", "gauge_style", "show_fps", "aspect_ratio_width", "aspect_ratio_height",
   ];
 
-  it("the form holds exactly the 30 options of the card, each once", () => {
+  it("the form holds exactly the 29 options of the card, each once", () => {
     expect(editorFields().map((f) => f.name).sort()).toEqual([...ALL_OPTIONS].sort());
-    expect(ALL_OPTIONS).toHaveLength(30);
+    expect(ALL_OPTIONS).toHaveLength(29);
   });
 
   it("keeps the essentials always visible and first: entity, temperature, title, theme, target", () => {

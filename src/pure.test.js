@@ -853,7 +853,7 @@ import { LEGACY_CONFIG_KEYS, stripLegacyConfigKeys } from "./pure.js";
 
 describe("stripLegacyConfigKeys", () => {
   it("lists the options that were removed: the night mode and the separate fullscreen cost switch", () => {
-    expect(LEGACY_CONFIG_KEYS).toEqual(["night_entity", "night_lux_threshold", "cost_in_fullscreen"]);
+    expect(LEGACY_CONFIG_KEYS).toEqual(["night_entity", "night_lux_threshold", "cost_in_fullscreen", "bottom_design"]);
   });
 
   it("removes legacy keys and keeps everything else", () => {

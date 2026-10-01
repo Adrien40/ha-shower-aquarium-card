@@ -18,7 +18,7 @@
   "field_temp_deadly": "Deadly temperature threshold (°C)",
   "field_algae_enabled": "Enable dirty algae accumulation",
   "field_algae_delay": "Algae accumulation delay (hours)",
-  "field_algae_age": "Algae age",
+  "field_algae_age": "Current algae age (right now)",
   "field_fish_speed": "Fish speed",
   "field_fullscreen": "Fullscreen mode",
   "helper_fullscreen": "Tablet, Nest Hub...",
@@ -35,10 +35,10 @@
   "quality_balanced": "Balanced",
   "quality_light": "Light (Google Nest Hub)",
   "helper_animation_quality": "Light: 20 frames/s and simpler effects, for low-power screens",
-  "field_respect_reduced_motion": "Respect reduced-motion setting",
+  "field_respect_reduced_motion": "Follow the device's reduced-motion setting",
   "field_show_fps": "Show FPS (debug)",
   "helper_show_fps": "Debug overlay: once per second, shows how many frames were drawn.",
-  "helper_respect_reduced_motion": "Freezes the animation when the device asks for reduced motion (accessibility). Turn off to always animate.",
+  "helper_respect_reduced_motion": "On: if your tablet, phone or computer has the \"reduce motion\" accessibility setting, the aquarium stays still. Off: the aquarium always animates. If you see no movement, turn this off.",
   "aria_summary": "Shower aquarium: {consumed} L used out of {target} L.",
   "aria_summary_temperature": "Shower aquarium: {consumed} L used out of {target} L, water at {temperature} °C.",
   "aria_dead": "The tank is empty or too hot: the animals have died.",
@@ -67,8 +67,5 @@
   "option_creature_flat": "Flat and detailed",
   "option_creature_cartoon": "Cartoon",
   "option_creature_realistic": "Realistic",
-  "helper_creature_style": "Realistic uses soft shading, which the light animation quality leaves out",
-  "field_bottom_design": "Drawing of the Ancistrus, the shrimp and the crab",
-  "option_bottom_redrawn": "Redrawn",
-  "option_bottom_classic": "Classic (the previous drawing)"
+  "helper_creature_style": "Realistic uses soft shading, which the light animation quality leaves out"
 }

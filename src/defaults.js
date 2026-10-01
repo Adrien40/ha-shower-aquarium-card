@@ -23,7 +23,6 @@ export const CONFIG_DEFAULTS = Object.freeze({
   cold_water_temp: 15,
   animation_quality: "max",
   creature_style: "flat",
-  bottom_design: "redrawn",
   respect_reduced_motion: true,
   show_fps: false,
   gauge_style: "thermometer",

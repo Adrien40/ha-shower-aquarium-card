@@ -26,16 +26,6 @@ export function creatureStyle(ctx) {
 }
 
 /**
- * Which drawing of the Ancistrus, the shrimp and the crab to use: the redrawn
- * one, or the classic one (the drawing they had before).
- * @param {import("../types.js").RenderHost} ctx the card element
- * @returns {"redrawn" | "classic"}
- */
-export function bottomDesign(ctx) {
-  return /** @type {"redrawn" | "classic"} */ (ctx._config?.bottom_design || "redrawn");
-}
-
-/**
  * Whether soft shading may be drawn: it costs a gradient fill per shape, so the
  * light animation profile (weak screens) leaves it out.
  * @param {import("../types.js").RenderHost} ctx the card element

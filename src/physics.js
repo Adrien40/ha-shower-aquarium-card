@@ -35,6 +35,8 @@ import { REEF_PILE } from "./reef-layout.js";
  * @typedef {object} CrawlerSpec
  * @property {number} minX
  * @property {number} maxX
+ * @property {number} [fleeMinX]  how far left it runs when startled, when that is beyond its lane
+ * @property {number} [fleeMaxX]  how far right it runs when startled, when that is beyond its lane
  * @property {number} floorOffset  distance between its feet and the tank bottom
  * @property {number} speed
  * @property {[number, number]} firstIdle
@@ -434,6 +436,63 @@ export function stepSnail(snail, frame) {
   }
 }
 
+/** How long (ms) the bottom dwellers keep running after a knock on the glass, and how much faster they go. */
+export const FLEE = { durationMs: 1800, radius: 520, ancistrusFactor: 7, crawlerFactor: 6, ancistrusTurn: 6 };
+
+/**
+ * A knock on the glass at (tx, ty) startles the Ancistrus: it turns away from
+ * the knock and darts off, much faster than its usual glide, for a moment.
+ *
+ * @param {Ancistrus} anc
+ * @param {number} tx
+ * @param {number} ty
+ * @param {number} nowMs
+ * @param {{ tankTop: number, tankBottom: number, waterSurfaceY: number }} tank
+ * @param {RandomSource} [rand]
+ * @returns {boolean} whether it was startled
+ */
+export function startleAncistrus(anc, tx, ty, nowMs, tank, rand = Math.random) {
+  const dx = anc.x - tx;
+  const dy = anc.y - ty;
+  const dist = Math.hypot(dx, dy);
+  if (dist > FLEE.radius) return false;
+  // Straight away from the knock; a random direction when it is right on it.
+  const angle = dist < 1 ? rand() * 2 * Math.PI : Math.atan2(dx, -dy);
+  const trip = 300 + 200 * (1 - dist / FLEE.radius);
+  anc.targetX = Math.min(934, Math.max(90, anc.x + Math.sin(angle) * trip));
+  anc.targetY = Math.min(tank.tankBottom - 110, Math.max(Math.max(tank.tankTop + 65, tank.waterSurfaceY + 70), anc.y - Math.cos(angle) * trip));
+  anc.state = "moving";
+  anc.fleeUntil = nowMs + FLEE.durationMs;
+  return true;
+}
+
+/**
+ * A knock on the glass startles a creature that walks on the sand (shrimp,
+ * crab, goby): it runs away from the knock, along its lane, much faster than
+ * usual. The goby, whose lane is a single point (its burrow), darts a short
+ * way out and comes back on its own afterwards.
+ *
+ * @param {Crawler} creature
+ * @param {number} tx
+ * @param {number} ty
+ * @param {number} nowMs
+ * @param {CrawlerSpec} spec
+ * @returns {boolean} whether it was startled
+ */
+export function startleCrawler(creature, tx, ty, nowMs, spec) {
+  if (Math.hypot(creature.x - tx, creature.y - ty) > FLEE.radius) return false;
+  const minX = spec.fleeMinX ?? spec.minX;
+  const maxX = spec.fleeMaxX ?? spec.maxX;
+  const awayDir = creature.x === tx ? (creature.dir || 1) : Math.sign(creature.x - tx);
+  // Away from the knock; when it already stands at the end of its lane, the other way.
+  let target = awayDir > 0 ? maxX : minX;
+  if (Math.abs(target - creature.x) < 8) target = awayDir > 0 ? minX : maxX;
+  creature.targetX = target;
+  creature.state = "moving";
+  creature.fleeUntil = nowMs + FLEE.durationMs;
+  return true;
+}
+
 /** How the plecostomus moves: units per frame, degrees per frame it can turn, and how far it goes at a time. */
 export const ANCISTRUS_MOVE = { speed: 0.8, turn: 3, minTrip: 140, maxTrip: 420 };
 
@@ -451,7 +510,8 @@ const turnBetween = (from, to) => ((((to - from) % 360) + 540) % 360) - 180;
  * @param {RandomSource} [rand]
  */
 export function stepAncistrus(anc, frame, rand = Math.random) {
-  const { isDead, deathStep, tankBottom, tankTop, waterSurfaceY, delta, timestamp, userSpeed } = frame;
+  const { isDead, deathStep, tankBottom, tankTop, waterSurfaceY, delta, timestamp, userSpeed, nowMs } = frame;
+  const fleeing = (anc.fleeUntil ?? 0) > nowMs;
 
   if (isDead) {
     anc.deathProgress = Math.min(1.0, (anc.deathProgress || 0) + deathStep);
@@ -476,14 +536,14 @@ export function stepAncistrus(anc, frame, rand = Math.random) {
     const distance = Math.hypot(dx, dy);
     // The head turns towards where it is going (0 degrees is straight up).
     const wanted = (Math.atan2(dx, -dy) * 180) / Math.PI;
-    const turn = ANCISTRUS_MOVE.turn * delta;
+    const turn = (fleeing ? FLEE.ancistrusTurn : ANCISTRUS_MOVE.turn) * delta;
     anc.heading += Math.max(-turn, Math.min(turn, turnBetween(anc.heading, wanted)));
-    const step = Math.min(distance, ANCISTRUS_MOVE.speed * userSpeed * delta);
+    const step = Math.min(distance, ANCISTRUS_MOVE.speed * userSpeed * (fleeing ? FLEE.ancistrusFactor : 1) * delta);
     anc.x += (dx / (distance || 1)) * step;
     anc.y += (dy / (distance || 1)) * step;
     if (Math.hypot(anc.targetX - anc.x, anc.targetY - anc.y) < 1.5) {
       anc.state = "idle";
-      anc.idleUntil = timestamp + 1200 + rand() * 2000;
+      anc.idleUntil = timestamp + (fleeing ? 2500 : 1200) + rand() * 2000;
     }
   } else if (timestamp >= anc.idleUntil) {
     anc.state = "moving";
@@ -521,6 +581,9 @@ export const CRAB_SPEC = {
 export const GOBY_SPEC = {
   minX: 530,
   maxX: 530,
+  // Where it darts to when startled, before it goes back to its burrow.
+  fleeMinX: 450,
+  fleeMaxX: 610,
   floorOffset: 14,
   speed: 0.5,
   firstIdle: [2000, 3000],
@@ -538,7 +601,8 @@ export const GOBY_SPEC = {
  * @param {RandomSource} [rand]
  */
 export function stepCrawler(creature, frame, spec, rand = Math.random) {
-  const { isDead, deathStep, tankBottom, delta, timestamp, userSpeed } = frame;
+  const { isDead, deathStep, tankBottom, delta, timestamp, userSpeed, nowMs } = frame;
+  const fleeing = (creature.fleeUntil ?? 0) > nowMs;
 
   if (isDead) {
     creature.deathProgress = Math.min(1.0, (creature.deathProgress || 0) + deathStep);
@@ -555,7 +619,7 @@ export function stepCrawler(creature, frame, spec, rand = Math.random) {
   if (creature.state === "moving") {
     const dx = creature.targetX - creature.x;
     creature.dir = dx < 0 ? -1 : 1;
-    const step = Math.sign(dx) * Math.min(Math.abs(dx), spec.speed * userSpeed * delta);
+    const step = Math.sign(dx) * Math.min(Math.abs(dx), spec.speed * userSpeed * (fleeing ? FLEE.crawlerFactor : 1) * delta);
     creature.x += step;
     if (Math.abs(creature.targetX - creature.x) < 1.5) {
       creature.state = "idle";

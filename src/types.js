@@ -39,7 +39,6 @@
  * @property {string} gauge_style  "thermometer" or "arc"
  * @property {boolean} show_budget
  * @property {string} creature_style  "flat", "cartoon" or "realistic"
- * @property {string} bottom_design  "redrawn" or "classic": the drawing of the Ancistrus, the shrimp and the crab
  * @property {number} comfort_temp_min
  * @property {string} [comfort_temp_entity]
  */
@@ -181,6 +180,7 @@
  * @property {string} state  "idle" or "moving"
  * @property {number} idleUntil
  * @property {number} [deathProgress]
+ * @property {number} [fleeUntil]  epoch ms until which it runs away after a knock on the glass
  */
 
 /**
@@ -194,6 +194,7 @@
  * @property {number} idleUntil
  * @property {number} dir
  * @property {number} [deathProgress]
+ * @property {number} [fleeUntil]  epoch ms until which it runs away after a knock on the glass
  */
 
 /**
@@ -331,7 +332,8 @@ export {};
  * @property {number} waterSurfaceY
  * @property {number} tankBottom
  * @property {number} effectiveAlgaeHours
- * @property {boolean} showReadings  some water was consumed: the gauges and the cost are shown
+ * @property {boolean} showReadings  some water was consumed (or the editor preview is open): the gauges and the cost are shown
+ * @property {boolean} forceTemp  the thermometer is shown even without a temperature (editor preview with no water)
  * @property {number} displayedTemp  temperature of the thermometer (0: none to show)
  * @property {number} currentVolume
  * @property {number} targetBudget

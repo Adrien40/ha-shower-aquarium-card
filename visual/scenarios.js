@@ -16,8 +16,6 @@ export const SCENARIOS = {
   "coldwater-cartoon": { config: { theme: "coldwater", creature_style: "cartoon" }, volume: 12, temp: 34 },
   "coldwater-realistic": { config: { theme: "coldwater", creature_style: "realistic" }, volume: 12, temp: 34 },
   // The previous drawing of the Ancistrus, the shrimp and the crab
-  "freshwater-classic-bottom": { config: { theme: "freshwater", bottom_design: "classic" }, volume: 12, temp: 34 },
-  "saltwater-classic-bottom": { config: { theme: "saltwater", bottom_design: "classic" }, volume: 12, temp: 34 },
   // States
   "freshwater-warning": { config: { theme: "freshwater" }, volume: 40, temp: 36 },
   "saltwater-over-budget": { config: { theme: "saltwater" }, volume: 55, temp: 36 },

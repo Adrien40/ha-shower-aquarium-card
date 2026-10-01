@@ -176,7 +176,6 @@ The card is not limited to showers: it can show any consumption you want to keep
 | `cold_water_temp` | Number | `15` | Cold water inlet temperature (°C), used to estimate the heating energy. |
 | `fullscreen` | Boolean | `false` | Immersive fullscreen mode (removes borders and metric cards). The drawing takes the exact shape of your screen (portrait, 4:3, ultra-wide...): nothing is stretched. |
 | `creature_style` | Select | `flat` | Look of the fish and the other living things: `flat` (flat colours with small details), `cartoon` (outlines, big eyes, rosy cheeks) or `realistic` (soft shading, scales, translucent fins). |
-| `bottom_design` | Select | `redrawn` | Drawing of the Ancistrus, the shrimp and the crab: `redrawn` (the new drawing) or `classic` (the drawing they had before). Both follow `creature_style`. |
 | `gauge_style` | Select | `thermometer` | Fullscreen gauges: `thermometer` (glass thermometer + volume bar) or `arc` (two open arcs with a marker dot). |
 | `show_budget` | Boolean | `false` | Write the target budget on the volume gauge (for example `18.0 / 50 L`). |
 | `respect_reduced_motion` | Boolean | `true` | Freeze the animation when the device asks for reduced motion (accessibility setting). Set to `false` to always animate. |
@@ -293,7 +292,6 @@ algae_enabled: true
 algae_delay_hours: 12
 algae_age: 0
 creature_style: flat
-bottom_design: redrawn
 fullscreen: false
 ```
 

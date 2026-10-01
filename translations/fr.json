@@ -18,7 +18,7 @@
   "field_temp_deadly": "Seuil mortel de température (°C)",
   "field_algae_enabled": "Activer l'accumulation d'algues",
   "field_algae_delay": "Délai d'apparition des algues (heures)",
-  "field_algae_age": "Âge des algues",
+  "field_algae_age": "Âge actuel des algues (maintenant)",
   "field_fish_speed": "Vitesse des poissons",
   "field_fullscreen": "Mode plein écran",
   "helper_fullscreen": "Tablette, Nest Hub...",
@@ -35,10 +35,10 @@
   "quality_balanced": "Équilibrée",
   "quality_light": "Légère (Google Nest Hub)",
   "helper_animation_quality": "Légère : 20 images/s et effets simplifiés, pour les écrans peu puissants",
-  "field_respect_reduced_motion": "Respecter la réduction des animations",
+  "field_respect_reduced_motion": "Suivre le mode « mouvement réduit » de l'appareil",
   "field_show_fps": "Afficher les images par seconde (débogage)",
   "helper_show_fps": "Affichage de débogage : indique une fois par seconde le nombre d'images dessinées.",
-  "helper_respect_reduced_motion": "Fige l'animation quand l'appareil demande moins de mouvement (accessibilité). Désactivez pour toujours animer.",
+  "helper_respect_reduced_motion": "Activé : si votre tablette, téléphone ou ordinateur a le réglage « réduire les animations » (accessibilité), l'aquarium reste immobile. Désactivé : l'aquarium s'anime toujours. Si vous ne voyez aucun mouvement, désactivez cette option.",
   "aria_summary": "Aquarium de douche : {consumed} L utilisés sur {target} L.",
   "aria_summary_temperature": "Aquarium de douche : {consumed} L utilisés sur {target} L, eau à {temperature} °C.",
   "aria_dead": "Le bac est vide ou trop chaud : les animaux sont morts.",
@@ -67,8 +67,5 @@
   "option_creature_flat": "Plat et détaillé",
   "option_creature_cartoon": "Dessin animé",
   "option_creature_realistic": "Réaliste",
-  "helper_creature_style": "Le réaliste utilise des ombrages doux, que la qualité d'animation légère supprime",
-  "field_bottom_design": "Dessin de l'ancistrus, de la crevette et du crabe",
-  "option_bottom_redrawn": "Redessiné",
-  "option_bottom_classic": "Classique (l'ancien dessin)"
+  "helper_creature_style": "Le réaliste utilise des ombrages doux, que la qualité d'animation légère supprime"
 }

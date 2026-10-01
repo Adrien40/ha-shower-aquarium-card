@@ -39,6 +39,7 @@ export function renderTankSvg(host, view) {
     tankBottom,
     effectiveAlgaeHours,
     showReadings,
+    forceTemp,
     displayedTemp,
     currentVolume,
     targetBudget,
@@ -126,6 +127,7 @@ export function renderTankSvg(host, view) {
               deadlyTemp,
               boilTemp,
               showBudget,
+              forceTemp,
               lang,
             })
           : ""}

@@ -75,7 +75,7 @@ Suivre sa consommation d'eau sous forme de jauges ou de chiffres peut vite deven
 
 ### Conçue pour Hydrao Custom, ouverte à tout le reste
 
-Cette carte a été développée pour **[Hydrao Custom](https://github.com/Adrien40/ha-hydrao-custom)**, une intégration Home Assistant 100 % locale (Bluetooth) pour les appareils de douche connectés Hydrao développé par moi-même. Elle lui fournit tout ce qu'elle affiche : le volume de la douche en cours, la température de l'eau, et même la température de confort minimale et les seuils en litres du pommeau.
+Cette carte a été développée pour **[Hydrao Custom](https://github.com/Adrien40/ha-hydrao-custom)**, une intégration Home Assistant 100 % locale (Bluetooth) pour les pommeaux de douche connectés Hydrao, du même auteur. Elle lui fournit tout ce qu'elle affiche : le volume de la douche en cours, la température de l'eau, et même la température de confort minimale et les seuils en litres du pommeau.
 
 **Elle n'y est pas liée.** La carte ne lit que des entités Home Assistant : elle fonctionne donc avec toute source qui lui donne un nombre de litres.
 
@@ -176,7 +176,6 @@ La carte n'est pas limitée aux douches : elle peut afficher toute consommation 
 | `cold_water_temp` | Nombre | `15` | Température de l'eau froide (°C), pour estimer l'énergie de chauffe. |
 | `fullscreen` | Booléen | `false` | Mode plein écran immersif (sans bordures ni cartes de métriques). Le dessin prend exactement la forme de votre écran (portrait, 4:3, ultra-large...) : rien n'est étiré. |
 | `creature_style` | Sélection | `flat` | Style des poissons et des autres êtres vivants : `flat` (aplats de couleur avec de petits détails), `cartoon` (contours, gros yeux, joues roses) ou `realistic` (ombrages doux, écailles, nageoires translucides). |
-| `bottom_design` | Sélection | `redrawn` | Dessin de l'ancistrus, de la crevette et du crabe : `redrawn` (le nouveau dessin) ou `classic` (celui qu'ils avaient avant). Les deux suivent `creature_style`. |
 | `gauge_style` | Sélection | `thermometer` | Jauges du plein écran : `thermometer` (thermomètre en verre + barre de volume) ou `arc` (deux arcs ouverts avec un repère). |
 | `show_budget` | Booléen | `false` | Écrit le budget cible sur la jauge de volume (par exemple `18.0 / 50 L`). |
 | `respect_reduced_motion` | Booléen | `true` | Fige l'animation quand l'appareil demande une réduction des animations (réglage d'accessibilité). Mettre `false` pour toujours animer. |
@@ -293,7 +292,6 @@ algae_enabled: true
 algae_delay_hours: 12
 algae_age: 0
 creature_style: flat
-bottom_design: redrawn
 fullscreen: false
 ```
 

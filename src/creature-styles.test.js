@@ -5,7 +5,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { render } from "lit";
 import "./shower-aquarium-card.js";
-import { CREATURE_STYLES, OUTLINE, E, C, P, L, sh, shapeEl, skinned, creatureStyle, shadingAllowed, bottomDesign } from "./render/skin.js";
+import { CREATURE_STYLES, OUTLINE, E, C, P, L, sh, shapeEl, skinned, creatureStyle, shadingAllowed } from "./render/skin.js";
 import { symmetric } from "./render/redrawn.js";
 import { fishSpec, FISH_SPECIES_COUNT } from "./render/fish-specs.js";
 import { drawFish, renderFishShape } from "./render/fish.js";
@@ -15,7 +15,7 @@ import { REEF_PILE } from "./reef-layout.js";
 import { CRAB_SPEC } from "./physics.js";
 import { freshwaterDecor } from "./render/freshwater.js";
 import { coldwaterDecor } from "./render/coldwater.js";
-import { ANIMATION_PROFILES, CREATURE_STYLE_NAMES, BOTTOM_DESIGN_NAMES, normalizeConfig, getAnimationProfile } from "./pure.js";
+import { ANIMATION_PROFILES, CREATURE_STYLE_NAMES, normalizeConfig, getAnimationProfile } from "./pure.js";
 
 const THEMES = ["freshwater", "saltwater", "coldwater"];
 const SPECIES = { freshwater: [0, 1, 2, 3, 4, 5], saltwater: [0, 1, 2, 3, 4, 5, 6], coldwater: [0, 1, 2, 3, 4, 5] };
@@ -340,10 +340,10 @@ describe("the snails", () => {
 });
 
 describe("the Ancistrus turns to face where it goes", () => {
-  const drawn = async (config = {}) => mountCard({ bottom_design: "redrawn", ...config });
+  const drawn = async (config = {}) => mountCard({ ...config });
 
-  it.each(["redrawn", "classic"])("%s drawing: the whole animal turns with its heading", async (bottom_design) => {
-    const el = await mountCard({ bottom_design });
+  it("the whole animal turns with its heading", async () => {
+    const el = await mountCard({});
     el._ancistrus.heading = 90;
     expect(markup(el._renderAncistrus(false))).toContain("rotate(90.0) scale(1.5,1.5)");
     el._ancistrus.heading = -135.26;
@@ -399,10 +399,10 @@ describe("the fish keep their distance in the card", () => {
 
 describe("the bottom dwellers", () => {
   const html = (template) => markup(template);
-  const combos = ["redrawn", "classic"].flatMap((design) => CREATURE_STYLES.flatMap((style) => [true, false].map((shading) => [design, style, shading])));
+  const combos = CREATURE_STYLES.flatMap((style) => [true, false].map((shading) => [style, shading]));
 
-  it.each(combos)("%s drawing, %s look, shading: %s", async (design, style, shading) => {
-    const el = await mountCard({ bottom_design: design, creature_style: style, theme: "saltwater", animation_quality: shading ? "max" : "light" });
+  it.each(combos)("%s look, shading: %s", async (style, shading) => {
+    const el = await mountCard({ creature_style: style, theme: "saltwater", animation_quality: shading ? "max" : "light" });
     const drawings = [html(el._renderAncistrus(false)), html(el._renderShrimp(false)), html(el._renderCrab(false))];
     for (const drawing of drawings) {
       expect(drawing.length).toBeGreaterThan(400);
@@ -413,54 +413,31 @@ describe("the bottom dwellers", () => {
     }
   });
 
-  it("the classic drawing is still there, and it is not the redrawn one", async () => {
-    const classic = await mountCard({ bottom_design: "classic" });
-    const redrawn = await mountCard({ bottom_design: "redrawn" });
-    expect(html(classic._renderAncistrus(false))).toContain("Streamlined Body");
-    expect(html(redrawn._renderAncistrus(false))).not.toContain("Streamlined Body");
-    expect(html(classic._renderCrab(false))).toContain("M -14,-2 L -26,-10 L -34,-8");
-    expect(html(redrawn._renderCrab(false))).not.toContain("M -14,-2 L -26,-10 L -34,-8");
-    expect(html(classic._renderShrimp(false))).toContain("M -6,10 L -8,16");
-    expect(html(redrawn._renderShrimp(false))).not.toContain("M -6,10 L -8,16");
+  it("the removed bottom_design option is ignored: only the redrawn drawing exists", async () => {
+    const el = await mountCard({ bottom_design: "classic" });
+    expect(html(el._renderAncistrus(false))).not.toContain("Streamlined Body");
+    expect(html(el._renderCrab(false))).not.toContain("M -14,-2 L -26,-10 L -34,-8");
+    expect(el._config.bottom_design).toBeUndefined();
   });
 
-  it("the redrawn drawing is the default", async () => {
-    const el = await mountCard({});
-    expect(el._config.bottom_design).toBe("redrawn");
-    expect(bottomDesign({})).toBe("redrawn");
-    expect(bottomDesign({ _config: { bottom_design: "classic" } })).toBe("classic");
-  });
-
-  it("an unknown drawing is corrected with a warning", () => {
-    const { config, warnings } = normalizeConfig({ entity: "sensor.x", bottom_design: "modern" });
-    expect(config.bottom_design).toBe("redrawn");
-    expect(warnings).toHaveLength(1);
-    expect(BOTTOM_DESIGN_NAMES).toEqual(["redrawn", "classic"]);
-    expect(normalizeConfig({ entity: "sensor.x", bottom_design: "classic" }).warnings).toEqual([]);
-  });
-
-  it("the cartoon look gives them big eyes and cheeks, in both drawings", async () => {
-    for (const bottom_design of ["redrawn", "classic"]) {
-      const el = await mountCard({ creature_style: "cartoon", bottom_design });
+  it("the cartoon look gives them big eyes and cheeks", async () => {
+    {
+      const el = await mountCard({ creature_style: "cartoon" });
       expect(html(el._renderCrab(false))).toContain("#fb7185");
       expect(html(el._renderShrimp(false))).toContain("#fb7185");
       expect(html(el._renderAncistrus(false))).toContain("#fb7185");
     }
   });
 
-  it("the flat look adds small details, in both drawings", async () => {
-    const classic = await mountCard({ creature_style: "flat", bottom_design: "classic" });
-    expect(html(classic._renderCrab(false))).toContain("#fca5a5");
-    expect(html(classic._renderShrimp(false))).toContain("M -16,-13 L -13,9");
-    expect(html(classic._renderAncistrus(false))).toContain("#94a3b8");
-    const redrawn = await mountCard({ creature_style: "flat", bottom_design: "redrawn" });
+  it("the flat look adds small details", async () => {
+    const redrawn = await mountCard({ creature_style: "flat" });
     expect(html(redrawn._renderCrab(false))).toContain("#fca5a5");
     expect(html(redrawn._renderShrimp(false))).toContain("#fef2f2");
     expect(html(redrawn._renderAncistrus(false))).toContain("#475569");
   });
 
   it("the redrawn Ancistrus is dark slate grey, like the classic one, not brown", async () => {
-    const el = await mountCard({ bottom_design: "redrawn" });
+    const el = await mountCard({});
     const drawing = html(el._renderAncistrus(false));
     for (const grey of ["#1e293b", "#182026", "#475569"]) expect(drawing).toContain(grey);
     expect(drawing).not.toContain("#6f6353");
@@ -468,7 +445,7 @@ describe("the bottom dwellers", () => {
   });
 
   it("the redrawn shrimp has a gentle arch and a tail fan pointing back and down, not curled under", async () => {
-    const el = await mountCard({ bottom_design: "redrawn", theme: "saltwater" });
+    const el = await mountCard({ theme: "saltwater" });
     el._shrimp.dir = 1;
     const drawing = html(el._renderShrimp(false));
     expect(drawing).toContain("translate(41.1 8.9) rotate(45)");
@@ -477,20 +454,20 @@ describe("the bottom dwellers", () => {
   });
 
   it("the redrawn Ancistrus breathes: its mouth follows the pulse, and stays still when dead", async () => {
-    const el = await mountCard({ bottom_design: "redrawn" });
+    const el = await mountCard({});
     el._ambientTime = 1;
     expect(html(el._renderAncistrus(false))).toMatch(/translate\(0, 3\) scale\(1\.0[0-9]+,1\.0[0-9]+\)/);
     expect(html(el._renderAncistrus(true))).toContain("translate(0, 3) scale(1,1)");
   });
 
   it("the redrawn Ancistrus keeps its skeleton when dead", async () => {
-    const el = await mountCard({ bottom_design: "redrawn" });
+    const el = await mountCard({});
     el._ancistrus.deathProgress = 1;
     expect(html(el._renderAncistrus(true))).toContain("Main Ancistrus Spine");
   });
 
   it("a redrawn shrimp and crab still face the way they walk", async () => {
-    const el = await mountCard({ bottom_design: "redrawn", theme: "saltwater" });
+    const el = await mountCard({ theme: "saltwater" });
     el._shrimp.dir = -1;
     el._crab.dir = -1;
     expect(html(el._renderShrimp(false))).toContain("scale(-1.5, 1.5)");

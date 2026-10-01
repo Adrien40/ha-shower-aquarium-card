@@ -124,6 +124,7 @@ function renderArc(cx, fraction, color, value, marks = []) {
  * @param {string} input.style  "thermometer" or "arc"
  * @param {number} input.currentTemp
  * @param {number} input.currentVolume
+ * @param {boolean} [input.forceTemp]  show the thermometer even without a temperature (editor preview)
  * @param {number} input.targetBudget
  * @param {number} input.comfortMin
  * @param {number} input.deadlyTemp
@@ -131,9 +132,9 @@ function renderArc(cx, fraction, color, value, marks = []) {
  * @param {boolean} input.showBudget
  * @param {string} input.lang  language code, for the decimal separator
  */
-export function renderStatusPanel({ style, currentTemp, currentVolume, targetBudget, comfortMin, deadlyTemp, boilTemp, showBudget, lang }) {
+export function renderStatusPanel({ style, currentTemp, currentVolume, targetBudget, comfortMin, deadlyTemp, boilTemp, showBudget, forceTemp = false, lang }) {
   const gauge = computeGaugeState({ currentTemp, currentVolume, targetBudget, comfortMin, deadlyTemp, boilTemp });
-  const showTemp = currentTemp > 0;
+  const showTemp = currentTemp > 0 || forceTemp;
 
   if (style !== "arc") {
     return svg`

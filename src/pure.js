@@ -84,18 +84,15 @@ export function getTheme(themeKey) {
   return THEME_PRESETS[themeKey] || THEME_PRESETS.freshwater;
 }
 
-/** The two drawings of the Ancistrus, the shrimp and the crab (see render/creatures.js). */
-export const BOTTOM_DESIGN_NAMES = ["redrawn", "classic"];
-
 /** The looks of the living things (see render/skin.js). */
 export const CREATURE_STYLE_NAMES = ["flat", "cartoon", "realistic"];
 
 /**
  * Config keys that belonged to features that have since been removed
- * (night mode). They are dropped on load so saved dashboards keep working
+ * (night mode, the classic drawing of the Ancistrus, the shrimp and the crab). They are dropped on load so saved dashboards keep working
  * and the visual editor stops writing them back.
  */
-export const LEGACY_CONFIG_KEYS = ["night_entity", "night_lux_threshold", "cost_in_fullscreen"];
+export const LEGACY_CONFIG_KEYS = ["night_entity", "night_lux_threshold", "cost_in_fullscreen", "bottom_design"];
 
 /**
  * Returns a shallow copy of `config` without any LEGACY_CONFIG_KEYS.
@@ -894,10 +891,6 @@ export function normalizeConfig(config) {
     warnings.push(`creature_style: ${JSON.stringify(clean.creature_style)} is unknown, using ${CONFIG_DEFAULTS.creature_style}`);
     clean.creature_style = CONFIG_DEFAULTS.creature_style;
   }
-  if (clean.bottom_design !== undefined && !BOTTOM_DESIGN_NAMES.includes(clean.bottom_design)) {
-    warnings.push(`bottom_design: ${JSON.stringify(clean.bottom_design)} is unknown, using ${CONFIG_DEFAULTS.bottom_design}`);
-    clean.bottom_design = CONFIG_DEFAULTS.bottom_design;
-  }
   if (clean.title !== undefined && typeof clean.title !== "string") {
     warnings.push("title: must be text, ignoring it");
     clean.title = "";
@@ -963,3 +956,48 @@ export function formatNumber(value, lang = "en", digits = 1) {
   }
 }
 
+
+// Hydrao Custom (the integration this card was made for) registers its entities
+// under this platform, with one translation key per entity.
+const HYDRAO_PLATFORM = "hydrao_custom";
+
+/**
+ * Finds the Hydrao Custom entities the card needs, so a new card is filled in
+ * without the user picking them.
+ *
+ * The entity registry (`hass.entities`) is used first: it names the platform and
+ * the translation key of each entity, which does not depend on the language Home
+ * Assistant had when the device was added. Without it, the id is matched on the
+ * English and French names of the entities. Each field is "" when nothing fits.
+ *
+ * @param {{ entities?: Record<string, { platform?: string, translation_key?: string }> } | null | undefined} hass
+ * @param {string[] | null | undefined} entityIds
+ * @returns {{ entity: string, temperature_entity: string, comfort_temp_entity: string }}
+ */
+export function detectHydraoEntities(hass, entityIds) {
+  const registry = hass && typeof hass.entities === "object" && hass.entities ? hass.entities : {};
+  const ids = Array.isArray(entityIds) && entityIds.length ? entityIds : Object.keys(registry);
+
+  /**
+   * @param {string} domain
+   * @param {string} translationKey
+   * @param {RegExp} idPattern  used when the registry does not know the entity
+   * @returns {string}
+   */
+  const find = (domain, translationKey, idPattern) => {
+    const inDomain = ids.filter((id) => id.startsWith(`${domain}.`));
+    const registered = inDomain.find((id) => registry[id]?.platform === HYDRAO_PLATFORM && registry[id]?.translation_key === translationKey);
+    if (registered) return registered;
+    // The cumulative, comfort and wasted volumes end like the shower volume does.
+    const other = /(total|cumul|comfort|confort|wasted|perdu|gaspill)/;
+    return inDomain.find((id) => id.includes("hydrao") && idPattern.test(id) && !other.test(id.replace(/_minimum_comfort_temperature|_temperature_de_confort_minimum|_temperature_confort_minimum/, ""))) || "";
+  };
+
+  return {
+    // "Shower Volume": the volume of the current shower. The cumulative,
+    // comfort, wasted and threshold volumes have other ids and are not taken.
+    entity: find("sensor", "shower_volume_raw", /_(shower_volume|volume_douche)(_\d+)?$/),
+    temperature_entity: find("sensor", "temperature", /_temperature(_\d+)?$/),
+    comfort_temp_entity: find("number", "comfort_temperature", /_(minimum_comfort_temperature|temperature_de_confort_minimum|temperature_confort_minimum)(_\d+)?$/),
+  };
+}

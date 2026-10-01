@@ -144,18 +144,9 @@ export const CARD_EDITOR_SCHEMA = [
           },
         },
       },
-      {
-        name: "bottom_design",
-        default: CONFIG_DEFAULTS.bottom_design,
-        selector: {
-          select: {
-            options: [
-              { value: "redrawn", label: "Redrawn" },
-              { value: "classic", label: "Classic (the previous drawing)" },
-            ],
-          },
-        },
-      },
+      { name: "show_budget", default: CONFIG_DEFAULTS.show_budget, selector: { boolean: {} } },
+      { name: "respect_reduced_motion", default: CONFIG_DEFAULTS.respect_reduced_motion, selector: { boolean: {} } },
+      { name: "fullscreen", default: CONFIG_DEFAULTS.fullscreen, selector: { boolean: {} } },
       {
         name: "gauge_style",
         default: CONFIG_DEFAULTS.gauge_style,
@@ -168,9 +159,6 @@ export const CARD_EDITOR_SCHEMA = [
           },
         },
       },
-      { name: "show_budget", default: CONFIG_DEFAULTS.show_budget, selector: { boolean: {} } },
-      { name: "respect_reduced_motion", default: CONFIG_DEFAULTS.respect_reduced_motion, selector: { boolean: {} } },
-      { name: "fullscreen", default: CONFIG_DEFAULTS.fullscreen, selector: { boolean: {} } },
       { name: "show_fps", default: CONFIG_DEFAULTS.show_fps, selector: { boolean: {} } },
       {
         name: "aspect_ratio_width",
@@ -238,7 +226,6 @@ export const FIELD_LABEL_KEYS = {
   fullscreen: "field_fullscreen",
   show_fps: "field_show_fps",
   creature_style: "field_creature_style",
-  bottom_design: "field_bottom_design",
   gauge_style: "field_gauge_style",
   show_budget: "field_show_budget",
   aspect_ratio_width: "field_aspect_ratio_width",
@@ -280,10 +267,6 @@ export const OPTION_LABEL_KEYS = {
     flat: "option_creature_flat",
     cartoon: "option_creature_cartoon",
     realistic: "option_creature_realistic",
-  },
-  bottom_design: {
-    redrawn: "option_bottom_redrawn",
-    classic: "option_bottom_classic",
   },
   gauge_style: {
     thermometer: "option_gauge_thermometer",
