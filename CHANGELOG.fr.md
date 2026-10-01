@@ -3,6 +3,13 @@
 Toutes les modifications notables du projet sont documentées dans ce fichier.
 Le format suit [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/).
 
+## [0.8.85] — 2026-10-01
+
+### Modifié
+- Quand on tape sur la vitre, seule la tête du gobi reste hors de son trou : il recule dans son terrier la queue la première, son corps tournant autour de la tête avec la queue qui s'enfonce dans le sable, et la tête s'arrête à l'entrée du trou, la lèvre avant du monticule dessinée par-dessus. Il ressort lentement quelques secondes plus tard, comme avant.
+- La pierre du milieu du récif, à côté de l'anémone, a disparu, ainsi que les deux petits cailloux à côté. Le crabe n'a plus qu'une grotte, celle du tas de pierres vivantes, et son parcours commence maintenant sur le sable.
+- Les plantes, les coraux et l'anémone meurent avec l'aquarium : ils rétrécissent et s'effondrent (les plantes de l'eau douce, les deux coraux ramifiés, le corail violet, l'éventail bleu et l'anémone), au lieu de seulement grisonner debout. Les tentacules de l'anémone pendent, mous, vers l'extérieur et vers le bas, au lieu de rester en l'air. Ils se redressent si l'aquarium revit.
+
 ## [0.8.84] — 2026-10-01
 
 ### Modifié

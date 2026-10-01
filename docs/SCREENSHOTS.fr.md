@@ -42,8 +42,8 @@ L'eau baisse avec le volume consommé, rougit quand elle est trop chaude, et les
 <td align="center" width="50%"><img src="../visual/baseline/coldwater-boiling.png" alt="Aquarium d'eau froide avec de l'eau bouillante" width="100%"><br><sub>**Ébullition** : eau à 42 °C (`temp_boiling_threshold: 40`). L'eau rougit, des bulles montent et les poissons sont stressés.</sub></td>
 </tr>
 <tr>
-<td align="center" width="50%"><img src="../visual/baseline/freshwater-dead-by-heat.png" alt="Aquarium d'eau douce, mort de chaleur" width="100%"><br><sub>**Mort de chaleur** : 50 °C dépasse `temp_deadly_threshold` (45 °C). Les plantes se flétrissent, les poissons coulent.</sub></td>
-<td align="center" width="50%"><img src="../visual/baseline/saltwater-dead-by-heat.png" alt="Aquarium d'eau de mer, mort de chaleur" width="100%"><br><sub>**Mort de chaleur** dans le récif : les coraux et l'anémone virent au gris.</sub></td>
+<td align="center" width="50%"><img src="../visual/baseline/freshwater-dead-by-heat.png" alt="Aquarium d'eau douce, mort de chaleur" width="100%"><br><sub>**Mort de chaleur** : 50 °C dépasse `temp_deadly_threshold` (45 °C). Les plantes se couchent, les poissons coulent.</sub></td>
+<td align="center" width="50%"><img src="../visual/baseline/saltwater-dead-by-heat.png" alt="Aquarium d'eau de mer, mort de chaleur" width="100%"><br><sub>**Mort de chaleur** dans le récif : les coraux rétrécissent et s'effondrent, l'anémone retombe, molle.</sub></td>
 </tr>
 <tr>
 <td align="center" width="50%"><img src="../visual/baseline/freshwater-dirty-algae.png" alt="Aquarium d'eau douce couvert d'algues" width="100%"><br><sub>**Algues** : `algae_age: 40`. Le voile monte sur la vitre et des touffes poussent sur le sol.</sub></td>

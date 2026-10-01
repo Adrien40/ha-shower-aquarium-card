@@ -143,7 +143,18 @@ describe("the visual test itself is trustworthy", () => {
 
     it("catches a missing element (no decoration)", async () => {
       const original = svgMarkup(await buildCard(spec));
-      const withoutPlants = original.replace(/<g id="freshwater-plants"[\s\S]*?<\/g>/, "");
+      // The plants are made of groups inside a group: cut the whole group, up to its own closing tag.
+      const start = original.indexOf('<g id="freshwater-plants"');
+      let depth = 0;
+      let end = start;
+      for (const m of original.slice(start).matchAll(/<g[\s>]|<\/g>/g)) {
+        depth += m[0] === "</g>" ? -1 : 1;
+        if (depth === 0) {
+          end = start + m.index + m[0].length;
+          break;
+        }
+      }
+      const withoutPlants = original.slice(0, start) + original.slice(end);
       expect(withoutPlants).not.toBe(original);
       expect(isDifferent(comparePng(rasterize(withoutPlants), rasterize(original)))).toBe(true);
     });

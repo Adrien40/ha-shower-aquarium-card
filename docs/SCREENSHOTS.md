@@ -42,8 +42,8 @@ The water goes down with the volume consumed, turns red when it is too hot, and 
 <td align="center" width="50%"><img src="../visual/baseline/coldwater-boiling.png" alt="Coldwater tank with boiling water" width="100%"><br><sub>**Boiling**: water at 42 °C (`temp_boiling_threshold: 40`). The water turns red, bubbles rise and the fish are stressed.</sub></td>
 </tr>
 <tr>
-<td align="center" width="50%"><img src="../visual/baseline/freshwater-dead-by-heat.png" alt="Freshwater tank, dead by heat" width="100%"><br><sub>**Dead by heat**: 50 °C is above `temp_deadly_threshold` (45 °C). Plants wither, the fish sink.</sub></td>
-<td align="center" width="50%"><img src="../visual/baseline/saltwater-dead-by-heat.png" alt="Saltwater tank, dead by heat" width="100%"><br><sub>**Dead by heat** in the reef: the corals and the anemone turn grey.</sub></td>
+<td align="center" width="50%"><img src="../visual/baseline/freshwater-dead-by-heat.png" alt="Freshwater tank, dead by heat" width="100%"><br><sub>**Dead by heat**: 50 °C is above `temp_deadly_threshold` (45 °C). The plants fall over, the fish sink.</sub></td>
+<td align="center" width="50%"><img src="../visual/baseline/saltwater-dead-by-heat.png" alt="Saltwater tank, dead by heat" width="100%"><br><sub>**Dead by heat** in the reef: the corals shrink and fall over, the anemone goes limp.</sub></td>
 </tr>
 <tr>
 <td align="center" width="50%"><img src="../visual/baseline/freshwater-dirty-algae.png" alt="Freshwater tank covered with algae" width="100%"><br><sub>**Algae**: `algae_age: 40`. The film creeps up the glass and tufts grow along the floor.</sub></td>

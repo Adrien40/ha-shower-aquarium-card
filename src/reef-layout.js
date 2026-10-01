@@ -27,7 +27,6 @@ export const REEF_PILE = Object.freeze({
  * grotto of the middle of the tank and the cave in the front of the pile.
  */
 export const CRAB_ROUTE = Object.freeze([
-  { x: 372, h: 24, cave: true },
   { x: 500, h: 26, cave: false },
   { x: 650, h: 26, cave: false },
   { x: 770, h: 26, cave: false },
@@ -67,4 +66,4 @@ export function crabPointAt(s) {
 export const CRAB_CAVES = Object.freeze(CRAB_STOPS.filter((_, i) => CRAB_ROUTE[i].cave));
 
 /** The crab starts in the middle of its flat rock, at the end of the route. */
-export const CRAB_START_S = CRAB_ROUTE_LENGTH - (CRAB_ROUTE[7].x - CRAB_ROUTE[6].x) / 2;
+export const CRAB_START_S = CRAB_ROUTE_LENGTH - (CRAB_ROUTE[CRAB_ROUTE.length - 1].x - CRAB_ROUTE[CRAB_ROUTE.length - 2].x) / 2;

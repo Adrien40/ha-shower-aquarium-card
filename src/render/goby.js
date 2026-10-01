@@ -74,8 +74,33 @@ function burrowDrawing(style, shading) {
   `;
 }
 
-/** The goby goes into the sand: how far (units of its drawing) it slides towards its burrow and sinks when it is completely hidden, and the height of the sand it is cut at. */
-export const GOBY_HIDE = { slide: 44, sink: 38, sandLine: 5 };
+/**
+ * The goby backs into its burrow, tail first, and only its head stays out: its
+ * body turns about its head (`tilt` degrees, the tail going down into the sand)
+ * and the head moves to the mouth of the hole (`slide` and `sink`, in units of
+ * its drawing, when it is completely in). What is under the sand line is cut off.
+ * `head` is the centre of its head, the point it turns about.
+ */
+export const GOBY_HIDE = { slide: -68, sink: 3, tilt: 78, head: [26, -4], sandLine: 5 };
+
+/**
+ * Where the goby is for a given hiding (0 = in sight, 1 = only its head out of the hole).
+ * @param {number} hide
+ */
+export function gobyPose(hide) {
+  const [hx, hy] = GOBY_HIDE.head;
+  return `translate(${(hide * GOBY_HIDE.slide).toFixed(1)}, ${(hide * GOBY_HIDE.sink).toFixed(1)}) rotate(${(-hide * GOBY_HIDE.tilt).toFixed(1)} ${hx} ${hy})`;
+}
+
+/**
+ * The front lip of the mound, drawn over the goby that goes in: the head comes
+ * out from behind it.
+ * @param {CreatureStyle} style
+ * @param {boolean} shading
+ */
+function burrowLip(style, shading) {
+  return skinned(style, shading, "M -64,4 A 20,7 0 0,0 -24,4 Z", "#d8b45f", { ...(style === "cartoon" ? {} : { stroke: "none" }), op: 0.95 });
+}
 
 /**
  * The goby, at its burrow in the sand (reef tank).
@@ -91,7 +116,7 @@ export function renderGoby(ctx, isDead) {
   const breath = isDead ? 0 : Math.sin(ctx._ambientTime * 2.6);
   const style = creatureStyle(ctx);
   const shading = shadingAllowed(ctx);
-  // Hiding, it slides to its burrow and sinks into the sand: whatever goes under the sand line is cut off.
+  // Hiding, it backs into its burrow and only its head stays out: whatever goes under the sand line is cut off.
   const hide = Math.max(0, Math.min(1, g.hide || 0));
   const sandY = g.y + GOBY_HIDE.sandLine * 1.3;
   return svg`
@@ -99,11 +124,12 @@ export function renderGoby(ctx, isDead) {
     ${hide > 0 ? svg`<clipPath id="goby-sand"><rect x="-100" y="-100" width="2300" height="${(sandY + 100).toFixed(1)}" /></clipPath>` : ""}
     <g clip-path="${hide > 0 ? "url(#goby-sand)" : "none"}">
       <g transform="translate(${g.x}, ${g.y}) scale(1.3, ${isDead ? -1.3 : 1.3})" opacity="${bodyOpacity}">
-        <g transform="translate(${(-hide * GOBY_HIDE.slide).toFixed(1)}, ${(hide * GOBY_HIDE.sink).toFixed(1)})">
+        <g transform="${gobyPose(hide)}">
           ${gobyDrawing(style, shading, sway, breath)}
           ${renderStressDots(isDead ? 0 : g.stress || 0, [0, -3, 27, 6], ctx._ambientTime, 1.5)}
         </g>
       </g>
     </g>
+    ${hide > 0 ? svg`<g transform="translate(${g.x}, ${g.y}) scale(1.3, 1.3)">${burrowLip(style, shading)}</g>` : ""}
   `;
 }

@@ -672,7 +672,7 @@ describe("the decor", () => {
   it.each(CREATURE_STYLES)("the reef is drawn in the %s look, with the anemone", async (style) => {
     const el = await mountCard({ creature_style: style, theme: "saltwater" });
     const html = svgOf(el);
-    for (const id of ["reef-decor", "live-rock", "live-rock-2", 'id="anemone"']) expect(html).toContain(id);
+    for (const id of ["reef-decor", "live-rock", 'id="anemone"']) expect(html).toContain(id);
     expect(html.includes("url(#shade)")).toBe(style === "realistic");
   });
 

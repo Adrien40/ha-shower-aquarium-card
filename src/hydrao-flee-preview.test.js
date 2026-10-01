@@ -69,6 +69,14 @@ describe("detectHydraoEntities()", () => {
     expect(detectHydraoEntities(null, fr).entity).toBe("");
   });
 
+  it("an entity of the integration without a translation key is not mistaken for another", () => {
+    const registry = { "sensor.hydrao_x_shower_volume": { platform: "hydrao_custom" }, "sensor.hydrao_x_threshold_4": { platform: "hydrao_custom" } };
+    const out = detectHydraoEntities({ entities: registry }, []);
+    // Found by their ids instead.
+    expect(out.entity).toBe("sensor.hydrao_x_shower_volume");
+    expect(out.target_budget_entity).toBe("sensor.hydrao_x_threshold_4");
+  });
+
   it("knows the translation keys of Hydrao Custom (shower_volume_comfort, shower_volume_raw, threshold_4)", () => {
     const registry = {
       "sensor.a": { platform: "hydrao_custom", translation_key: "shower_volume_raw" },

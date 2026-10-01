@@ -6,7 +6,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import "./shower-aquarium-card.js";
 import { createFrame, stepGoby, startleGoby, GOBY_MOVE, FLEE, STRESS_MS } from "./physics.js";
-import { GOBY_HIDE } from "./render/goby.js";
+import { GOBY_HIDE, gobyPose } from "./render/goby.js";
 import { createInitialScene } from "./scene.js";
 
 beforeEach(() => {
@@ -203,23 +203,63 @@ describe("drawing the goby and its burrow", () => {
     expect(JSON.stringify(el._renderGoby(false).values)).not.toContain("url(#goby-sand)");
   });
 
-  it("slides to the burrow and sinks into the sand as it hides, and is cut at the sand", async () => {
+  /** Where a point of the drawing of the goby ends up for a hiding, in the units of its drawing. */
+  const place = ([x, y], hide) => {
+    const [hx, hy] = GOBY_HIDE.head;
+    const a = (-hide * GOBY_HIDE.tilt * Math.PI) / 180;
+    const [dx, dy] = [x - hx, y - hy];
+    return [hx + dx * Math.cos(a) - dy * Math.sin(a) + hide * GOBY_HIDE.slide, hy + dx * Math.sin(a) + dy * Math.cos(a) + hide * GOBY_HIDE.sink];
+  };
+
+  it("backs into its burrow as it hides: it turns about its head, the tail down, and the head goes to the hole", async () => {
     const el = await mount();
     el._goby.hide = 0.5;
-    const half = el._renderGoby(false);
-    const flat = JSON.stringify(half.values);
-    expect(flat).toContain(String(-0.5 * GOBY_HIDE.slide));
-    expect(flat).toContain(String(0.5 * GOBY_HIDE.sink));
-    expect(flat).toContain("url(#goby-sand)");
+    const half = JSON.stringify(el._renderGoby(false).values);
+    expect(half).toContain(gobyPose(0.5));
+    expect(half).toContain("url(#goby-sand)");
     el._goby.hide = 1;
-    const full = JSON.stringify(el._renderGoby(false).values);
-    expect(full).toContain(String(-GOBY_HIDE.slide));
-    expect(full).toContain(String(GOBY_HIDE.sink));
+    expect(JSON.stringify(el._renderGoby(false).values)).toContain(gobyPose(1));
+    expect(gobyPose(0)).toBe("translate(0.0, 0.0) rotate(0.0 26 -4)");
+    expect(gobyPose(1)).toContain(`rotate(${-GOBY_HIDE.tilt}.0 26 -4)`);
   });
 
-  it("sinks far enough to hide even its tall fin", () => {
-    // The tallest part of the drawing is the first dorsal fin, about 30 units above its centre.
-    expect(-30 + GOBY_HIDE.sink).toBeGreaterThan(GOBY_HIDE.sandLine);
+  it("only the head stays out: its head is at the mouth of the hole and the rest of the body is under the sand", () => {
+    const [headX, headY] = place(GOBY_HIDE.head, 1);
+    // The hole is at (-42, 2.4) in the units of the drawing.
+    expect(Math.abs(headX + 42)).toBeLessThan(6);
+    // The head is above the sand line (so it is seen), at least its top.
+    expect(headY - 8).toBeLessThan(GOBY_HIDE.sandLine);
+    // The tail, the end of the belly and the tall fin are all under the sand line: cut off.
+    for (const part of [[-49, -1], [-30, 3], [-10, -28], [8, 6]]) expect(place(part, 1)[1], String(part)).toBeGreaterThan(GOBY_HIDE.sandLine);
+  });
+
+  it("the tail goes down into the sand as it hides", () => {
+    expect(place([-49, -1], 0)[1]).toBeLessThan(GOBY_HIDE.sandLine);
+    expect(place([-49, -1], 1)[1]).toBeGreaterThan(GOBY_HIDE.sandLine + 40);
+    const heights = [0, 0.25, 0.5, 0.75, 1].map((hide) => place([-49, -1], hide)[1]);
+    for (let i = 1; i < heights.length; i++) expect(heights[i]).toBeGreaterThan(heights[i - 1]);
+  });
+
+  it("the front lip of the burrow is drawn over the goby, only while it hides", async () => {
+    const el = await mount();
+    const out = (hide) => {
+      el._goby.hide = hide;
+      return markup(el._renderGoby(false));
+    };
+    expect(out(0).match(/M -64,4 A 20,7/g)).toBeNull();
+    expect(out(0.5).match(/M -64,4 A 20,7/g)).toHaveLength(1);
+    // It is drawn after the goby (its yellow), so the head comes out from behind it.
+    expect(out(1).lastIndexOf("M -64,4 A 20,7")).toBeGreaterThan(out(1).lastIndexOf("#fde047"));
+  });
+
+  it("the front lip has the dark outline in the cartoon look, and none in the others", async () => {
+    for (const style of ["cartoon", "flat", "realistic"]) {
+      const el = await mount({ creature_style: style });
+      el._goby.hide = 1;
+      const out = markup(el._renderGoby(false));
+      const lip = out.slice(out.lastIndexOf("M -64,4 A 20,7") - 40);
+      expect(lip.includes("#1e293b"), style).toBe(style === "cartoon");
+    }
   });
 
   it("the cut is just under the sand line of the burrow, scaled like the drawing", async () => {
@@ -230,19 +270,10 @@ describe("drawing the goby and its burrow", () => {
     expect(clip).toContain((el._goby.y + GOBY_HIDE.sandLine * 1.3 + 100).toFixed(1));
   });
 
-  it("fully hidden, nothing of the goby shows above the sand", async () => {
-    const el = await mount();
-    el._goby.hide = 1;
-    const out = JSON.stringify(el._renderGoby(false).values);
-    // Its top (the tall fin) after the sinking is below the cut: 551 + 1.3 * (-30 + 38) > 551 + 1.3 * 5.
-    expect(551 + 1.3 * (-30 + GOBY_HIDE.sink)).toBeGreaterThan(551 + 1.3 * GOBY_HIDE.sandLine);
-    expect(out).toContain("url(#goby-sand)");
-  });
-
   it("a hiding that is not a number or goes beyond 0..1 is kept in range", async () => {
     const el = await mount();
     el._goby.hide = 7;
-    expect(JSON.stringify(el._renderGoby(false).values)).toContain(String(-GOBY_HIDE.slide));
+    expect(JSON.stringify(el._renderGoby(false).values)).toContain(gobyPose(1));
     el._goby.hide = -3;
     expect(JSON.stringify(el._renderGoby(false).values)).not.toContain("url(#goby-sand)");
     el._goby.hide = undefined;

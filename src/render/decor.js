@@ -23,7 +23,7 @@ export function renderThemeDecoration(ctx, themeKey, isFullscreen, deathProgress
 
   if (themeKey === "saltwater") return saltwaterDecor(ctx, bottomY, lifeStyle, deathProgress);
   if (themeKey === "coldwater") return coldwaterDecor(bottomY, creatureStyle(ctx), shadingAllowed(ctx));
-  return freshwaterDecor(bottomY, lifeStyle, creatureStyle(ctx), shadingAllowed(ctx));
+  return freshwaterDecor(bottomY, lifeStyle, creatureStyle(ctx), shadingAllowed(ctx), deathProgress);
 }
 
 // Where the tufts of hair algae grow along the bottom: x, height they can

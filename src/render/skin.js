@@ -76,3 +76,21 @@ export function skinned(style, shading, d, fill, extra = {}) {
   const base = shapeEl(sh(d, fill, extra), style === "cartoon");
   return style === "realistic" && shading ? svg`${base}<path d="${d}" fill="url(#shade)" opacity="${ifDefined(extra.op)}" />` : base;
 }
+
+/**
+ * The transform of a plant or a coral that dies with the tank: it shrinks and
+ * falls over, about its foot (px, py). `death` goes from 0 (alive) to 1 (dead);
+ * undefined while alive, so the drawing is left as it was.
+ *
+ * @param {number} px
+ * @param {number} py
+ * @param {number} tilt  degrees it has turned when dead (positive: to the right)
+ * @param {number} shrink  share of its height it has lost when dead
+ * @param {number} death
+ * @returns {string | undefined}
+ */
+export function wilt(px, py, tilt, shrink, death) {
+  if (!(death > 0)) return undefined;
+  const d = Math.min(1, death);
+  return `translate(${px} ${py}) rotate(${(tilt * d).toFixed(1)}) scale(1 ${(1 - shrink * d).toFixed(3)}) translate(${-px} ${-py})`;
+}

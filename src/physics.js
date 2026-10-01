@@ -913,8 +913,7 @@ export function stepCrab(crab, frame, rand = Math.random) {
 
 /**
  * A knock on the glass at (tx, ty) startles the crab: it runs, much faster than
- * usual, to the cave that is the nearest along its route (the other one when
- * the first lies on the side of the knock), and hides there. A crab that is
+ * usual, to its cave (in the pile of live rock), and hides there. A crab that is
  * already hiding stays hidden for longer.
  *
  * @param {Crawler} crab
@@ -936,15 +935,9 @@ export function startleCrab(crab, tx, ty, nowMs) {
     crab.state = "hiding";
     return true;
   }
-  // The caves, nearest first; a cave on the side of the knock comes last (it would run towards it).
-  const caves = [...CRAB_CAVES]
-    .map((stop) => {
-      const stopX = crabPointAt(stop).x;
-      const towardKnock = Math.sign(stopX - crab.x) === Math.sign(tx - crab.x) && Math.abs(tx - crab.x) < Math.abs(stopX - crab.x);
-      return { stop, cost: Math.abs(stop - s) + (towardKnock ? 400 : 0) };
-    })
-    .sort((a, b) => a.cost - b.cost);
-  crab.goalS = caves[0].stop;
+  // There is one cave, in the pile of live rock: it runs there, from wherever it is.
+  const [cave] = CRAB_CAVES;
+  crab.goalS = cave;
   crab.state = Math.abs(crab.goalS - s) < 0.5 ? "hiding" : "moving";
   return true;
 }

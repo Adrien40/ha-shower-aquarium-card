@@ -3,6 +3,13 @@
 All notable changes to this project are documented in this file.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.8.85] — 2026-10-01
+
+### Changed
+- When the glass is knocked, only the head of the goby stays out of its hole: it backs into its burrow tail first, its body turning about its head with the tail going down into the sand, and the head stops at the mouth of the hole, with the front lip of the mound drawn over it. It comes out slowly a few seconds later, as before.
+- The rock in the middle of the reef, next to the anemone, is gone, along with the two small rocks beside it. The crab has one cave left, the one in the pile of live rock, and its route now starts on the sand.
+- The plants, the corals and the anemone die with the tank: they shrink and fall over (the plants of the freshwater tank, the two branching corals, the purple coral, the blue fan and the anemone), instead of only turning grey while standing. The tentacles of the anemone hang limp, outward and down, instead of staying up in the air. They stand up again if the tank recovers.
+
 ## [0.8.84] — 2026-10-01
 
 ### Changed

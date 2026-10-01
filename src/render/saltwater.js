@@ -1,5 +1,6 @@
 import { svg } from "lit";
-import { skinned, shapeEl, sh, C, E, OUTLINE, creatureStyle, shadingAllowed } from "./skin.js";
+import { ifDefined } from "lit/directives/if-defined.js";
+import { skinned, shapeEl, sh, C, E, OUTLINE, creatureStyle, shadingAllowed, wilt } from "./skin.js";
 import { REEF_PILE } from "../reef-layout.js";
 
 /**
@@ -30,7 +31,11 @@ export function renderAnemoneTentacles(ctx, deathProgress = 0) {
       const bx = Math.cos(rad) * layer.baseR;
       const by = Math.sin(rad) * layer.baseR;
       const wobble = ((i * 37) % 17) - 8;
-      const rotateDeg = baseAngle + 90 + sway;
+      // Dead, the tentacles go limp: they hang outward and down (the ones on the left to the left, the others to the right).
+      const side = baseAngle < -90 ? -1 : 1;
+      const limp = side * (118 + (i % 4) * 7);
+      const standing = baseAngle + 90 + sway;
+      const rotateDeg = standing + (limp - standing) * deathProgress;
       parts.push(svg`
         <g transform="translate(${bx.toFixed(1)}, ${by.toFixed(1)}) rotate(${rotateDeg.toFixed(1)})">
           <path d="M 0,0 Q ${wobble.toFixed(1)},${(-length * 0.55).toFixed(1)} 0,${(-length).toFixed(1)}" stroke="${layer.color}" stroke-width="${(layer.width * widthFactor).toFixed(1)}" stroke-linecap="round" fill="none" opacity="0.9" />
@@ -92,23 +97,8 @@ const PILE_TOP = [
 ];
 /** @typedef {[number, number, number, number, number, string]} Chunk  [cx, height above the bottom, rx, ry, seed, colour] */
 
-/** @type {Chunk[]} The grotto in the middle of the tank: a low arch of live rock, whose dark mouth is where the crab hides. */
-const GROTTO = [
-  [322, 26, 38, 26, 21, "#7d5c8f"],
-  [424, 20, 28, 20, 22, "#6d5280"],
-  [314, 70, 30, 36, 23, "#8b6a9c"],
-  [428, 64, 24, 32, 24, "#7d5c8f"],
-  [372, 110, 68, 30, 25, "#6d5280"],
-  [340, 138, 28, 20, 26, "#8b6a9c"],
-  [404, 134, 26, 18, 27, "#7d5c8f"],
-];
-/** The dark inside of the grotto: where the crab goes in. */
-const GROTTO_MOUTH = { left: 345, right: 398, top: 78 };
-
 /** @type {Chunk[]} More live rock, lying on the sand between the other things of the reef. */
 const SCATTERED_ROCKS = [
-  [330, 9, 26, 11, 41, "#7d5c8f"],
-  [352, 20, 14, 10, 42, "#8b6a9c"],
   [572, 8, 22, 9, 43, "#6d5280"],
   [716, 11, 32, 13, 44, "#8b6a9c"],
   [740, 24, 18, 12, 45, "#7d5c8f"],
@@ -157,20 +147,28 @@ export function saltwaterDecor(ctx, bottomY, lifeStyle, deathProgress) {
   return svg`
     <g id="reef-decor">
       <g style="${lifeStyle}">
+      <g transform="${ifDefined(wilt(88, b, -16, 0.6, deathProgress))}">
       ${k(`M 60 ${b} Q 40 ${b - 165}, 95 ${b - 225} Q 120 ${b - 275}, 85 ${b - 335} Q 135 ${b - 265}, 120 ${b - 195} Q 150 ${b - 135}, 115 ${b} Z`, "#f43f5e", 0.95)}
-      ${k(`M 115 ${b} Q 150 ${b - 155}, 190 ${b - 205} Q 215 ${b - 245}, 190 ${b - 295} Q 230 ${b - 235}, 205 ${b - 155} Q 180 ${b - 105}, 155 ${b} Z`, "#fb7185", 0.9)}
       ${dots([[88, b - 40], [80, b - 110], [98, b - 190], [105, b - 240], [92, b - 300]], "#ffe4e6", 3, 0.55)}
+      </g>
+      <g transform="${ifDefined(wilt(160, b, 14, 0.55, deathProgress))}">
+      ${k(`M 115 ${b} Q 150 ${b - 155}, 190 ${b - 205} Q 215 ${b - 245}, 190 ${b - 295} Q 230 ${b - 235}, 205 ${b - 155} Q 180 ${b - 105}, 155 ${b} Z`, "#fb7185", 0.9)}
       ${dots([[135, b - 40], [160, b - 120], [185, b - 190], [196, b - 250]], "#ffe4e6", 3, 0.55)}
+      </g>
       <g transform="translate(690, ${b})">
+        <g transform="${ifDefined(wilt(-40, 0, 12, 0.55, deathProgress))}">
         ${k("M -80 0 Q -110 -90, -85 -160 Q -55 -90, -55 0 Z", "#c084fc", 0.85)}
         ${k("M -55 0 Q -70 -120, -35 -185 Q -15 -120, -25 0 Z", "#a855f7", 0.9)}
         ${k("M -25 0 Q -20 -135, 10 -205 Q 30 -130, 0 0 Z", "#d8b4fe", 0.85)}
         ${k(C(0, -20, 60), "#7e22ce", 0.75)}
+        </g>
       </g>
       <g transform="translate(190, ${b - 70})">
+        <g transform="${ifDefined(wilt(0, 46, 0, 0.4, deathProgress))}">
         ${skinned(style, shading, "M 0,-42 C 6,-42 12,-18 16,-12 C 22,-8 44,-10 44,-4 C 44,2 26,10 22,16 C 18,22 28,42 22,46 C 16,50 8,30 0,26 C -8,30 -16,50 -22,46 C -28,42 -18,22 -22,16 C -26,10 -44,2 -44,-4 C -44,-10 -22,-8 -16,-12 C -12,-18 -6,-42 0,-42 Z", "#1d4ed8", { stroke: "#1e40af", sw: 2 })}
         <path d="M 0,-34 L 0,18 M -35,-4 L 35,-4 M -18,36 L 18,36" stroke="#3b82f6" stroke-width="3" stroke-linecap="round" opacity="0.75" />
         <circle cx="0" cy="0" r="5" fill="#60a5fa" />
+        </g>
       </g>
       </g>
       <g id="live-rock">
@@ -187,6 +185,7 @@ export function saltwaterDecor(ctx, bottomY, lifeStyle, deathProgress) {
         ${SCATTERED_ROCKS.map((piece) => rock(style, shading, b, piece))}
       </g>
       <g id="anemone" style="${lifeStyle}" transform="translate(260, ${b - 17}) scale(1.4, 1.4)">
+        <g transform="${ifDefined(wilt(0, 22, 0, 0.3, deathProgress))}">
         ${renderAnemoneTentacles(ctx, deathProgress)}
         ${k(E(0, -16, 30, 11), "#86198f", 0.9)}
         ${k("M -22,-5 C -26,3 -23,12 -15,17 C -7,21 7,21 15,17 C 23,12 26,3 22,-5 C 14,-14 -14,-14 -22,-5 Z", "#701a75")}
@@ -202,11 +201,7 @@ export function saltwaterDecor(ctx, bottomY, lifeStyle, deathProgress) {
               ${shapeEl(sh(E(14, 8, 3.4, 2), "#fb7185", { op: 0.75, stroke: "none" }))}
             `
           : ""}
-      </g>
-      <g id="live-rock-2">
-        ${GROTTO.map((piece) => rock(style, shading, b, piece))}
-        ${style === "cartoon" ? "" : [[314, 76, 12, 6], [404, 140, 14, 6], [430, 70, 10, 6]].map(([x, up, rx, ry]) => shapeEl(sh(E(x, b - up, rx, ry), "#e879f9", { op: 0.32, stroke: "none" })))}
-        ${shapeEl(sh(`M ${GROTTO_MOUTH.left},${b - 4} L ${GROTTO_MOUTH.left},${b - 44} Q ${GROTTO_MOUTH.left},${b - GROTTO_MOUTH.top} ${(GROTTO_MOUTH.left + GROTTO_MOUTH.right) / 2},${b - GROTTO_MOUTH.top} Q ${GROTTO_MOUTH.right},${b - GROTTO_MOUTH.top} ${GROTTO_MOUTH.right},${b - 44} L ${GROTTO_MOUTH.right},${b - 4} Z`, "#0b0614", { stroke: "none", op: 1 }))}
+        </g>
       </g>
     </g>
   `;

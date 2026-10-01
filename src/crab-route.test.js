@@ -1,8 +1,8 @@
 // @vitest-environment happy-dom
 //
-// The crab walks all over the reef, along a route from the grotto in the middle
+// The crab walks all over the reef, along a route from the sand in the middle
 // of the tank, over the sand, up the pile of live rock to its flat rock, and
-// hides in the caves (the grotto and the cave of the pile). A knock on the
+// hides in the cave of the pile of live rock. A knock on the
 // glass sends it into the nearest cave.
 import { describe, it, expect, vi, afterEach, beforeEach } from "vitest";
 import "./shower-aquarium-card.js";
@@ -49,7 +49,7 @@ function run(c, { ms = 16.66, from = NOW, limit = 4000, rand = constant(0.5), do
 }
 
 describe("the route of the crab", () => {
-  it("goes from the grotto, over the sand, up the pile of rock, to its flat rock", () => {
+  it("goes from the sand, up the pile of rock, to its flat rock", () => {
     expect(CRAB_ROUTE[0].x).toBeLessThan(REEF_PILE.x0);
     expect(CRAB_ROUTE[CRAB_ROUTE.length - 1].h).toBe(REEF_PILE.ledge);
     for (const stop of CRAB_ROUTE) expect(stop.h).toBeLessThanOrEqual(REEF_PILE.ledge);
@@ -74,11 +74,15 @@ describe("the route of the crab", () => {
     expect(crabPointAt(CRAB_ROUTE_LENGTH + 50)).toEqual(crabPointAt(CRAB_ROUTE_LENGTH));
   });
 
-  it("has two caves: the grotto of the middle of the tank and the cave of the pile", () => {
-    expect(CRAB_CAVES).toHaveLength(2);
-    expect(crabPointAt(CRAB_CAVES[0]).x).toBeLessThan(REEF_PILE.x0);
-    expect(crabPointAt(CRAB_CAVES[1]).x).toBeGreaterThanOrEqual(REEF_PILE.x0);
-    expect(crabPointAt(CRAB_CAVES[1]).x).toBeLessThanOrEqual(REEF_PILE.x1);
+  it("has one cave: the one in the front of the pile of live rock (the rock in the middle of the tank is gone)", () => {
+    expect(CRAB_CAVES).toHaveLength(1);
+    expect(crabPointAt(CRAB_CAVES[0]).x).toBeGreaterThanOrEqual(REEF_PILE.x0);
+    expect(crabPointAt(CRAB_CAVES[0]).x).toBeLessThanOrEqual(REEF_PILE.x1);
+  });
+
+  it("starts on the sand, clear of the anemone", () => {
+    expect(CRAB_ROUTE[0].x).toBeGreaterThan(400);
+    expect(CRAB_ROUTE[0].h).toBeLessThan(40);
   });
 
   it("starts on the flat rock, in the middle of the part it walks on", () => {
@@ -126,13 +130,19 @@ describe("stepCrab()", () => {
     expect(c.targetX).toBeCloseTo(crabPointAt(c.goalS).x, 6);
   });
 
-  it("often chooses one of the caves", () => {
+  it("often chooses the cave", () => {
     const c = crab({ s: CRAB_START_S, idleUntil: NOW - 1 });
     stepCrab(c, frame(), scripted(0.1, 0));
     expect(c.goalS).toBe(CRAB_CAVES[0]);
     const d = crab({ s: CRAB_START_S, idleUntil: NOW - 1 });
     stepCrab(d, frame(), scripted(0.1, 0.99));
-    expect(d.goalS).toBe(CRAB_CAVES[1]);
+    expect(d.goalS).toBe(CRAB_CAVES[0]);
+  });
+
+  it("does not choose the cave it stands at: it walks somewhere else", () => {
+    const c = crab({ s: CRAB_CAVES[0], idleUntil: NOW - 1 });
+    stepCrab(c, frame(), scripted(0.1, 0.9));
+    expect(Math.abs(c.goalS - CRAB_CAVES[0])).toBeGreaterThanOrEqual(40);
   });
 
   it("does not choose a place that is hardly worth the walk: it goes to the other end of the route", () => {
@@ -159,7 +169,7 @@ describe("stepCrab()", () => {
   });
 
   it("goes in a cave when it arrives at one: it hides, stays hidden for a while, comes out and rests", () => {
-    const c = crab({ s: CRAB_CAVES[1] - 20, goalS: CRAB_CAVES[1], state: "moving" });
+    const c = crab({ s: CRAB_CAVES[0] - 20, goalS: CRAB_CAVES[0], state: "moving" });
     const seen = [c.state];
     let now = NOW;
     for (let i = 0; i < 20000 && !(seen.includes("emerging") && c.state === "idle"); i++) {
@@ -254,25 +264,32 @@ describe("startleCrab()", () => {
   });
 
   it("makes it run to the nearest cave, much faster than it walks", () => {
-    const c = crab({ s: CRAB_CAVES[1] + 100, state: "idle" });
+    const c = crab({ s: CRAB_CAVES[0] + 100, state: "idle" });
     stepCrab(c, frame(), constant(0.5));
-    // The knock comes from the left, so the cave at the right (the nearest) is the one.
     expect(startleCrab(c, c.x - 120, c.y, NOW)).toBe(true);
     expect(c.state).toBe("moving");
-    expect(c.goalS).toBe(CRAB_CAVES[1]);
+    expect(c.goalS).toBe(CRAB_CAVES[0]);
     expect(c.fleeUntil).toBeGreaterThan(NOW);
     const before = c.s;
     stepCrab(c, frame(), constant(0.5));
     expect(before - c.s).toBeCloseTo(CRAB_MOVE.speed * FLEE.crawlerFactor, 6);
   });
 
-  it("does not run towards the knock: the cave on the far side comes first", () => {
-    const c = crab({ s: (CRAB_CAVES[0] + CRAB_CAVES[1]) / 2 - 10, state: "idle" });
+  it("runs to the cave even when the knock is on its side: it has only one", () => {
+    const c = crab({ s: CRAB_CAVES[0] - 150, state: "idle" });
     stepCrab(c, frame(), constant(0.5));
-    // A little nearer to the first cave, but the knock is on that side.
     const knockX = crabPointAt(CRAB_CAVES[0]).x + 20;
     expect(startleCrab(c, knockX, c.y, NOW)).toBe(true);
-    expect(c.goalS).toBe(CRAB_CAVES[1]);
+    expect(c.goalS).toBe(CRAB_CAVES[0]);
+  });
+
+  it("a knock on the side of the cave still sends it there, but a knock on the far side is no different", () => {
+    const [near, far] = [crab({ s: CRAB_CAVES[0] - 150, state: "idle" }), crab({ s: CRAB_CAVES[0] - 150, state: "idle" })];
+    stepCrab(near, frame(), constant(0.5));
+    stepCrab(far, frame(), constant(0.5));
+    startleCrab(near, near.x + 60, near.y, NOW);
+    startleCrab(far, far.x - 60, far.y, NOW);
+    expect(near.goalS).toBe(far.goalS);
   });
 
   it("when it is already at a cave, it goes in at once", () => {
@@ -358,18 +375,17 @@ describe("the crab in the card", () => {
     expect(markup(el._renderCrab(true))).not.toContain("<circle");
   });
 
-  it("the crab is drawn before the rocks of the grotto, so it goes behind them", async () => {
-    const el = await mount();
-    const html = el.shadowRoot.innerHTML;
-    expect(html.indexOf('id="live-rock-2"')).toBeGreaterThan(0);
-    expect(html.indexOf('id="live-rock-scattered"')).toBeGreaterThan(0);
-    expect(html).toContain('id="live-rock-2"');
-  });
-
-  it("there are more live rocks in the reef than before, and none in the other biotopes", async () => {
+  it("there is no rock in the middle of the tank next to the anemone any more, and the rocks on the sand are only there", async () => {
     const reef = await mount();
-    expect(reef.shadowRoot.querySelectorAll("#live-rock-scattered path").length).toBeGreaterThanOrEqual(7);
-    expect(reef.shadowRoot.querySelectorAll("#live-rock-2 path").length).toBeGreaterThanOrEqual(7);
+    expect(reef.shadowRoot.querySelector("#live-rock-2")).toBeNull();
+    const scattered = reef.shadowRoot.querySelectorAll("#live-rock-scattered path");
+    expect(scattered.length).toBeGreaterThanOrEqual(5);
+    // None of them reaches the anemone (its tentacles spread about 130 units on each side of x = 260).
+    for (const path of scattered) {
+      // The first point of each shape (the pits and the arcs have other numbers after it).
+      const first = Number(path.getAttribute("d").match(/^M\s*(-?[\d.]+)/)[1]);
+      expect(first).toBeGreaterThan(400);
+    }
     const fresh = await mount({ theme: "freshwater" });
     expect(fresh.shadowRoot.querySelector("#live-rock-scattered")).toBeNull();
   });
@@ -396,6 +412,13 @@ describe("startleCrawler() without a special run, and for a crab that has no ide
   it("a knock exactly above a creature that has no direction yet sends it to the right", () => {
     const c = { x: 200, y: 500, targetX: 200, state: "idle", idleUntil: 0 };
     startleCrawler(c, 200, 500, NOW, lane);
+    expect(c.targetX).toBe(300);
+  });
+
+  it("at the left end of its lane, a creature knocked from its left turns back to the right", () => {
+    const c = { x: 100, y: 500, targetX: 100, state: "idle", idleUntil: 0, dir: 1 };
+    startleCrawler(c, 150, 500, NOW, { ...lane, minX: 100, maxX: 300 });
+    // Away from the knock is to the left, where the lane ends: so it goes the other way.
     expect(c.targetX).toBe(300);
   });
 
