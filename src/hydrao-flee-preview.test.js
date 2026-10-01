@@ -119,10 +119,57 @@ describe("a knock on the glass makes the bottom dwellers run", () => {
     document.body.appendChild(el);
     await el.updateComplete;
     el._crab.x = 600; el._crab.y = 560; el._shrimp.x = 640; el._shrimp.y = 560;
-    el._knockAt(500, 560);
+    el._knockAt(500, 560, el._tankState());
     expect(el._crab.fleeUntil).toBeGreaterThan(Date.now());
     expect(el._shrimp.state).toBe("moving");
     expect(el._shrimp.targetX).toBeGreaterThan(el._shrimp.x);
+  });
+});
+
+describe("edge cases of the flee", () => {
+  const tank = { tankTop: 0, tankBottom: 600, waterSurfaceY: 40 };
+
+  it("a knock right on the Ancistrus sends it in a random direction", () => {
+    const anc = { x: 400, y: 300, targetX: 400, targetY: 300, state: "idle", idleUntil: 0 };
+    expect(startleAncistrus(anc, 400, 300, 0, tank, () => 0.25)).toBe(true);
+    expect(Math.hypot(anc.targetX - 400, anc.targetY - 300)).toBeGreaterThan(100);
+  });
+
+  it("a crawler knocked exactly from above runs the way it faces; at the end of its lane it turns back", () => {
+    const c = { x: 600, y: 560, targetX: 600, state: "idle", idleUntil: 0, dir: -1 };
+    startleCrawler(c, 600, 560, 0, SHRIMP_SPEC);
+    expect(c.targetX).toBeLessThan(600);
+    const edge = { x: SHRIMP_SPEC.maxX, y: 560, targetX: SHRIMP_SPEC.maxX, state: "idle", idleUntil: 0, dir: 1 };
+    startleCrawler(edge, SHRIMP_SPEC.maxX - 50, 560, 0, SHRIMP_SPEC);
+    expect(edge.targetX).toBeLessThan(SHRIMP_SPEC.maxX);
+  });
+
+  it("the Ancistrus rests longer after a flee, once it has arrived", () => {
+    const frame = (nowMs) => createFrame({
+      timestamp: nowMs, deltaMs: 16, delta: 1, nowMs, animTime: 0, userSpeed: 1, themeKey: "saltwater",
+      tank: { ...tank, waterRatio: 1, isDead: false, isBoiling: false, speedMultiplier: 1 },
+    });
+    const anc = { x: 400, y: 300, targetX: 400, targetY: 300, heading: 0, state: "moving", idleUntil: 0, fleeUntil: 5000 };
+    stepAncistrus(anc, frame(1000), () => 0);
+    expect(anc.state).toBe("idle");
+    expect(anc.idleUntil).toBe(1000 + 2500);
+  });
+});
+
+describe("the editor preview is recognised from its ancestors", () => {
+  it.each(["hui-card-preview", "hui-dialog-edit-card"])("inside %s", async (tag) => {
+    const host = document.createElement(tag);
+    const root = host.attachShadow({ mode: "open" });
+    const el = new (Card())();
+    root.appendChild(el);
+    document.body.appendChild(host);
+    expect(el._isEditorPreview()).toBe(true);
+  });
+
+  it("not on a plain dashboard", () => {
+    const el = new (Card())();
+    document.body.appendChild(el);
+    expect(el._isEditorPreview()).toBe(false);
   });
 });
 

@@ -789,8 +789,9 @@ export class AquariumShowerCard extends LitElement {
   /**
    * @param {number} x
    * @param {number} y
+   * @param {TankState} tank
    */
-  _knockAt(x, y) {
+  _knockAt(x, y, tank) {
     const now = Date.now();
     this._ripples = [...this._ripples, { x, y, born: now }];
     (this._fishes || []).forEach((fish) => {
@@ -801,8 +802,6 @@ export class AquariumShowerCard extends LitElement {
       fish.scare = kick.scare;
       if (Math.abs(kick.kx) > 0.5) fish.dir = kick.kx < 0 ? -1 : 1;
     });
-    const tank = this._tankState();
-    if (!tank) return;
     if (this._ancistrus) startleAncistrus(this._ancistrus, x, y, now, tank, randomSource);
     if (this._shrimp) startleCrawler(this._shrimp, x, y, now, SHRIMP_SPEC);
     if (this._crab) startleCrawler(this._crab, x, y, now, CRAB_SPEC);
@@ -822,7 +821,7 @@ export class AquariumShowerCard extends LitElement {
     if (classifyTap(point.y, tank.waterSurfaceY) === "feed") {
       this._dropFood(point.x, tank.waterSurfaceY);
     } else {
-      this._knockAt(point.x, point.y);
+      this._knockAt(point.x, point.y, tank);
     }
     this.requestUpdate();
   }
@@ -839,7 +838,7 @@ export class AquariumShowerCard extends LitElement {
   _onKnockButton() {
     const tank = this._interactiveTank();
     if (!tank) return;
-    this._knockAt(CANVAS_WIDTH / 2, (tank.waterSurfaceY + tank.tankBottom) / 2);
+    this._knockAt(CANVAS_WIDTH / 2, (tank.waterSurfaceY + tank.tankBottom) / 2, tank);
     this._announce("aria_knocked");
     this.requestUpdate();
   }
