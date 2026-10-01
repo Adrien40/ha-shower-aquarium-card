@@ -71,7 +71,8 @@ export const cardStyles = css`
     height: auto;
     max-height: calc(100vh - 100px);
     cursor: pointer;
-    touch-action: manipulation;
+    /* Vertical scrolling of the page stays; a horizontal swipe is the card's (it changes the biotope). */
+    touch-action: pan-y;
     -webkit-tap-highlight-color: transparent;
     user-select: none;
   }

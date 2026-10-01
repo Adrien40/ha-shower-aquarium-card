@@ -126,13 +126,9 @@ describe("_updatePhysics() fallbacks", () => {
     expect(flake.eaten).toBe(true);
   });
 
-  it.each([
-    ["shrimp", 740],
-    ["crab", 240],
-  ])("%s walks left when its target is on the left and right when on the right", (name, lane) => {
-    const key = name === "shrimp" ? "_shrimp" : "_crab";
+  it.each([["shrimp", 740]])("%s walks left when its target is on the left and right when on the right", (name, lane) => {
     const el = makeCard({ theme: "saltwater" });
-    const creature = el[key];
+    const creature = el._shrimp;
     Object.assign(creature, { state: "moving", x: lane + 100, targetX: lane, idleUntil: 1e9, dir: 1 });
     el._updatePhysics(1000);
     el._updatePhysics(1016.66);

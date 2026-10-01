@@ -5,7 +5,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import "./shower-aquarium-card.js";
 import { detectHydraoEntities } from "./pure.js";
-import { startleAncistrus, startleCrawler, stepAncistrus, stepCrawler, createFrame, SHRIMP_SPEC, CRAB_SPEC, GOBY_SPEC, FLEE } from "./physics.js";
+import { startleAncistrus, startleCrawler, stepAncistrus, stepCrawler, createFrame, SHRIMP_SPEC, GOBY_SPEC, FLEE } from "./physics.js";
 
 const Card = () => customElements.get("shower-aquarium-card");
 
@@ -95,7 +95,7 @@ describe("a knock on the glass makes the bottom dwellers run", () => {
     expect(anc.state).toBe("idle");
   });
 
-  it.each([["shrimp", SHRIMP_SPEC, 650], ["crab", CRAB_SPEC, (CRAB_SPEC.minX + CRAB_SPEC.maxX) / 2], ["goby", GOBY_SPEC, 530]])("the %s runs away from the knock, then calms down", (_n, spec, x) => {
+  it.each([["shrimp", SHRIMP_SPEC, 650], ["goby", GOBY_SPEC, 530]])("the %s runs away from the knock, then calms down", (_n, spec, x) => {
     const c = { x, y: 560, targetX: x, state: "idle", idleUntil: 1e9, dir: 1 };
     expect(startleCrawler(c, x - 60, 560, 1000, spec)).toBe(true);
     expect(c.state).toBe("moving");
@@ -139,9 +139,10 @@ describe("edge cases of the flee", () => {
     const c = { x: 600, y: 560, targetX: 600, state: "idle", idleUntil: 0, dir: -1 };
     startleCrawler(c, 600, 560, 0, SHRIMP_SPEC);
     expect(c.targetX).toBeLessThan(600);
-    const edge = { x: SHRIMP_SPEC.maxX, y: 560, targetX: SHRIMP_SPEC.maxX, state: "idle", idleUntil: 0, dir: 1 };
-    startleCrawler(edge, SHRIMP_SPEC.maxX - 50, 560, 0, SHRIMP_SPEC);
-    expect(edge.targetX).toBeLessThan(SHRIMP_SPEC.maxX);
+    // The shrimp runs farther than it walks; at the end of that run it turns back.
+    const edge = { x: SHRIMP_SPEC.fleeMaxX, y: 560, targetX: SHRIMP_SPEC.fleeMaxX, state: "idle", idleUntil: 0, dir: 1 };
+    startleCrawler(edge, SHRIMP_SPEC.fleeMaxX - 50, 560, 0, SHRIMP_SPEC);
+    expect(edge.targetX).toBeLessThan(SHRIMP_SPEC.fleeMaxX);
   });
 
   it("the Ancistrus rests longer after a flee, once it has arrived", () => {

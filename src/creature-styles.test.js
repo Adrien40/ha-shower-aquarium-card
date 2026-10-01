@@ -12,7 +12,7 @@ import { drawFish, renderFishShape } from "./render/fish.js";
 import { renderSnails, SNAIL_KINDS } from "./render/snails.js";
 import { chunkPath, ledgePath } from "./render/saltwater.js";
 import { REEF_PILE } from "./reef-layout.js";
-import { CRAB_SPEC } from "./physics.js";
+import { CRAB_ROUTE } from "./reef-layout.js";
 import { freshwaterDecor } from "./render/freshwater.js";
 import { coldwaterDecor } from "./render/coldwater.js";
 import { ANIMATION_PROFILES, CREATURE_STYLE_NAMES, normalizeConfig, getAnimationProfile } from "./pure.js";
@@ -568,13 +568,14 @@ describe("the pile of live rock", () => {
     // The level top, from one cut corner to the other.
     expect(d).toContain(`M${REEF_PILE.ledgeFrom - 30 + 10},${top}`);
     expect(d).toContain(`L${REEF_PILE.ledgeTo + 52 - 10},${top}`);
-    // The crab's feet are 30 units below its body, on that top.
-    expect(b - CRAB_SPEC.floorOffset + 30).toBe(top);
+    // The end of the route of the crab is on that top (its body is drawn 30 units above its feet).
+    expect(b - CRAB_ROUTE[CRAB_ROUTE.length - 1].h).toBe(top);
   });
 
   it("the crab walks over the whole flat rock, which is wider than its lane", () => {
-    expect(REEF_PILE.ledgeFrom - 30).toBeLessThan(CRAB_SPEC.minX);
-    expect(REEF_PILE.ledgeTo + 52).toBeGreaterThan(CRAB_SPEC.maxX);
+    const [from, to] = CRAB_ROUTE.slice(-2).map((stop) => stop.x);
+    expect(REEF_PILE.ledgeFrom - 30).toBeLessThan(from);
+    expect(REEF_PILE.ledgeTo + 52).toBeGreaterThan(to);
   });
 
   it("is tall: over 250 units high, so the pile rises well above the sand", () => {

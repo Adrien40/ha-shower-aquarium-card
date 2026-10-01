@@ -40,7 +40,8 @@ async function mount(config = {}, { volume = 12, temp = 34, language = "en" } = 
   return el;
 }
 
-const buttons = (el) => [...el.shadowRoot.querySelectorAll(".keyboard-actions button")];
+// The feed and knock buttons; the biotope button is tested on its own (see swipe-biotope.test.js).
+const buttons = (el) => [...el.shadowRoot.querySelectorAll(".keyboard-actions button")].slice(0, 2);
 const live = (el) => el.shadowRoot.querySelector(".sr-only[role='status']");
 
 // ---------------------------------------------------------------------------

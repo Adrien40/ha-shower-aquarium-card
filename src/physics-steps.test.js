@@ -16,16 +16,28 @@ import {
   stepFish,
   stepSnail,
   stepAncistrus,
+  ancistrusYRange,
   separateFish,
   FISH_SPACING,
   stepCrawler,
   SHRIMP_SPEC,
-  CRAB_SPEC,
   GOBY_SPEC,
   SNAIL_REJOIN_SPEED,
 } from "./physics.js";
 import { RIPPLE_DURATION_MS } from "./pure.js";
-import { REEF_PILE } from "./reef-layout.js";
+import { REEF_PILE, CRAB_ROUTE } from "./reef-layout.js";
+
+// A lane on the flat rock of the pile of live rock (where the crab used to live): a crawler specification
+// for the generic walking tests.
+const LEDGE_SPEC = {
+  minX: REEF_PILE.ledgeFrom,
+  maxX: REEF_PILE.ledgeTo,
+  floorOffset: REEF_PILE.ledge + 30,
+  speed: 0.5,
+  firstIdle: [2000, 3000],
+  nextIdle: [2500, 3500],
+};
+
 
 afterEach(() => vi.restoreAllMocks());
 
@@ -862,15 +874,22 @@ describe("stepAncistrus()", () => {
     }
   });
 
-  it("stays inside its area: the target is clamped to the water and to the walls", () => {
-    const corner = anc({ x: 100, y: 90, idleUntil: 500 });
-    stepAncistrus(corner, frame({ timestamp: 1000 }), scripted(0.875, 1)); // up and to the left, as far as it gets
-    expect(corner.targetX).toBe(90);
-    expect(corner.targetY).toBe(Math.max(15 + 65, 15 + 70));
-    const far = anc({ x: 900, y: 440, idleUntil: 500 });
-    stepAncistrus(far, frame({ timestamp: 1000 }), scripted(0.375, 1)); // down and to the right
-    expect(far.targetX).toBe(934);
-    expect(far.targetY).toBe(565 - 110);
+  it("stays inside its area: a trip towards a wall turns into one along it, in the water and between the walls", () => {
+    const tank = { tankBottom: 565, waterSurfaceY: 15 };
+    for (const [x, y, turn] of [[100, 90, 0.875], [900, 440, 0.375], [95, 300, 0.75], [930, 100, 0.25]]) {
+      const a = anc({ x, y, idleUntil: 500 });
+      stepAncistrus(a, frame({ timestamp: 1000 }), scripted(turn, 1));
+      expect(a.state).toBe("moving");
+      expect(a.targetX).toBeGreaterThanOrEqual(90);
+      expect(a.targetX).toBeLessThanOrEqual(934);
+      // Far enough to be worth the trip, and where its body is in the water.
+      expect(Math.hypot(a.targetX - x, a.targetY - y)).toBeGreaterThanOrEqual(60);
+      const heading = (Math.atan2(a.targetX - x, -(a.targetY - y)) * 180) / Math.PI;
+      const range = ancistrusYRange(heading, tank);
+      // (the heading is worked out from the target, which is itself kept in range: within a unit)
+      expect(a.targetY).toBeGreaterThanOrEqual(range.minY - 1);
+      expect(a.targetY).toBeLessThanOrEqual(range.maxY + 1);
+    }
   });
 
   it("keeps resting before its idle time has passed", () => {
@@ -979,12 +998,12 @@ describe("stepAncistrus()", () => {
 });
 
 // ---------------------------------------------------------------------------
-describe("stepCrawler() (shrimp and crab)", () => {
+describe("stepCrawler() (shrimp, goby and a lane on the flat rock)", () => {
   const crawler = (over = {}) => ({ x: 800, y: 0, targetX: 800, state: "idle", idleUntil: 0, dir: -1, deathProgress: 0, ...over });
 
   it.each([
     ["shrimp", SHRIMP_SPEC],
-    ["crab", CRAB_SPEC],
+    ["ledge crawler", LEDGE_SPEC],
   ])("the %s has a coherent specification", (_name, spec) => {
     expect(spec.minX).toBeLessThan(spec.maxX);
     expect(spec.speed).toBeGreaterThan(0);
@@ -993,19 +1012,19 @@ describe("stepCrawler() (shrimp and crab)", () => {
     expect(spec.nextIdle[0]).toBeGreaterThan(0);
   });
 
-  it("the shrimp walks on the sand left of the pile of rock, the crab on the pile: their lanes do not overlap", () => {
+  it("the shrimp walks on the sand left of the pile of rock; the route of the crab goes from the grotto up to the flat rock", () => {
     expect(SHRIMP_SPEC.maxX).toBeLessThan(REEF_PILE.x0);
-    expect(CRAB_SPEC.minX).toBeGreaterThan(SHRIMP_SPEC.maxX);
-    expect(CRAB_SPEC.minX).toBeGreaterThanOrEqual(REEF_PILE.x0);
-    expect(CRAB_SPEC.maxX).toBeLessThanOrEqual(REEF_PILE.x1);
+    expect(CRAB_ROUTE[0].x).toBeLessThan(SHRIMP_SPEC.minX);
+    const last = CRAB_ROUTE[CRAB_ROUTE.length - 1];
+    expect(last.x).toBeLessThanOrEqual(REEF_PILE.x1);
   });
 
-  it("the crab lives at three quarters of the height of the pile", () => {
+  it("the crab ends its route on the flat rock, at three quarters of the height of the pile", () => {
     expect(REEF_PILE.ledge / REEF_PILE.height).toBeCloseTo(0.75, 1);
-    // Its body is drawn about 30 units above its feet, which stand on the flat rock.
-    expect(CRAB_SPEC.floorOffset).toBe(REEF_PILE.ledge + 30);
-    expect(CRAB_SPEC.minX).toBe(REEF_PILE.ledgeFrom);
-    expect(CRAB_SPEC.maxX).toBe(REEF_PILE.ledgeTo);
+    const [a, b] = CRAB_ROUTE.slice(-2);
+    expect([a.h, b.h]).toEqual([REEF_PILE.ledge, REEF_PILE.ledge]);
+    expect(a.x).toBeGreaterThanOrEqual(REEF_PILE.ledgeFrom);
+    expect(b.x).toBeLessThanOrEqual(REEF_PILE.ledgeTo);
   });
 
   it("the goby stays where it is: its lane is a single point", () => {
@@ -1018,7 +1037,7 @@ describe("stepCrawler() (shrimp and crab)", () => {
 
   it.each([
     ["shrimp", SHRIMP_SPEC, 25],
-    ["crab", CRAB_SPEC, REEF_PILE.ledge + 30],
+    ["ledge crawler", LEDGE_SPEC, REEF_PILE.ledge + 30],
     ["goby", GOBY_SPEC, 14],
   ])("the %s keeps the height of its place (the sand, or the flat rock of the pile)", (_name, spec, offset) => {
     const c = crawler();
@@ -1028,7 +1047,7 @@ describe("stepCrawler() (shrimp and crab)", () => {
 
   it.each([
     ["shrimp", SHRIMP_SPEC],
-    ["crab", CRAB_SPEC],
+    ["ledge crawler", LEDGE_SPEC],
   ])("the %s schedules its first walk from the clock and the random source", (_name, spec) => {
     const c = crawler();
     stepCrawler(c, frame({ timestamp: 1000 }), spec, constant(0.5));
@@ -1037,7 +1056,7 @@ describe("stepCrawler() (shrimp and crab)", () => {
 
   it.each([
     ["shrimp", SHRIMP_SPEC],
-    ["crab", CRAB_SPEC],
+    ["ledge crawler", LEDGE_SPEC],
   ])("the %s picks a spot inside its lane when it sets off", (_name, spec) => {
     const c = crawler({ idleUntil: 10 });
     stepCrawler(c, frame({ timestamp: 1000 }), spec, constant(0.25));
@@ -1047,7 +1066,7 @@ describe("stepCrawler() (shrimp and crab)", () => {
 
   it.each([
     ["shrimp", SHRIMP_SPEC],
-    ["crab", CRAB_SPEC],
+    ["ledge crawler", LEDGE_SPEC],
   ])("the %s faces where it walks and steps speed * delta", (_name, spec) => {
     const right = crawler({ state: "moving", x: 500, targetX: 900, idleUntil: 1e9 });
     stepCrawler(right, frame({ delta: 2, userSpeed: 1.5 }), spec, constant(0.5));
@@ -1061,7 +1080,7 @@ describe("stepCrawler() (shrimp and crab)", () => {
 
   it.each([
     ["shrimp", SHRIMP_SPEC],
-    ["crab", CRAB_SPEC],
+    ["ledge crawler", LEDGE_SPEC],
   ])("the %s stops on arrival and schedules its next pause", (_name, spec) => {
     const c = crawler({ state: "moving", x: 500, targetX: 500.4, idleUntil: 1e9 });
     stepCrawler(c, frame({ timestamp: 3000 }), spec, constant(0.5));
@@ -1072,7 +1091,7 @@ describe("stepCrawler() (shrimp and crab)", () => {
 
   it.each([
     ["shrimp", SHRIMP_SPEC],
-    ["crab", CRAB_SPEC],
+    ["ledge crawler", LEDGE_SPEC],
   ])("the %s stays where it is and only fades when dead", (_name, spec) => {
     const c = crawler({ x: 333, y: 7 });
     stepCrawler(c, frame({ deltaMs: 900 }, { isDead: true }), spec, constant(0.5));
@@ -1082,7 +1101,7 @@ describe("stepCrawler() (shrimp and crab)", () => {
 
   it("comes back to life with no death progress", () => {
     const c = crawler({ deathProgress: 0.6 });
-    stepCrawler(c, frame(), CRAB_SPEC, constant(0.5));
+    stepCrawler(c, frame(), LEDGE_SPEC, constant(0.5));
     expect(c.deathProgress).toBe(0);
   });
 });

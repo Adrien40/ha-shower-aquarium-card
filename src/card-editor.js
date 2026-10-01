@@ -159,6 +159,7 @@ export const CARD_EDITOR_SCHEMA = [
           },
         },
       },
+      { name: "swipe_biotope", default: CONFIG_DEFAULTS.swipe_biotope, selector: { boolean: {} } },
       { name: "show_fps", default: CONFIG_DEFAULTS.show_fps, selector: { boolean: {} } },
       {
         name: "aspect_ratio_width",
@@ -228,6 +229,7 @@ export const FIELD_LABEL_KEYS = {
   creature_style: "field_creature_style",
   gauge_style: "field_gauge_style",
   show_budget: "field_show_budget",
+  swipe_biotope: "field_swipe_biotope",
   aspect_ratio_width: "field_aspect_ratio_width",
   aspect_ratio_height: "field_aspect_ratio_height",
 };
@@ -246,6 +248,8 @@ export const HELPER_KEYS = {
   animation_quality: "helper_animation_quality",
   respect_reduced_motion: "helper_respect_reduced_motion",
   show_fps: "helper_show_fps",
+  swipe_biotope: "helper_swipe_biotope",
+  algae_age: "helper_algae_age",
 };
 
 // select field name -> { option value -> translation key }. The labels in

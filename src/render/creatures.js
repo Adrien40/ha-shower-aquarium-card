@@ -63,7 +63,8 @@ export function renderShrimp(ctx, isDead) {
 }
 
 /**
- * Crab.
+ * Crab. Hiding in a cave, it shrinks and fades into the dark of the cave until
+ * only its two eyes show.
  * @param {import("../types.js").RenderHost} ctx the card element
  * @param {boolean} isDead
  */
@@ -71,12 +72,24 @@ export function renderCrab(ctx, isDead) {
   if (!ctx._crab) return svg``;
   const c = ctx._crab;
   const p = c.deathProgress || 0;
-  const bodyOpacity = (1.0 - p).toFixed(2);
+  const hide = Math.max(0, Math.min(1, c.hide || 0));
+  const bodyOpacity = ((1.0 - p) * (1 - hide * 0.92)).toFixed(2);
   const flip = c.dir === -1 ? -1 : 1;
+  // It backs away into the cave: smaller, and only the eyes are left at the end.
+  const size = Number((1.4 * (1 - hide * 0.6)).toFixed(3));
+  const eyes = hide > 0.85 && !isDead ? Math.min(1, (hide - 0.85) / 0.15) : 0;
 
   return svg`
-    <g transform="translate(${c.x}, ${c.y}) scale(${flip * 1.4}, ${isDead ? -1.4 : 1.4})" opacity="${bodyOpacity}">
+    <g transform="translate(${c.x}, ${c.y}) scale(${flip * size}, ${isDead ? -size : size})" opacity="${bodyOpacity}">
       ${crabRedrawn(creatureStyle(ctx), shadingAllowed(ctx))}
     </g>
+    ${eyes > 0
+      ? svg`
+          <g transform="translate(${c.x}, ${(c.y - 22 * size).toFixed(1)})" opacity="${eyes.toFixed(2)}">
+            <circle cx="-6" cy="0" r="3.6" fill="#f8fafc" /><circle cx="-5.4" cy="0.4" r="1.9" fill="#0f172a" />
+            <circle cx="6" cy="0" r="3.6" fill="#f8fafc" /><circle cx="6.6" cy="0.4" r="1.9" fill="#0f172a" />
+          </g>
+        `
+      : ""}
   `;
 }

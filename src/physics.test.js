@@ -10,7 +10,7 @@
 // connectedCallback's real requestAnimationFrame loop never engages.
 import { describe, it, expect, vi, afterEach } from "vitest";
 import "./shower-aquarium-card.js";
-import { REEF_PILE } from "./reef-layout.js";
+import { REEF_PILE, CRAB_ROUTE, CRAB_ROUTE_LENGTH, CRAB_START_S, crabPointAt } from "./reef-layout.js";
 
 function makeCard(config = {}) {
   const Card = customElements.get("shower-aquarium-card");
@@ -266,40 +266,44 @@ describe("_updatePhysics(): shrimp and crab (idle/moving state machines)", () =>
     expect(el._shrimp.x).toBe(840);
   });
 
-  it("crab: transitions to moving after idleUntil, picks a targetX on the flat rock of its pile (REEF_PILE.ledgeFrom to ledgeTo)", () => {
+  it("crab: transitions to moving after idleUntil, picks a goal on its route", () => {
     const el = makeCard();
-    el._crab = { x: 900, y: 418, targetX: 900, state: "idle", idleUntil: 1000, dir: 1 };
+    el._crab = { x: 910, y: 418, s: CRAB_START_S, targetX: 910, state: "idle", idleUntil: 1000, dir: 1 };
     vi.spyOn(Math, "random").mockReturnValue(0.999);
     el._updatePhysics(1500);
     expect(el._crab.state).toBe("moving");
-    expect(el._crab.targetX).toBeGreaterThanOrEqual(REEF_PILE.ledgeFrom);
+    expect(el._crab.goalS).toBeGreaterThanOrEqual(0);
+    expect(el._crab.goalS).toBeLessThanOrEqual(CRAB_ROUTE_LENGTH);
+    expect(el._crab.targetX).toBeGreaterThanOrEqual(CRAB_ROUTE[0].x);
     expect(el._crab.targetX).toBeLessThanOrEqual(REEF_PILE.ledgeTo);
   });
 
-  it("crab: while already moving, steps toward targetX each frame", () => {
+  it("crab: while already moving, steps along its route each frame", () => {
     const el = makeCard();
-    el._crab = { x: 260, y: 555, targetX: 440, state: "moving", idleUntil: 99999, dir: 1 };
+    el._crab = { x: 500, y: 555, s: 100, goalS: 300, targetX: 600, state: "moving", idleUntil: 99999, dir: 1 };
     el._updatePhysics(1000);
     el._updatePhysics(1050);
-    expect(el._crab.x).toBeGreaterThan(260);
+    expect(el._crab.s).toBeGreaterThan(100);
+    expect(el._crab.x).toBeGreaterThan(crabPointAt(100).x);
   });
 
-  it("crab: settles back to idle once within 1.5px of its target", () => {
+  it("crab: settles back to idle once it has reached its goal", () => {
     const el = makeCard();
-    el._crab = { x: 439.5, y: 555, targetX: 440, state: "moving", idleUntil: 99999, dir: 1 };
+    el._crab = { x: 600, y: 555, s: 299.7, goalS: 300, targetX: 600, state: "moving", idleUntil: 99999, dir: 1 };
     el._updatePhysics(1000);
     el._updatePhysics(1050);
     expect(el._crab.state).toBe("idle");
   });
 
-  it("crab: when dead, only deathProgress advances", () => {
+  it("crab: when dead, only deathProgress advances (it stays where it is on its route)", () => {
     const el = makeCard();
     el._cachedTemperature = 50;
-    el._crab = { x: 350, y: 555, targetX: 350, state: "idle", idleUntil: 99999, dir: 1, deathProgress: 0 };
+    el._crab = { x: 350, y: 555, s: 100, goalS: 100, targetX: 350, state: "idle", idleUntil: 99999, dir: 1, deathProgress: 0 };
     el._updatePhysics(1000);
     el._updatePhysics(1050);
     expect(el._crab.deathProgress).toBeGreaterThan(0);
-    expect(el._crab.x).toBe(350);
+    expect(el._crab.s).toBe(100);
+    expect(el._crab.x).toBe(crabPointAt(100).x);
   });
 
   it("missing shrimp/crab (e.g. cleared) doesn't throw", () => {

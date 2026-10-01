@@ -1,5 +1,5 @@
 import { html, svg } from "lit";
-import { renderSensorBadge } from "./hud.js";
+import { renderSensorBadge, renderBiotopeNotice } from "./hud.js";
 import { renderStatusPanel } from "./gauges.js";
 import { renderDefs } from "./defs.js";
 import { renderTankBackdrop, renderTankGlass } from "./tank.js";
@@ -51,12 +51,16 @@ export function renderTankSvg(host, view) {
     cost,
     lang,
     sensorLost,
+    biotopeNotice,
   } = view;
   return html`
     <svg
       role="img"
       aria-label="${ariaLabel}"
       @click=${(/** @type {MouseEvent} */ e) => host._onTankTap(e)}
+      @pointerdown=${(/** @type {PointerEvent} */ e) => host._onSwipeStart(e)}
+      @pointerup=${(/** @type {PointerEvent} */ e) => host._onSwipeEnd(e)}
+      @pointercancel=${() => host._onSwipeCancel()}
       viewBox="0 0 1024 ${canvasH}"
       preserveAspectRatio="xMidYMid meet"
       shape-rendering="${host._profile.antialias ? "auto" : "optimizeSpeed"}"
@@ -110,8 +114,8 @@ export function renderTankSvg(host, view) {
         </g>
 
         ${themeKey === "freshwater" ? host._renderAncistrus(isDead) : ""}
-        ${themeKey === "saltwater" ? host._renderShrimp(isDead) : ""}
         ${themeKey === "saltwater" ? host._renderCrab(isDead) : ""}
+        ${themeKey === "saltwater" ? host._renderShrimp(isDead) : ""}
         ${themeKey === "saltwater" ? host._renderGoby(isDead) : ""}
         ${host._renderAlgae(effectiveAlgaeHours, isFullscreen)}
         ${host._renderRipples()}
@@ -133,6 +137,7 @@ export function renderTankSvg(host, view) {
           : ""}
         ${isFullscreen && showReadings ? host._renderCostLabel(cost) : ""}
 
+        ${renderBiotopeNotice(biotopeNotice, canvasH)}
         ${host._renderFpsBadge()}
         ${renderSensorBadge(host, sensorLost, isFullscreen && showReadings)}
       </g>

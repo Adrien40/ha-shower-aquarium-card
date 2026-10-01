@@ -1046,7 +1046,7 @@ describe("render(): gauges and metric tiles", () => {
 
     it("the thermometer is not taller than 160 units, the height of a corner gauge", async () => {
       const el = await mountCard({ fullscreen: true }, 12, 38.5);
-      const bulb = el.shadowRoot.querySelector('circle[cx="62"][r="17"]');
+      const bulb = el.shadowRoot.querySelector('circle[cx="62"][r="12"]');
       const tube = el.shadowRoot.querySelector('rect[rx="9"]');
       expect(Number(bulb.getAttribute("cy")) + Number(bulb.getAttribute("r"))).toBeLessThanOrEqual(160);
       expect(Number(tube.getAttribute("y"))).toBeGreaterThanOrEqual(25);
@@ -1062,7 +1062,7 @@ describe("render(): gauges and metric tiles", () => {
     it("the liquid follows the zone: blue when cold, green when comfortable, orange when hot, red when deadly", async () => {
       for (const [temp, colour] of [[20, "#0284c7"], [36, "#16a34a"], [41, "#f97316"], [47, "#ef4444"]]) {
         const el = await mountCard({ fullscreen: true }, 5, temp);
-        expect(el.shadowRoot.querySelector('circle[r="13"]').getAttribute("fill"), `${temp} degrees`).toBe(colour);
+        expect(el.shadowRoot.querySelector('circle[r="8.5"]').getAttribute("fill"), `${temp} degrees`).toBe(colour);
       }
     });
 
@@ -1072,7 +1072,7 @@ describe("render(): gauges and metric tiles", () => {
       document.body.appendChild(el);
       await el.updateComplete;
       expect(el._cachedComfortMin).toBe(37);
-      expect(el.shadowRoot.querySelector('circle[r="13"]').getAttribute("fill")).toBe("#0284c7");
+      expect(el.shadowRoot.querySelector('circle[r="8.5"]').getAttribute("fill")).toBe("#0284c7");
     });
 
     it("the volume is a number over a bar filled up to the budget", async () => {

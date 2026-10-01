@@ -90,12 +90,49 @@ const PILE_TOP = [
   [998, 198, 24, 36, 10, "#7d5c8f"],
   [930, 228, 26, 26, 11, "#6d5280"],
 ];
-/** @type {[number, number, number, number, number, string][]} The small pile of rock in the middle of the tank. */
-const SMALL_PILE = [
-  [420, 12, 34, 16, 12, "#8b6a9c"],
-  [448, 26, 22, 20, 13, "#6d5280"],
-  [398, 24, 20, 16, 14, "#7d5c8f"],
+/** @typedef {[number, number, number, number, number, string]} Chunk  [cx, height above the bottom, rx, ry, seed, colour] */
+
+/** @type {Chunk[]} The grotto in the middle of the tank: a low arch of live rock, whose dark mouth is where the crab hides. */
+const GROTTO = [
+  [322, 26, 38, 26, 21, "#7d5c8f"],
+  [424, 20, 28, 20, 22, "#6d5280"],
+  [314, 70, 30, 36, 23, "#8b6a9c"],
+  [428, 64, 24, 32, 24, "#7d5c8f"],
+  [372, 110, 68, 30, 25, "#6d5280"],
+  [340, 138, 28, 20, 26, "#8b6a9c"],
+  [404, 134, 26, 18, 27, "#7d5c8f"],
 ];
+/** The dark inside of the grotto: where the crab goes in. */
+const GROTTO_MOUTH = { left: 345, right: 398, top: 78 };
+
+/** @type {Chunk[]} More live rock, lying on the sand between the other things of the reef. */
+const SCATTERED_ROCKS = [
+  [330, 9, 26, 11, 41, "#7d5c8f"],
+  [352, 20, 14, 10, 42, "#8b6a9c"],
+  [572, 8, 22, 9, 43, "#6d5280"],
+  [716, 11, 32, 13, 44, "#8b6a9c"],
+  [740, 24, 18, 12, 45, "#7d5c8f"],
+  [610, 6, 12, 6, 46, "#6d5280"],
+  [506, 6, 10, 5, 47, "#8b6a9c"],
+];
+
+/**
+ * One chunk of rock in the chosen look: the dark body, and (except in the
+ * cartoon look) its lit upper face and a few pits.
+ * @param {import("./skin.js").CreatureStyle} style
+ * @param {boolean} shading
+ * @param {number} b  the bottom of the tank
+ * @param {Chunk} piece
+ */
+function rock(style, shading, b, [x, up, rx, ry, seed, fill]) {
+  const y = b - up;
+  const { body, top } = chunkPath(x, y, rx, ry, seed);
+  return svg`
+    ${skinned(style, shading, body, fill)}
+    ${style === "cartoon" ? "" : shapeEl(sh(top, "#ffffff", { op: 0.15, stroke: "none" }))}
+    ${style === "flat" ? [[-0.3, 0.1], [0.25, 0.3], [-0.05, 0.45]].map(([px, py]) => shapeEl(sh(C(x + px * rx, y + py * ry, Math.max(1.4, rx * 0.06)), "#3b2a4a", { op: 0.35, stroke: "none" }))) : ""}
+  `;
+}
 
 /**
  * Reef decor: coral, live rock, anemone.
@@ -117,15 +154,6 @@ export function saltwaterDecor(ctx, bottomY, lifeStyle, deathProgress) {
   // Polyps on the corals and pits in the rocks (flat look only).
   const dots = (/** @type {number[][]} */ points, /** @type {string} */ fill, /** @type {number} */ r, /** @type {number} */ op) =>
     style === "flat" ? points.map(([x, y]) => shapeEl(sh(C(x, y, r), fill, { op }))) : "";
-  // A chunk of rock: dark body, and (except in the cartoon look) its lit top face and a few pits.
-  const chunk = (/** @type {number} */ x, /** @type {number} */ y, /** @type {number} */ rx, /** @type {number} */ ry, /** @type {number} */ seed, /** @type {string} */ fill) => {
-    const { body, top } = chunkPath(x, y, rx, ry, seed);
-    return svg`
-      ${k(body, fill)}
-      ${style === "cartoon" ? "" : shapeEl(sh(top, "#ffffff", { op: 0.15, stroke: "none" }))}
-      ${style === "flat" ? [[-0.3, 0.1], [0.25, 0.3], [-0.05, 0.45]].map(([px, py]) => shapeEl(sh(C(x + px * rx, y + py * ry, Math.max(1.4, rx * 0.06)), "#3b2a4a", { op: 0.35, stroke: "none" }))) : ""}
-    `;
-  };
   return svg`
     <g id="reef-decor">
       <g style="${lifeStyle}">
@@ -146,18 +174,17 @@ export function saltwaterDecor(ctx, bottomY, lifeStyle, deathProgress) {
       </g>
       </g>
       <g id="live-rock">
-        ${PILE.slice(0, 4).map(([x, up, rx, ry, seed, fill]) => chunk(x, b - up, rx, ry, seed, fill))}
-        ${PILE.slice(4).map(([x, up, rx, ry, seed, fill]) => chunk(x, b - up, rx, ry, seed, fill))}
-        ${k(E(884, b - 60, 22, 12), "#1f1230", 0.6)}
+        ${PILE.slice(0, 4).map((piece) => rock(style, shading, b, piece))}
+        ${PILE.slice(4).map((piece) => rock(style, shading, b, piece))}
+        ${shapeEl(sh(E(884, b - 52, 36, 22), "#0b0614", { stroke: "none", op: 1 }))}
         ${k(ledgePath(b), "#9a78ad")}
         ${style === "cartoon" ? "" : shapeEl(sh(`M ${REEF_PILE.ledgeFrom - 20},${b - REEF_PILE.ledge + 3} L ${REEF_PILE.ledgeTo + 44},${b - REEF_PILE.ledge + 3}`, undefined, { stroke: "#ffffff", sw: 1.6, op: 0.4, lc: "round" }))}
-        ${PILE_TOP.map(([x, up, rx, ry, seed, fill]) => chunk(x, b - up, rx, ry, seed, fill))}
+        ${PILE_TOP.map((piece) => rock(style, shading, b, piece))}
         ${style === "cartoon" ? "" : [[850, 44, 16, 7], [942, 108, 18, 8], [976, 152, 11, 6], [812, 74, 12, 6], [1002, 200, 9, 7]].map(([x, up, rx, ry]) => shapeEl(sh(E(x, b - up, rx, ry), "#e879f9", { op: 0.32, stroke: "none" })))}
         ${style === "flat" ? [[846, 66], [972, 158]].map(([x, up]) => svg`${shapeEl(sh(`M ${x},${b - up} L ${x},${b - up - 9}`, undefined, { stroke: "#fb923c", sw: 1.2, lc: "round" }))}${shapeEl(sh(C(x, b - up - 11, 3.2), "#fb923c", { stroke: "none" }))}`) : ""}
       </g>
-      <g id="live-rock-2">
-        ${SMALL_PILE.map(([x, up, rx, ry, seed, fill]) => chunk(x, b - up, rx, ry, seed, fill))}
-        ${style === "cartoon" ? "" : shapeEl(sh(E(432, b - 22, 12, 5), "#e879f9", { op: 0.32, stroke: "none" }))}
+      <g id="live-rock-scattered">
+        ${SCATTERED_ROCKS.map((piece) => rock(style, shading, b, piece))}
       </g>
       <g id="anemone" style="${lifeStyle}" transform="translate(260, ${b - 17}) scale(1.4, 1.4)">
         ${renderAnemoneTentacles(ctx, deathProgress)}
@@ -175,6 +202,11 @@ export function saltwaterDecor(ctx, bottomY, lifeStyle, deathProgress) {
               ${shapeEl(sh(E(14, 8, 3.4, 2), "#fb7185", { op: 0.75, stroke: "none" }))}
             `
           : ""}
+      </g>
+      <g id="live-rock-2">
+        ${GROTTO.map((piece) => rock(style, shading, b, piece))}
+        ${style === "cartoon" ? "" : [[314, 76, 12, 6], [404, 140, 14, 6], [430, 70, 10, 6]].map(([x, up, rx, ry]) => shapeEl(sh(E(x, b - up, rx, ry), "#e879f9", { op: 0.32, stroke: "none" })))}
+        ${shapeEl(sh(`M ${GROTTO_MOUTH.left},${b - 4} L ${GROTTO_MOUTH.left},${b - 44} Q ${GROTTO_MOUTH.left},${b - GROTTO_MOUTH.top} ${(GROTTO_MOUTH.left + GROTTO_MOUTH.right) / 2},${b - GROTTO_MOUTH.top} Q ${GROTTO_MOUTH.right},${b - GROTTO_MOUTH.top} ${GROTTO_MOUTH.right},${b - 44} L ${GROTTO_MOUTH.right},${b - 4} Z`, "#0b0614", { stroke: "none", op: 1 }))}
       </g>
     </g>
   `;

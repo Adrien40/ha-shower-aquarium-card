@@ -56,3 +56,20 @@ export function renderSensorBadge(ctx, isLost, underNumbers) {
     </g>
   `;
 }
+
+/**
+ * The name of the biotope, in the middle of the picture, for a moment after a
+ * swipe changed it.
+ * @param {string} name  empty when there is nothing to show
+ * @param {number} canvasH
+ */
+export function renderBiotopeNotice(name, canvasH) {
+  if (!name) return svg``;
+  const width = Math.max(260, name.length * 22 + 70);
+  return svg`
+    <g transform="translate(512, ${Math.round(canvasH / 2)})" pointer-events="none">
+      <rect x="${-width / 2}" y="-30" width="${width}" height="60" rx="30" fill="#000000" fill-opacity="0.72" />
+      <text y="9" font-family="system-ui, sans-serif" font-size="28" font-weight="700" fill="#ffffff" text-anchor="middle">${name}</text>
+    </g>
+  `;
+}

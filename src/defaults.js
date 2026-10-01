@@ -27,4 +27,5 @@ export const CONFIG_DEFAULTS = Object.freeze({
   show_fps: false,
   gauge_style: "thermometer",
   show_budget: false,
+  swipe_biotope: true,
 });

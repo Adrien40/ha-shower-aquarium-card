@@ -32,10 +32,11 @@ import {
   stepSnail,
   stepAncistrus,
   stepCrawler,
+  stepCrab,
   startleAncistrus,
   startleCrawler,
+  startleCrab,
   SHRIMP_SPEC,
-  CRAB_SPEC,
   GOBY_SPEC,
 } from "./physics.js";
 import {
@@ -63,6 +64,9 @@ import {
   detectHydraoEntities,
   formatNumber,
   isMotionAllowed,
+  nextBiotope,
+  classifySwipe,
+  BIOTOPES,
   CANVAS_WIDTH,
   SENSOR_LOST_DELAY_MS,
   settleSteps,
@@ -103,6 +107,7 @@ export class AquariumShowerCard extends LitElement {
       _ripples: { type: Array },
       _fpsInfo: { type: String },
       _announcement: { type: String },
+      _biotopeNotice: { type: String },
     };
   }
 
@@ -113,13 +118,16 @@ export class AquariumShowerCard extends LitElement {
   /**
    * @param {unknown} hass
    * @param {string[]} entities
+   * @param {string[]} [entitiesFallback]  the entities Home Assistant offers when the first list has none to suggest
    * @returns {Record<string, unknown>}
    */
-  static getStubConfig(hass, entities) {
-    const hydrao = detectHydraoEntities(/** @type {any} */ (hass), entities);
+  static getStubConfig(hass, entities, entitiesFallback) {
+    const hydrao = detectHydraoEntities(/** @type {any} */ (hass), entities, entitiesFallback);
+    // Without any Hydrao entity: a shower sensor, else any sensor (a card without an entity shows an error in the picker).
     const defaultEntity =
       hydrao.entity ||
       entities.find((e) => e.includes("shower") || e.includes("hydrao")) ||
+      entities.find((e) => e.startsWith("sensor.")) ||
       entities[0] ||
       "";
     const tempEntity =
@@ -168,6 +176,16 @@ export class AquariumShowerCard extends LitElement {
     // identical announcements in a row still differ, so both are read.
     this._announcement = "";
     this._announceFlip = false;
+    // Biotope chosen with a swipe (null: the one of the configuration), where the finger went
+    // down, when the last swipe happened, and the name of the new biotope shown for a moment.
+    /** @type {string | null} */
+    this._themeOverride = null;
+    /** @type {{ x: number, y: number, t: number } | null} */
+    this._swipeStart = null;
+    this._swipedAt = 0;
+    this._biotopeNotice = "";
+    /** @type {ReturnType<typeof setTimeout> | null} */
+    this._noticeTimer = null;
     this._rafCount = 0;
     this._tickCount = 0;
     this._fpsWindowStart = 0;
@@ -244,6 +262,104 @@ export class AquariumShowerCard extends LitElement {
    */
   _t(key) {
     return translate(resolveLang(this._hass), key);
+  }
+
+  // The biotope on screen: the one picked with a swipe, else the one of the configuration.
+  get _themeKey() {
+    return this._themeOverride || this._config?.theme || "freshwater";
+  }
+
+  _biotopeStorageKey() {
+    return `shower-aquarium-card:biotope:${this._config?.entity}`;
+  }
+
+  // The biotope picked with a swipe is remembered on this device, as long as the
+  // biotope of the configuration is still the one it was picked from: changing
+  // the biotope in the editor starts over from the new one.
+  /**
+   * @returns {string | null}
+   */
+  _restoreBiotope() {
+    if (!this._config?.swipe_biotope) return null;
+    try {
+      const saved = JSON.parse(window.localStorage.getItem(this._biotopeStorageKey()) || "null");
+      if (saved && saved.base === this._config.theme && saved.chosen !== saved.base && BIOTOPES.includes(saved.chosen)) return saved.chosen;
+    } catch {
+      // No storage, or something else than what was saved: the configured biotope it is.
+    }
+    return null;
+  }
+
+  /**
+   * @param {string} chosen
+   */
+  _rememberBiotope(chosen) {
+    if (this._isEditorPreview()) return;
+    try {
+      window.localStorage.setItem(this._biotopeStorageKey(), JSON.stringify({ base: this._config?.theme, chosen }));
+    } catch {
+      // Storage may be forbidden (private mode): the choice then lasts until the page is reloaded.
+    }
+  }
+
+  // A swipe along the tank, left or right, goes to the next or the previous biotope.
+  /**
+   * @param {PointerEvent} e
+   */
+  _onSwipeStart(e) {
+    this._swipeStart = this._config?.swipe_biotope ? { x: e.clientX, y: e.clientY, t: Date.now() } : null;
+  }
+
+  /**
+   * @param {PointerEvent} e
+   */
+  _onSwipeEnd(e) {
+    const start = this._swipeStart;
+    this._swipeStart = null;
+    if (!start) return;
+    const step = classifySwipe(e.clientX - start.x, e.clientY - start.y, Date.now() - start.t);
+    if (step === 0) return;
+    this._swipedAt = Date.now();
+    this._switchBiotope(step);
+  }
+
+  _onSwipeCancel() {
+    this._swipeStart = null;
+  }
+
+  // Puts another biotope in the tank: new fish and creatures at their starting
+  // places, the name of the biotope shown for a moment and read out.
+  /**
+   * @param {number} step  1 for the next biotope, -1 for the previous one
+   */
+  _switchBiotope(step) {
+    if (!this._config) return;
+    const next = nextBiotope(this._themeKey, step);
+    this._themeOverride = next === this._config.theme ? null : next;
+    this._rememberBiotope(next);
+    this._fishes = generateDefaultFishes(this._config.fish_count, next);
+    const scene = createInitialScene();
+    this._snails = scene.snails;
+    this._ancistrus = scene.ancistrus;
+    this._shrimp = scene.shrimp;
+    this._crab = scene.crab;
+    this._goby = scene.goby;
+    this._food = [];
+    this._ripples = [];
+    const name = this._t(`theme_${next}`);
+    this._biotopeNotice = name;
+    this._announce("aria_biotope", { name });
+    if (this._noticeTimer !== null) clearTimeout(this._noticeTimer);
+    this._noticeTimer = setTimeout(() => {
+      this._noticeTimer = null;
+      this._biotopeNotice = "";
+    }, 2000);
+    this._onDataChanged();
+  }
+
+  // The same thing for the keyboard and screen readers: a real button.
+  _onBiotopeButton() {
+    this._switchBiotope(1);
   }
 
   _getCanvasHeight() {
@@ -323,7 +439,8 @@ export class AquariumShowerCard extends LitElement {
       this.removeAttribute("fullscreen");
     }
 
-    this._fishes = generateDefaultFishes(this._config.fish_count, this._config.theme);
+    this._themeOverride = this._restoreBiotope();
+    this._fishes = generateDefaultFishes(this._config.fish_count, this._themeKey);
 
     this._flow = createFlowTracker();
     this._food = [];
@@ -473,6 +590,10 @@ export class AquariumShowerCard extends LitElement {
   disconnectedCallback() {
     super.disconnectedCallback();
     this._clearSensorTimer();
+    if (this._noticeTimer !== null) {
+      clearTimeout(this._noticeTimer);
+      this._noticeTimer = null;
+    }
     document.removeEventListener("visibilitychange", this._onVisibilityChange);
     this._intersectionObserver?.disconnect();
     this._intersectionObserver = null;
@@ -577,7 +698,7 @@ export class AquariumShowerCard extends LitElement {
         canvasHeight: this._getCanvasHeight(),
       }),
       userSpeed: config.fish_speed_multiplier,
-      themeKey: config.theme || "freshwater",
+      themeKey: this._themeKey,
     });
     const { isDead } = frame;
     let stateChanged = false;
@@ -629,7 +750,7 @@ export class AquariumShowerCard extends LitElement {
       stateChanged = true;
     }
     if (this._crab) {
-      stepCrawler(this._crab, frame, CRAB_SPEC, randomSource);
+      stepCrab(this._crab, frame, randomSource);
       stateChanged = true;
     }
     if (this._goby) {
@@ -784,8 +905,8 @@ export class AquariumShowerCard extends LitElement {
   }
 
   // A knock on the glass at (x, y): a ripple, and the nearby fish dart away. The
-  // Ancistrus, the shrimp, the crab and the goby run off too, much faster than
-  // they usually move.
+  // Ancistrus, the shrimp and the goby run off too, much faster than they
+  // usually move, and the crab runs into a cave to hide.
   /**
    * @param {number} x
    * @param {number} y
@@ -804,7 +925,7 @@ export class AquariumShowerCard extends LitElement {
     });
     if (this._ancistrus) startleAncistrus(this._ancistrus, x, y, now, tank, randomSource);
     if (this._shrimp) startleCrawler(this._shrimp, x, y, now, SHRIMP_SPEC);
-    if (this._crab) startleCrawler(this._crab, x, y, now, CRAB_SPEC);
+    if (this._crab) startleCrab(this._crab, x, y, now);
     if (this._goby) startleCrawler(this._goby, x, y, now, GOBY_SPEC);
   }
 
@@ -813,6 +934,8 @@ export class AquariumShowerCard extends LitElement {
    * @param {MouseEvent} e
    */
   _onTankTap(e) {
+    // The click that ends a swipe is not a tap.
+    if (Date.now() - this._swipedAt < 500) return;
     const tank = this._interactiveTank();
     if (!tank) return;
     const point = this._eventToSvgPoint(e);
@@ -846,10 +969,11 @@ export class AquariumShowerCard extends LitElement {
   // Tells screen readers what a keyboard action did.
   /**
    * @param {string} key  translation key of the message
+   * @param {Record<string, unknown>} [values]  what replaces the {names} of the message
    */
-  _announce(key) {
+  _announce(key, values = {}) {
     this._announceFlip = !this._announceFlip;
-    this._announcement = this._t(key) + (this._announceFlip ? "\u00a0" : "");
+    this._announcement = fillTemplate(this._t(key), values) + (this._announceFlip ? "\u00a0" : "");
   }
 
   _renderFlowBubbles() {
@@ -927,7 +1051,7 @@ export class AquariumShowerCard extends LitElement {
 
     const displayedRemaining = Math.max(0, targetBudget - currentVolume);
 
-    const themeKey = this._config.theme || "freshwater";
+    const themeKey = this._themeKey;
     const theme = getTheme(themeKey);
 
     const waterColorStart = isBoiling || isCritical
@@ -1001,6 +1125,7 @@ export class AquariumShowerCard extends LitElement {
             cost,
             lang,
             sensorLost,
+            biotopeNotice: this._biotopeNotice,
           })}
 
           <!-- The same two actions as a tap on the tank, for the keyboard and screen readers. -->
@@ -1010,6 +1135,9 @@ export class AquariumShowerCard extends LitElement {
             </button>
             <button type="button" class="kb-button" ?disabled=${!canInteract} @click=${() => this._onKnockButton()}>
               ${this._t("action_knock")}
+            </button>
+            <button type="button" class="kb-button" @click=${() => this._onBiotopeButton()}>
+              ${this._t("action_biotope")}
             </button>
           </div>
           <div class="sr-only" role="status" aria-live="polite">${this._announcement}</div>

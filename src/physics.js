@@ -12,7 +12,7 @@
 //    something changed when that is not always the case.
 
 import { flowBubbleCount, pickFoodTarget, RIPPLE_DURATION_MS } from "./pure.js";
-import { REEF_PILE } from "./reef-layout.js";
+import { CRAB_ROUTE_LENGTH, CRAB_CAVES, CRAB_START_S, crabPointAt } from "./reef-layout.js";
 
 /** @typedef {import("./types.js").Frame} Frame */
 /** @typedef {import("./types.js").TankState} TankState */
@@ -439,9 +439,99 @@ export function stepSnail(snail, frame) {
 /** How long (ms) the bottom dwellers keep running after a knock on the glass, and how much faster they go. */
 export const FLEE = { durationMs: 1800, radius: 520, ancistrusFactor: 7, crawlerFactor: 6, ancistrusTurn: 6 };
 
+/** How the plecostomus moves: units per frame, degrees per frame it can turn, and how far it goes at a time. */
+export const ANCISTRUS_MOVE = { speed: 0.8, turn: 3, minTrip: 140, maxTrip: 420 };
+
+/** The shortest way round from one heading to another, in degrees (-180..180). @param {number} from @param {number} to */
+const turnBetween = (from, to) => ((((to - from) % 360) + 540) % 360) - 180;
+
+/** The drawing of the Ancistrus is scaled by this much (see render/creatures.js). */
+const ANCISTRUS_SCALE = 1.5;
+/**
+ * Points of the drawing of the Ancistrus (in its own units, head at the top):
+ * the tentacles, the lips, the tips of the fins and the end of the body. They
+ * must stay in the water.
+ * @type {number[][]}
+ */
+const ANCISTRUS_BODY = [[0, -21], [13, -19], [-13, -19], [15, 0], [-15, 0], [34, 32], [-34, 32], [19, 55], [-19, 55], [9, 72], [-9, 72]];
+/**
+ * The end of the tail: it may stick out of the water a little, the rest may not.
+ * @type {number[][]}
+ */
+const ANCISTRUS_TAIL = [[9, 89], [-9, 89], [0, 84]];
+/** How far (drawing units) the body stays under the surface, how far the tail may stick out of it, the gap kept above the bottom, and how fast (units per frame) it is brought back into the water. */
+export const ANCISTRUS_WATER = { surfaceMargin: 6, tailOut: 16, floorMargin: 4, rescue: 12 };
+
+/**
+ * The highest and the lowest place (y of its centre) where the Ancistrus can
+ * be with its head pointing at `heading`, so that its body is in the water (the
+ * tip of its tail may be a little above the surface) and above the bottom.
+ * Turned head down, the long body reaches far above its centre; turned sideways,
+ * it takes little height: the range depends on the heading.
+ *
+ * @param {number} heading  degrees, 0 = head straight up
+ * @param {{ tankBottom: number, waterSurfaceY: number }} tank
+ * @returns {{ minY: number, maxY: number }}
+ */
+export function ancistrusYRange(heading, tank) {
+  const rad = (heading * Math.PI) / 180;
+  const [sin, cos] = [Math.sin(rad), Math.cos(rad)];
+  // Vertical offset of a point of the drawing from the centre of the fish.
+  const dy = (/** @type {number[]} */ [x, y]) => ANCISTRUS_SCALE * (x * sin + y * cos);
+  const body = ANCISTRUS_BODY.map(dy);
+  const tail = ANCISTRUS_TAIL.map(dy);
+  const minY = Math.max(tank.waterSurfaceY + ANCISTRUS_WATER.surfaceMargin - Math.min(...body), tank.waterSurfaceY - ANCISTRUS_WATER.tailOut - Math.min(...tail));
+  const maxY = tank.tankBottom - ANCISTRUS_WATER.floorMargin - Math.max(...body, ...tail);
+  return { minY, maxY };
+}
+
+/**
+ * Where the Ancistrus can go from where it is: a point `trip` units away in
+ * the direction `angle`, kept in its area and in the water. When that spot is
+ * out of reach (a wall, the surface), the other directions are tried and the
+ * best one is taken: the one that goes the nearest to the wanted trip or, when
+ * the fish runs away from a knock, the one that takes it the farthest from it.
+ * Returns null when it has nowhere to go (almost no water).
+ *
+ * @param {Ancistrus} anc
+ * @param {{ tankBottom: number, waterSurfaceY: number }} tank
+ * @param {number} angle  radians, 0 = straight up
+ * @param {number} trip
+ * @param {{ x: number, y: number }} [awayFrom]  the place of a knock on the glass
+ * @returns {{ x: number, y: number } | null}
+ */
+function chooseAncistrusTarget(anc, tank, angle, trip, awayFrom) {
+  const [minX, maxX] = [90, 934];
+  const before = awayFrom ? Math.hypot(anc.x - awayFrom.x, anc.y - awayFrom.y) : 0;
+  /** @type {{ x: number, y: number, score: number } | null} */
+  let best = null;
+  for (const offset of [0, 40, -40, 80, -80, 120, -120, 160, 180]) {
+    const a = angle + (offset * Math.PI) / 180;
+    const x = Math.min(maxX, Math.max(minX, anc.x + Math.sin(a) * trip));
+    let y = anc.y - Math.cos(a) * trip;
+    let ok = true;
+    // Its heading on arrival depends on where it ends up, which depends on the range: a few passes settle it.
+    for (let pass = 0; pass < 4 && ok; pass++) {
+      const heading = (Math.atan2(x - anc.x, -(y - anc.y)) * 180) / Math.PI;
+      const range = ancistrusYRange(heading, tank);
+      if (range.minY > range.maxY) ok = false;
+      else y = Math.min(range.maxY, Math.max(range.minY, y));
+    }
+    if (!ok) continue;
+    const move = Math.hypot(x - anc.x, y - anc.y);
+    if (move < 60) continue;
+    const score = awayFrom
+      ? Math.hypot(x - awayFrom.x, y - awayFrom.y) - before + move * 0.5 - Math.abs(offset) * 0.5
+      : -Math.abs(move - trip) - Math.abs(offset) * 0.3;
+    if (!best || score > best.score) best = { x, y, score };
+  }
+  return best;
+}
+
 /**
  * A knock on the glass at (tx, ty) startles the Ancistrus: it turns away from
- * the knock and darts off, much faster than its usual glide, for a moment.
+ * the knock and darts off, much faster than its usual glide, for a moment. When
+ * a wall is in the way it takes the way that is open (along the wall).
  *
  * @param {Ancistrus} anc
  * @param {number} tx
@@ -459,16 +549,89 @@ export function startleAncistrus(anc, tx, ty, nowMs, tank, rand = Math.random) {
   // Straight away from the knock; a random direction when it is right on it.
   const angle = dist < 1 ? rand() * 2 * Math.PI : Math.atan2(dx, -dy);
   const trip = 300 + 200 * (1 - dist / FLEE.radius);
-  anc.targetX = Math.min(934, Math.max(90, anc.x + Math.sin(angle) * trip));
-  anc.targetY = Math.min(tank.tankBottom - 110, Math.max(Math.max(tank.tankTop + 65, tank.waterSurfaceY + 70), anc.y - Math.cos(angle) * trip));
+  const target = chooseAncistrusTarget(anc, tank, angle, trip, { x: tx, y: ty });
+  if (target) {
+    anc.targetX = target.x;
+    anc.targetY = target.y;
+  } else {
+    // Hardly any water: it only shakes where it is.
+    anc.targetX = anc.x;
+    anc.targetY = anc.y;
+  }
   anc.state = "moving";
   anc.fleeUntil = nowMs + FLEE.durationMs;
   return true;
 }
 
 /**
+ * The plecostomus: rests on the glass, then turns to face a new spot and
+ * glides to it, in any direction (up, down, sideways, diagonally), and sinks
+ * when the tank is dead. It always stays in the water (only the tip of its
+ * tail may come out of it). Idle and move delays come from the injected clock
+ * and random source.
+ *
+ * @param {Ancistrus} anc
+ * @param {Frame} frame
+ * @param {RandomSource} [rand]
+ */
+export function stepAncistrus(anc, frame, rand = Math.random) {
+  const { isDead, deathStep, tankBottom, waterSurfaceY, delta, timestamp, userSpeed, nowMs } = frame;
+  const fleeing = (anc.fleeUntil ?? 0) > nowMs;
+
+  if (isDead) {
+    anc.deathProgress = Math.min(1.0, (anc.deathProgress || 0) + deathStep);
+    anc.y = Math.min(tankBottom - 35, anc.y + 1.2 * delta);
+    return;
+  }
+
+  anc.deathProgress = 0;
+  anc.heading = anc.heading ?? 0;
+  const tank = { tankBottom, waterSurfaceY };
+
+  if (!anc.idleUntil) {
+    anc.idleUntil = timestamp + 1000 + rand() * 2000;
+  }
+
+  if (anc.state === "moving") {
+    const dx = anc.targetX - anc.x;
+    const dy = anc.targetY - anc.y;
+    const distance = Math.hypot(dx, dy);
+    // The head turns towards where it is going (0 degrees is straight up).
+    const wanted = (Math.atan2(dx, -dy) * 180) / Math.PI;
+    const turn = (fleeing ? FLEE.ancistrusTurn : ANCISTRUS_MOVE.turn) * delta;
+    anc.heading += Math.max(-turn, Math.min(turn, turnBetween(anc.heading, wanted)));
+    const step = Math.min(distance, ANCISTRUS_MOVE.speed * userSpeed * (fleeing ? FLEE.ancistrusFactor : 1) * delta);
+    anc.x += (dx / (distance || 1)) * step;
+    anc.y += (dy / (distance || 1)) * step;
+    if (Math.hypot(anc.targetX - anc.x, anc.targetY - anc.y) < 1.5) {
+      anc.state = "idle";
+      anc.idleUntil = timestamp + (fleeing ? 2500 : 1200) + rand() * 2000;
+    }
+  } else if (timestamp >= anc.idleUntil) {
+    // A trip of a good length in a random direction, kept inside its area and in the water.
+    const angle = rand() * 2 * Math.PI;
+    const trip = ANCISTRUS_MOVE.minTrip + rand() * (ANCISTRUS_MOVE.maxTrip - ANCISTRUS_MOVE.minTrip);
+    const target = chooseAncistrusTarget(anc, tank, angle, trip);
+    if (target) {
+      anc.state = "moving";
+      anc.targetX = target.x;
+      anc.targetY = target.y;
+    } else {
+      anc.idleUntil = timestamp + 1500;
+    }
+  }
+
+  // Whatever the heading it has now, or the water level (it goes down with the
+  // consumption), the fish is brought back into the water, fast enough to keep up
+  // with its own turning (a long body swings its tail up to 7 units per frame).
+  const range = ancistrusYRange(anc.heading, tank);
+  const goal = range.minY > range.maxY ? (range.minY + range.maxY) / 2 : Math.min(range.maxY, Math.max(range.minY, anc.y));
+  if (goal !== anc.y) anc.y += Math.sign(goal - anc.y) * Math.min(Math.abs(goal - anc.y), ANCISTRUS_WATER.rescue * delta);
+}
+
+/**
  * A knock on the glass startles a creature that walks on the sand (shrimp,
- * crab, goby): it runs away from the knock, along its lane, much faster than
+ * goby): it runs away from the knock, along its lane, much faster than
  * usual. The goby, whose lane is a single point (its burrow), darts a short
  * way out and comes back on its own afterwards.
  *
@@ -493,89 +656,20 @@ export function startleCrawler(creature, tx, ty, nowMs, spec) {
   return true;
 }
 
-/** How the plecostomus moves: units per frame, degrees per frame it can turn, and how far it goes at a time. */
-export const ANCISTRUS_MOVE = { speed: 0.8, turn: 3, minTrip: 140, maxTrip: 420 };
-
-/** The shortest way round from one heading to another, in degrees (-180..180). @param {number} from @param {number} to */
-const turnBetween = (from, to) => ((((to - from) % 360) + 540) % 360) - 180;
-
-/**
- * The plecostomus: rests on the glass, then turns to face a new spot and
- * glides to it, in any direction (up, down, sideways, diagonally), and sinks
- * when the tank is dead. Idle and move delays come from the injected clock and
- * random source.
- *
- * @param {Ancistrus} anc
- * @param {Frame} frame
- * @param {RandomSource} [rand]
- */
-export function stepAncistrus(anc, frame, rand = Math.random) {
-  const { isDead, deathStep, tankBottom, tankTop, waterSurfaceY, delta, timestamp, userSpeed, nowMs } = frame;
-  const fleeing = (anc.fleeUntil ?? 0) > nowMs;
-
-  if (isDead) {
-    anc.deathProgress = Math.min(1.0, (anc.deathProgress || 0) + deathStep);
-    anc.y = Math.min(tankBottom - 35, anc.y + 1.2 * delta);
-    return;
-  }
-
-  anc.deathProgress = 0;
-  anc.heading = anc.heading ?? 0;
-  const minVX = 90;
-  const maxVX = 934;
-  const minVY = Math.max(tankTop + 65, waterSurfaceY + 70);
-  const maxVY = tankBottom - 110;
-
-  if (!anc.idleUntil) {
-    anc.idleUntil = timestamp + 1000 + rand() * 2000;
-  }
-
-  if (anc.state === "moving") {
-    const dx = anc.targetX - anc.x;
-    const dy = anc.targetY - anc.y;
-    const distance = Math.hypot(dx, dy);
-    // The head turns towards where it is going (0 degrees is straight up).
-    const wanted = (Math.atan2(dx, -dy) * 180) / Math.PI;
-    const turn = (fleeing ? FLEE.ancistrusTurn : ANCISTRUS_MOVE.turn) * delta;
-    anc.heading += Math.max(-turn, Math.min(turn, turnBetween(anc.heading, wanted)));
-    const step = Math.min(distance, ANCISTRUS_MOVE.speed * userSpeed * (fleeing ? FLEE.ancistrusFactor : 1) * delta);
-    anc.x += (dx / (distance || 1)) * step;
-    anc.y += (dy / (distance || 1)) * step;
-    if (Math.hypot(anc.targetX - anc.x, anc.targetY - anc.y) < 1.5) {
-      anc.state = "idle";
-      anc.idleUntil = timestamp + (fleeing ? 2500 : 1200) + rand() * 2000;
-    }
-  } else if (timestamp >= anc.idleUntil) {
-    anc.state = "moving";
-    // A trip of a good length in a random direction, kept inside its area.
-    const angle = rand() * 2 * Math.PI;
-    const trip = ANCISTRUS_MOVE.minTrip + rand() * (ANCISTRUS_MOVE.maxTrip - ANCISTRUS_MOVE.minTrip);
-    anc.targetX = Math.min(maxVX, Math.max(minVX, anc.x + Math.sin(angle) * trip));
-    anc.targetY = Math.min(maxVY, Math.max(minVY, anc.y - Math.cos(angle) * trip));
-  }
-}
-
 /** @type {CrawlerSpec} */
-// The shrimp walks on the sand between the coral and the pile of rock; the crab
-// lives on the flat rock of that pile, at three quarters of its height; the
-// goby stays at its burrow in the sand (its lane is one point).
+// The shrimp walks on the sand between the coral and the pile of rock; the goby
+// stays at its burrow in the sand (its lane is one point). The crab does not
+// have a lane: it follows a route over the whole reef (see stepCrab()).
 export const SHRIMP_SPEC = {
   minX: 560,
   maxX: 740,
+  // Startled, it runs a long way along the sand, much farther than it ever walks.
+  fleeMinX: 470,
+  fleeMaxX: 770,
   floorOffset: 25,
   speed: 0.9,
   firstIdle: [1200, 2000],
   nextIdle: [1500, 2500],
-};
-/** @type {CrawlerSpec} */
-export const CRAB_SPEC = {
-  minX: REEF_PILE.ledgeFrom,
-  maxX: REEF_PILE.ledgeTo,
-  // The crab's body is drawn about 30 units above its feet.
-  floorOffset: REEF_PILE.ledge + 30,
-  speed: 0.5,
-  firstIdle: [2000, 3000],
-  nextIdle: [2500, 3500],
 };
 /** @type {CrawlerSpec} */
 export const GOBY_SPEC = {
@@ -629,4 +723,173 @@ export function stepCrawler(creature, frame, spec, rand = Math.random) {
     creature.state = "moving";
     creature.targetX = spec.minX + rand() * (spec.maxX - spec.minX);
   }
+}
+
+// ---------------------------------------------------------------------------
+// The crab: it walks along its route over the reef, hides in the caves
+// ---------------------------------------------------------------------------
+
+/**
+ * How the crab behaves: units per frame along its route, the share of the
+ * hiding it does per frame (0 = in sight, 1 = hidden), and the delays in ms,
+ * [fixed part, random part].
+ */
+export const CRAB_MOVE = { speed: 0.9, hideStep: 0.03, idle: [1500, 2500], hidden: [4000, 4000], fleeHidden: [6000, 3000], firstIdle: [1500, 2000], caveChance: 0.4 };
+
+/**
+ * Where on its route the crab is: the distance walked from the start. A crab
+ * that was placed by hand (x only) is put on the route at the nearest place.
+ *
+ * @param {Crawler} crab
+ * @returns {number}
+ */
+function crabDistance(crab) {
+  if (typeof crab.s === "number") return crab.s;
+  crab.s = CRAB_START_S;
+  return crab.s;
+}
+
+/**
+ * Puts the crab where its distance along the route says, standing on the floor
+ * of the tank whatever its height.
+ *
+ * @param {Crawler} crab
+ * @param {number} tankBottom
+ * @returns {number} the horizontal distance it moved since the last call
+ */
+function placeCrab(crab, tankBottom) {
+  const { x, h } = crabPointAt(crabDistance(crab));
+  const moved = x - crab.x;
+  crab.x = x;
+  // The body of the crab is drawn about 30 units above its feet.
+  crab.y = tankBottom - (h + 30);
+  return moved;
+}
+
+/**
+ * The next place the crab walks to: now and then a cave, otherwise anywhere
+ * along its route (the other end of it when that is too close to be worth it).
+ *
+ * @param {number} s
+ * @param {RandomSource} rand
+ * @returns {number}
+ */
+function pickCrabGoal(s, rand) {
+  const caves = CRAB_CAVES.filter((stop) => Math.abs(stop - s) > 40);
+  if (caves.length > 0 && rand() < CRAB_MOVE.caveChance) return caves[Math.min(caves.length - 1, Math.floor(rand() * caves.length))];
+  const goal = rand() * CRAB_ROUTE_LENGTH;
+  if (Math.abs(goal - s) >= 40) return goal;
+  return s < CRAB_ROUTE_LENGTH / 2 ? CRAB_ROUTE_LENGTH : 0;
+}
+
+/**
+ * The crab: rests, then walks along its route (over the sand, up the pile of
+ * rock to its flat rock), and from time to time goes into a cave, where it
+ * hides for a while and shows only its eyes, before it comes out again. Dead,
+ * it comes out of its hiding place and stays where it is, fading.
+ *
+ * @param {Crawler} crab
+ * @param {Frame} frame
+ * @param {RandomSource} [rand]
+ */
+export function stepCrab(crab, frame, rand = Math.random) {
+  const { isDead, deathStep, tankBottom, delta, userSpeed, nowMs } = frame;
+  const fleeing = (crab.fleeUntil ?? 0) > nowMs;
+  crab.hide = crab.hide ?? 0;
+
+  if (isDead) {
+    crab.deathProgress = Math.min(1.0, (crab.deathProgress || 0) + deathStep);
+    crab.hide = Math.max(0, crab.hide - CRAB_MOVE.hideStep * delta);
+    placeCrab(crab, tankBottom);
+    return;
+  }
+
+  crab.deathProgress = 0;
+  placeCrab(crab, tankBottom);
+
+  if (!crab.idleUntil) crab.idleUntil = nowMs + CRAB_MOVE.firstIdle[0] + rand() * CRAB_MOVE.firstIdle[1];
+
+  switch (crab.state) {
+    case "moving": {
+      const s = crabDistance(crab);
+      const goal = crab.goalS ?? s;
+      const step = Math.sign(goal - s) * Math.min(Math.abs(goal - s), CRAB_MOVE.speed * userSpeed * (fleeing ? FLEE.crawlerFactor : 1) * delta);
+      crab.s = s + step;
+      const moved = placeCrab(crab, tankBottom);
+      if (Math.abs(moved) > 0.01) crab.dir = moved < 0 ? -1 : 1;
+      if (Math.abs(goal - crab.s) < 0.5) {
+        crab.s = goal;
+        const atCave = CRAB_CAVES.some((stop) => Math.abs(stop - goal) < 1);
+        if (atCave) {
+          crab.state = "hiding";
+        } else {
+          crab.state = "idle";
+          crab.idleUntil = nowMs + CRAB_MOVE.idle[0] + rand() * CRAB_MOVE.idle[1];
+        }
+      }
+      break;
+    }
+    case "hiding":
+      crab.hide = Math.min(1, crab.hide + CRAB_MOVE.hideStep * (fleeing ? 2 : 1) * delta);
+      if (crab.hide >= 1) {
+        crab.state = "hidden";
+        const [fixed, extra] = fleeing ? CRAB_MOVE.fleeHidden : CRAB_MOVE.hidden;
+        crab.idleUntil = nowMs + fixed + rand() * extra;
+      }
+      break;
+    case "hidden":
+      if (nowMs >= crab.idleUntil) crab.state = "emerging";
+      break;
+    case "emerging":
+      crab.hide = Math.max(0, crab.hide - CRAB_MOVE.hideStep * delta);
+      if (crab.hide <= 0) {
+        crab.state = "idle";
+        crab.idleUntil = nowMs + 600 + rand() * 800;
+      }
+      break;
+    default:
+      if (nowMs >= crab.idleUntil) {
+        crab.state = "moving";
+        crab.goalS = pickCrabGoal(crabDistance(crab), rand);
+      }
+  }
+  crab.targetX = crabPointAt(crab.goalS ?? crabDistance(crab)).x;
+}
+
+/**
+ * A knock on the glass at (tx, ty) startles the crab: it runs, much faster than
+ * usual, to the cave that is the nearest along its route (the other one when
+ * the first lies on the side of the knock), and hides there. A crab that is
+ * already hiding stays hidden for longer.
+ *
+ * @param {Crawler} crab
+ * @param {number} tx
+ * @param {number} ty
+ * @param {number} nowMs
+ * @returns {boolean} whether it was startled
+ */
+export function startleCrab(crab, tx, ty, nowMs) {
+  if (Math.hypot(crab.x - tx, crab.y - ty) > FLEE.radius) return false;
+  const s = crabDistance(crab);
+  crab.fleeUntil = nowMs + 4000;
+  if (crab.state === "hidden" || crab.state === "hiding") {
+    crab.idleUntil = Math.max(crab.idleUntil ?? 0, nowMs + CRAB_MOVE.fleeHidden[0]);
+    return true;
+  }
+  if (crab.state === "emerging") {
+    // Back in, at once.
+    crab.state = "hiding";
+    return true;
+  }
+  // The caves, nearest first; a cave on the side of the knock comes last (it would run towards it).
+  const caves = [...CRAB_CAVES]
+    .map((stop) => {
+      const stopX = crabPointAt(stop).x;
+      const towardKnock = Math.sign(stopX - crab.x) === Math.sign(tx - crab.x) && Math.abs(tx - crab.x) < Math.abs(stopX - crab.x);
+      return { stop, cost: Math.abs(stop - s) + (towardKnock ? 400 : 0) };
+    })
+    .sort((a, b) => a.cost - b.cost);
+  crab.goalS = caves[0].stop;
+  crab.state = Math.abs(crab.goalS - s) < 0.5 ? "hiding" : "moving";
+  return true;
 }

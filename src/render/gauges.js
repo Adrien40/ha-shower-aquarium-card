@@ -21,8 +21,9 @@ const TUBE_HEIGHT = 92;
 const TUBE_HALF_WIDTH = 9;
 const SCALE_TOP = 38; // y of the top of the scale (maximum temperature)
 const SCALE_BOTTOM = 114; // y of the bottom of the scale (minimum temperature)
-const BULB_Y = 138;
-const BULB_RADIUS = 17;
+// A bulb about one and a half times as wide as the tube, like a real thermometer.
+const BULB_RADIUS = 12;
+const BULB_Y = TUBE_TOP + TUBE_HEIGHT - 1 + BULB_RADIUS;
 
 // Volume bar geometry.
 const BAR_RIGHT = 992;
@@ -50,7 +51,7 @@ function renderThermometer(currentTemp, gauge, lang) {
     <g pointer-events="none">
       <rect x="${TUBE_X - TUBE_HALF_WIDTH}" y="${TUBE_TOP}" width="${TUBE_HALF_WIDTH * 2}" height="${TUBE_HEIGHT}" rx="${TUBE_HALF_WIDTH}" fill="#ffffff" fill-opacity="0.9" stroke="${INK}" stroke-opacity="0.35" stroke-width="1.5" />
       <circle cx="${TUBE_X}" cy="${BULB_Y}" r="${BULB_RADIUS}" fill="#ffffff" fill-opacity="0.9" stroke="${INK}" stroke-opacity="0.35" stroke-width="1.5" />
-      <circle cx="${TUBE_X}" cy="${BULB_Y}" r="${BULB_RADIUS - 4}" fill="${gauge.tempColor}" />
+      <circle cx="${TUBE_X}" cy="${BULB_Y}" r="${BULB_RADIUS - 3.5}" fill="${gauge.tempColor}" />
       <rect x="${TUBE_X - 4.5}" y="${liquidY}" width="9" height="${BULB_Y - liquidY}" fill="${gauge.tempColor}" />
       ${gauge.ticks.map(
         (fraction) =>

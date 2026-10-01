@@ -5,7 +5,7 @@
 /** @typedef {import("./types.js").Snail} Snail */
 /** @typedef {import("./types.js").Ancistrus} Ancistrus */
 /** @typedef {import("./types.js").Crawler} Crawler */
-import { REEF_PILE } from "./reef-layout.js";
+import { REEF_PILE, CRAB_START_S } from "./reef-layout.js";
 
 /** @typedef {import("./types.js").Bubble} Bubble */
 /** @typedef {import("./types.js").BoilingBubble} BoilingBubble */
@@ -33,20 +33,23 @@ export function createInitialScene(random = () => Math.random()) {
       deathProgress: 0,
     },
     shrimp: {
-      x: 840,
+      x: 650,
       y: 550,
-      targetX: 840,
+      targetX: 650,
       state: "idle",
       idleUntil: 0,
       dir: -1,
       deathProgress: 0,
     },
     // The crab starts on the flat rock of the pile of live rock (at three
-    // quarters of its height); the goby at its burrow in the sand.
+    // quarters of its height) and then walks all over the reef; the goby at its
+    // burrow in the sand.
     crab: {
       x: (REEF_PILE.ledgeFrom + REEF_PILE.ledgeTo) / 2,
       y: 565 - (REEF_PILE.ledge + 30),
       targetX: (REEF_PILE.ledgeFrom + REEF_PILE.ledgeTo) / 2,
+      s: CRAB_START_S,
+      hide: 0,
       state: "idle",
       idleUntil: 0,
       dir: 1,

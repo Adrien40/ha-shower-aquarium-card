@@ -106,6 +106,42 @@ export function stripLegacyConfigKeys(config) {
   return clean;
 }
 
+/** The biotopes, in the order a swipe goes through them. */
+export const BIOTOPES = ["freshwater", "saltwater", "coldwater"];
+
+/**
+ * The biotope `step` places after `current` in the list (wrapping round), 1 for
+ * the next one and -1 for the previous one. An unknown biotope counts as the first.
+ *
+ * @param {string} current
+ * @param {number} step
+ * @returns {string}
+ */
+export function nextBiotope(current, step) {
+  const index = Math.max(0, BIOTOPES.indexOf(current));
+  return BIOTOPES[(index + step + BIOTOPES.length * 2) % BIOTOPES.length];
+}
+
+/** What counts as a swipe: how far (screen pixels) and how fast (ms) the finger goes, and how horizontal the move is. */
+export const SWIPE = { minDistance: 60, maxDurationMs: 900, horizontalRatio: 1.6 };
+
+/**
+ * Whether a move of the finger from a first to a last point is a swipe to the
+ * left (1: the next biotope), to the right (-1: the previous one) or neither
+ * (0). It must be long enough, quick enough and clearly more horizontal than
+ * vertical, so a tap, a slow drag or a scroll of the page is not taken for one.
+ *
+ * @param {number} dx
+ * @param {number} dy
+ * @param {number} elapsedMs
+ * @returns {-1 | 0 | 1}
+ */
+export function classifySwipe(dx, dy, elapsedMs) {
+  if (elapsedMs > SWIPE.maxDurationMs || Math.abs(dx) < SWIPE.minDistance) return 0;
+  if (Math.abs(dx) < Math.abs(dy) * SWIPE.horizontalRatio) return 0;
+  return dx < 0 ? 1 : -1;
+}
+
 /** Width of the drawing (SVG viewBox), in drawing units. The height follows the shape of the screen. */
 export const CANVAS_WIDTH = 1024;
 
@@ -970,13 +1006,16 @@ const HYDRAO_PLATFORM = "hydrao_custom";
  * Assistant had when the device was added. Without it, the id is matched on the
  * English and French names of the entities. Each field is "" when nothing fits.
  *
- * @param {{ entities?: Record<string, { platform?: string, translation_key?: string }> } | null | undefined} hass
- * @param {string[] | null | undefined} entityIds
+ * @param {{ entities?: Record<string, { platform?: string, translation_key?: string }>, states?: Record<string, unknown> } | null | undefined} hass
+ * @param {...(string[] | null | undefined)} entityIdLists  the lists of entity ids Home Assistant hands to the card picker
  * @returns {{ entity: string, temperature_entity: string, comfort_temp_entity: string }}
  */
-export function detectHydraoEntities(hass, entityIds) {
+export function detectHydraoEntities(hass, ...entityIdLists) {
   const registry = hass && typeof hass.entities === "object" && hass.entities ? hass.entities : {};
-  const ids = Array.isArray(entityIds) && entityIds.length ? entityIds : Object.keys(registry);
+  const states = hass && typeof hass.states === "object" && hass.states ? hass.states : {};
+  // The card picker only offers the entities that are not on a dashboard yet; the Hydrao ones
+  // may be there already. So everything Home Assistant knows is looked at, not only that list.
+  const ids = [...new Set([...entityIdLists.flatMap((list) => (Array.isArray(list) ? list : [])), ...Object.keys(registry), ...Object.keys(states)])].sort();
 
   /**
    * @param {string} domain

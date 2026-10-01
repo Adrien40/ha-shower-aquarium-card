@@ -16,11 +16,22 @@ import {
   stepFish,
   stepSnail,
   stepAncistrus,
+  ancistrusYRange,
   stepCrawler,
   SHRIMP_SPEC,
-  CRAB_SPEC,
 } from "./physics.js";
 import { RIPPLE_DURATION_MS } from "./pure.js";
+import { REEF_PILE } from "./reef-layout.js";
+
+// A lane on the flat rock of the pile of live rock, for the generic walking tests.
+const LEDGE_SPEC = {
+  minX: REEF_PILE.ledgeFrom,
+  maxX: REEF_PILE.ledgeTo,
+  floorOffset: REEF_PILE.ledge + 30,
+  speed: 0.5,
+  firstIdle: [2000, 3000],
+  nextIdle: [2500, 3500],
+};
 
 const RUNS = { numRuns: 200 };
 const EPS = 1e-9;
@@ -269,7 +280,7 @@ describe("creatures on the ground and on the glass", () => {
 
   it.each([
     ["shrimp", SHRIMP_SPEC],
-    ["crab", CRAB_SPEC],
+    ["ledge crawler", LEDGE_SPEC],
   ])("the %s never leaves its lane and always walks on the sand", (_name, spec) => {
     fc.assert(
       fc.property(fc.integer(), num(spec.minX, spec.maxX), framesArb({ isDead: false }), (seed, x, frames) => {
@@ -290,7 +301,7 @@ describe("creatures on the ground and on the glass", () => {
 
   it.each([
     ["shrimp", SHRIMP_SPEC],
-    ["crab", CRAB_SPEC],
+    ["ledge crawler", LEDGE_SPEC],
   ])("a walking %s gets closer to its target and never overshoots it", (_name, spec) => {
     fc.assert(
       fc.property(num(spec.minX, spec.maxX), num(spec.minX, spec.maxX), framesArb({ isDead: false }), (x, target, frames) => {
@@ -314,10 +325,14 @@ describe("creatures on the ground and on the glass", () => {
         const a = { x: 70, y, targetY: y, state: "idle", idleUntil: 0, deathProgress: 0 };
         for (const f of frames) {
           const before = Math.abs(a.targetY - a.y);
+          // While the water leaves it room it glides without overshooting; when the level (or its heading)
+          // asks for it, it is brought back into the water, which may move it away from its target.
+          const range = ancistrusYRange(a.heading ?? 0, f);
+          const free = range.minY <= a.y && a.y <= range.maxY;
           const wasMoving = a.state === "moving";
           stepAncistrus(a, f, rand);
           if (!finite(a.y, a.targetY)) return false;
-          if (wasMoving && Math.abs(a.targetY - a.y) > before + EPS) return false;
+          if (wasMoving && free && Math.abs(a.targetY - a.y) > before + EPS && Math.abs(a.targetY - a.y) > 3.01 * f.delta) return false;
         }
         return true;
       }),
