@@ -30,8 +30,6 @@ function gobyDrawing(style, shading, sway, breath) {
   const line = (d, w, color, op) => shapeEl(sh(d, undefined, { stroke: color, sw: w, op, lc: "round" }));
   const body = "M -34,-1 C -26,-6 -12,-11 6,-12 C 16,-12.5 26,-10 31,-5 C 34,-2 33,1 29,3 C 22,5.5 6,6 -10,4.5 C -24,3 -32,2 -34,-1 Z";
   return svg`
-    ${k(E(-44, 4, 20, 7), "#d8b45f", 0.95)}
-    ${shapeEl(sh(E(-42, 2.4, 11, 3.6), "#5b4423", { stroke: "none" }))}
     ${k("M -34,-1 C -40,-7 -47,-7 -49,-1 C -47,5 -40,6 -34,-1 Z", "#fde68a")}
     ${k("M -28,-5 C -24,-13 -14,-15 -8,-11 L -10,-6 Z", "#fde047", 0.9)}
     <g transform="rotate(${sway.toFixed(2)} 2 -10)">
@@ -64,6 +62,22 @@ function gobyDrawing(style, shading, sway, breath) {
 }
 
 /**
+ * The burrow of the goby: a mound of sand with a dark hole. It stays where it
+ * is, whatever the goby does (it goes into it when the glass is knocked).
+ * @param {CreatureStyle} style
+ * @param {boolean} shading
+ */
+function burrowDrawing(style, shading) {
+  return svg`
+    ${skinned(style, shading, E(-44, 4, 20, 7), "#d8b45f", { ...(style === "cartoon" ? {} : { stroke: "#a16207", sw: 0.7 }), op: 0.95 })}
+    ${shapeEl(sh(E(-42, 2.4, 11, 3.6), "#5b4423", { stroke: "none" }))}
+  `;
+}
+
+/** The goby goes into the sand: how far (units of its drawing) it slides towards its burrow and sinks when it is completely hidden, and the height of the sand it is cut at. */
+export const GOBY_HIDE = { slide: 44, sink: 38, sandLine: 5 };
+
+/**
  * The goby, at its burrow in the sand (reef tank).
  * @param {import("../types.js").RenderHost} ctx the card element
  * @param {boolean} isDead
@@ -75,10 +89,21 @@ export function renderGoby(ctx, isDead) {
   const bodyOpacity = (1.0 - p).toFixed(2);
   const sway = isDead ? 0 : Math.sin(ctx._ambientTime * 1.4) * 3;
   const breath = isDead ? 0 : Math.sin(ctx._ambientTime * 2.6);
+  const style = creatureStyle(ctx);
+  const shading = shadingAllowed(ctx);
+  // Hiding, it slides to its burrow and sinks into the sand: whatever goes under the sand line is cut off.
+  const hide = Math.max(0, Math.min(1, g.hide || 0));
+  const sandY = g.y + GOBY_HIDE.sandLine * 1.3;
   return svg`
-    <g transform="translate(${g.x}, ${g.y}) scale(1.3, ${isDead ? -1.3 : 1.3})" opacity="${bodyOpacity}">
-      ${gobyDrawing(creatureStyle(ctx), shadingAllowed(ctx), sway, breath)}
-      ${renderStressDots(isDead ? 0 : g.stress || 0, [0, -3, 27, 6], ctx._ambientTime, 1.5)}
+    <g transform="translate(${g.x}, ${g.y}) scale(1.3, 1.3)">${burrowDrawing(style, shading)}</g>
+    ${hide > 0 ? svg`<clipPath id="goby-sand"><rect x="-100" y="-100" width="2300" height="${(sandY + 100).toFixed(1)}" /></clipPath>` : ""}
+    <g clip-path="${hide > 0 ? "url(#goby-sand)" : "none"}">
+      <g transform="translate(${g.x}, ${g.y}) scale(1.3, ${isDead ? -1.3 : 1.3})" opacity="${bodyOpacity}">
+        <g transform="translate(${(-hide * GOBY_HIDE.slide).toFixed(1)}, ${(hide * GOBY_HIDE.sink).toFixed(1)})">
+          ${gobyDrawing(style, shading, sway, breath)}
+          ${renderStressDots(isDead ? 0 : g.stress || 0, [0, -3, 27, 6], ctx._ambientTime, 1.5)}
+        </g>
+      </g>
     </g>
   `;
 }

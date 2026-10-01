@@ -3,6 +3,11 @@
 Toutes les modifications notables du projet sont documentées dans ce fichier.
 Le format suit [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/).
 
+## [0.8.84] — 2026-10-01
+
+### Modifié
+- Le gobi ne traîne plus son terrier avec lui : le monticule de sable et le trou sombre sont dessinés à part, à la place du gobi, et y restent. Quand on tape sur la vitre, le gobi glisse vers son terrier et s'enfonce dans le sable (il est coupé à la ligne du sable, nageoire dorsale comprise) au lieu de filer sur le côté ; il reste caché de quatre à sept secondes, puis ressort lentement. Un gobi déjà caché reste caché plus longtemps, et celui qui ressort rentre aussitôt. Mort, il sort du sable et reste allongé. Il montre toujours les points blancs de stress.
+
 ## [0.8.83] — 2026-10-01
 
 ### Modifié

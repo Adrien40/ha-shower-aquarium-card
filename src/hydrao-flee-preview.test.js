@@ -5,7 +5,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import "./shower-aquarium-card.js";
 import { detectHydraoEntities } from "./pure.js";
-import { startleAncistrus, startleCrawler, stepAncistrus, stepCrawler, createFrame, SHRIMP_SPEC, GOBY_SPEC, FLEE } from "./physics.js";
+import { startleAncistrus, startleCrawler, stepAncistrus, stepCrawler, createFrame, SHRIMP_SPEC, FLEE } from "./physics.js";
 
 const Card = () => customElements.get("shower-aquarium-card");
 
@@ -148,7 +148,7 @@ describe("a knock on the glass makes the bottom dwellers run", () => {
     expect(anc.state).toBe("idle");
   });
 
-  it.each([["shrimp", SHRIMP_SPEC, 650], ["goby", GOBY_SPEC, 530]])("the %s runs away from the knock, then calms down", (_n, spec, x) => {
+  it.each([["shrimp", SHRIMP_SPEC, 650]])("the %s runs away from the knock, then calms down", (_n, spec, x) => {
     const c = { x, y: 560, targetX: x, state: "idle", idleUntil: 1e9, dir: 1 };
     expect(startleCrawler(c, x - 60, 560, 1000, spec)).toBe(true);
     expect(c.state).toBe("moving");
@@ -176,6 +176,8 @@ describe("a knock on the glass makes the bottom dwellers run", () => {
     expect(el._crab.fleeUntil).toBeGreaterThan(Date.now());
     expect(el._shrimp.state).toBe("moving");
     expect(el._shrimp.targetX).toBeGreaterThan(el._shrimp.x);
+    // The goby does not run: it goes into the sand.
+    expect(el._goby.state).toBe("hiding");
   });
 });
 

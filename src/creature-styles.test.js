@@ -509,7 +509,7 @@ describe("the goby", () => {
     expect(drawing.includes("url(#shade)")).toBe(style === "realistic" && shading);
   });
 
-  it("sits at its burrow in the sand: a mound, a dark hole, a yellow body", async () => {
+  it("sits at its burrow in the sand: a mound, a dark hole, a yellow body (the burrow is drawn on its own)", async () => {
     const drawing = markup((await goby())._renderGoby(false));
     for (const part of ["#d8b45f", "#5b4423", "#fde047", "#fef9c3", "#38bdf8"]) expect(drawing).toContain(part);
     expect(drawing).toContain("translate(530, 551)");

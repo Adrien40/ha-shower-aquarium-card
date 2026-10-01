@@ -691,10 +691,9 @@ export function stepAncistrus(anc, frame, rand = Math.random) {
 }
 
 /**
- * A knock on the glass startles a creature that walks on the sand (shrimp,
- * goby): it runs away from the knock, along its lane, much faster than
- * usual. The goby, whose lane is a single point (its burrow), darts a short
- * way out and comes back on its own afterwards.
+ * A knock on the glass startles a creature that walks on the sand (the
+ * shrimp): it runs away from the knock, along its lane, much faster than
+ * usual.
  *
  * @param {Crawler} creature
  * @param {number} tx
@@ -719,8 +718,8 @@ export function startleCrawler(creature, tx, ty, nowMs, spec) {
 
 /** @type {CrawlerSpec} */
 // The shrimp walks on the sand between the coral and the pile of rock; the goby
-// stays at its burrow in the sand (its lane is one point). The crab does not
-// have a lane: it follows a route over the whole reef (see stepCrab()).
+// stays at its burrow in the sand and goes into it when startled (see stepGoby()).
+// The crab does not have a lane: it follows a route over the whole reef (see stepCrab()).
 export const SHRIMP_SPEC = {
   minX: 560,
   maxX: 740,
@@ -732,19 +731,6 @@ export const SHRIMP_SPEC = {
   firstIdle: [1200, 2000],
   nextIdle: [1500, 2500],
 };
-/** @type {CrawlerSpec} */
-export const GOBY_SPEC = {
-  minX: 530,
-  maxX: 530,
-  // Where it darts to when startled, before it goes back to its burrow.
-  fleeMinX: 450,
-  fleeMaxX: 610,
-  floorOffset: 14,
-  speed: 0.5,
-  firstIdle: [2000, 3000],
-  nextIdle: [2500, 3500],
-};
-
 /**
  * A creature that walks left and right along the sand (shrimp, crab): pauses,
  * then walks to a random spot inside its lane. When dead it stays in place and
@@ -960,5 +946,81 @@ export function startleCrab(crab, tx, ty, nowMs) {
     .sort((a, b) => a.cost - b.cost);
   crab.goalS = caves[0].stop;
   crab.state = Math.abs(crab.goalS - s) < 0.5 ? "hiding" : "moving";
+  return true;
+}
+
+// ---------------------------------------------------------------------------
+// The goby: stays at its burrow, goes into the sand when the glass is knocked
+// ---------------------------------------------------------------------------
+
+/**
+ * How the goby behaves: the distance between its feet and the tank bottom, the
+ * share of the hiding it does per frame going in (fast) and coming out (slow),
+ * and how long (ms, [fixed part, random part]) it stays hidden.
+ */
+export const GOBY_MOVE = { floorOffset: 14, hideStep: 0.08, emergeStep: 0.025, hidden: [4000, 3000] };
+
+/**
+ * The goby: it watches from the mouth of its burrow, and stays there. A knock
+ * on the glass sends it into the sand (see startleGoby()); after a few seconds
+ * it comes out again, slowly. Dead, it comes out and stays where it is, fading.
+ *
+ * @param {Crawler} goby
+ * @param {Frame} frame
+ * @param {RandomSource} [rand]
+ */
+export function stepGoby(goby, frame, rand = Math.random) {
+  const { isDead, deathStep, tankBottom, delta, nowMs } = frame;
+  goby.hide = goby.hide ?? 0;
+  goby.y = tankBottom - GOBY_MOVE.floorOffset;
+
+  if (isDead) {
+    goby.deathProgress = Math.min(1.0, (goby.deathProgress || 0) + deathStep);
+    goby.hide = Math.max(0, goby.hide - GOBY_MOVE.hideStep * delta);
+    return;
+  }
+
+  goby.deathProgress = 0;
+  stressLevel(goby, nowMs);
+
+  switch (goby.state) {
+    case "hiding":
+      goby.hide = Math.min(1, goby.hide + GOBY_MOVE.hideStep * delta);
+      if (goby.hide >= 1) {
+        goby.state = "hidden";
+        goby.idleUntil = nowMs + GOBY_MOVE.hidden[0] + rand() * GOBY_MOVE.hidden[1];
+      }
+      break;
+    case "hidden":
+      if (nowMs >= goby.idleUntil) goby.state = "emerging";
+      break;
+    case "emerging":
+      goby.hide = Math.max(0, goby.hide - GOBY_MOVE.emergeStep * delta);
+      if (goby.hide <= 0) goby.state = "idle";
+      break;
+    default:
+      // At the mouth of its burrow.
+      break;
+  }
+}
+
+/**
+ * A knock on the glass at (tx, ty) sends the goby into the sand, quickly. A goby
+ * that is already hidden stays hidden for longer, and one that is coming out goes
+ * back in.
+ *
+ * @param {Crawler} goby
+ * @param {number} tx
+ * @param {number} ty
+ * @param {number} nowMs
+ * @returns {boolean} whether it was startled
+ */
+export function startleGoby(goby, tx, ty, nowMs) {
+  if (Math.hypot(goby.x - tx, goby.y - ty) > FLEE.radius) return false;
+  if (goby.state === "hidden") {
+    goby.idleUntil = Math.max(goby.idleUntil ?? 0, nowMs + GOBY_MOVE.hidden[0]);
+  } else if (goby.state !== "hiding") {
+    goby.state = "hiding";
+  }
   return true;
 }

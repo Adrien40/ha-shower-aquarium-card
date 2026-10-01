@@ -125,7 +125,7 @@ The card is not limited to showers: it can show any consumption you want to keep
 * 🐠 **Fully animated aquarium:** Ultra-smooth SVG vector rendering, dynamic fish swimming physics with fin motion, and autonomous wandering.
 * 🌿 **Realistic algae:** A granular film creeps up from the bottom and along the side glass, and tufts of hair algae grow along the floor, thicker and thicker up to 48 hours without showers.
 * 🧹 **Ancistrus:** Seen from below with its round suction mouth, fleshy tentacles and fins swept back, it roams the whole tank in every direction and turns its head towards where it goes.
-* 🦀 **Reef life:** a crab that walks all over the reef (over the sand, up the pile of live rock to its flat rock) and hides in the caves when it feels like it or when you knock on the glass, a shrimp on the sand and a goby in its burrow.
+* 🦀 **Reef life:** a crab that walks all over the reef (over the sand, up the pile of live rock to its flat rock) and hides in the caves when it feels like it or when you knock on the glass, a shrimp on the sand and a goby at its burrow that dives into the sand when you knock on the glass.
 * 👆 **Swipe to change the biotope:** slide a finger sideways on the aquarium to go from freshwater to saltwater to coldwater.
 * 🐟 **Fish that keep their distance:** they never pile up, and every biotope has fish of very different shapes and colours (discus, angelfish, clownfish, goldfish with a hump, a hood or telescope eyes...).
 * 🐌 **Diverse fauna:** Three kinds of snail (turret, ramshorn, round pond snail) grazing along the sand floor and the glass walls. When the water goes down they may be left above it: they crawl down to rejoin it.

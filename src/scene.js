@@ -59,6 +59,7 @@ export function createInitialScene(random = () => Math.random()) {
       x: 530,
       y: 551,
       targetX: 530,
+      hide: 0,
       state: "idle",
       idleUntil: 0,
       dir: 1,

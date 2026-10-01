@@ -3,6 +3,11 @@
 All notable changes to this project are documented in this file.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.8.84] — 2026-10-01
+
+### Changed
+- The goby no longer drags its burrow around: the mound of sand and the dark hole are drawn on their own, at the place of the goby, and stay there. When the glass is knocked, the goby slides towards its burrow and sinks into the sand (it is cut off at the sand line, tall fin included) instead of darting sideways; it stays hidden for four to seven seconds, then comes out again slowly. A goby that is already hidden stays hidden for longer, and one that is coming out goes back in. Dead, it comes out of the sand and lies there. It still shows the white dots of stress.
+
 ## [0.8.83] — 2026-10-01
 
 ### Changed

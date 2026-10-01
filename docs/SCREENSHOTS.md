@@ -59,7 +59,7 @@ What happens when you use the card: water running, a pinch of fish food, a knock
 <tr>
 <td align="center" width="33%"><img src="../visual/baseline/freshwater-water-running.png" alt="Freshwater tank while the water runs" width="100%"><br><sub>**Water running**: while the volume grows, the surface is choppier and bubbles rise from the bottom.</sub></td>
 <td align="center" width="33%"><img src="../visual/baseline/saltwater-fish-food.png" alt="Saltwater tank with fish food" width="100%"><br><sub>**Fish food**: a tap near the surface throws a pinch of flakes, and the fish rush to them.</sub></td>
-<td align="center" width="33%"><img src="../visual/baseline/saltwater-knock-on-the-glass.png" alt="Saltwater tank with shock waves on the glass" width="100%"><br><sub>**Knock on the glass**: shock waves, the fish dart away and the crab runs to a cave.</sub></td>
+<td align="center" width="33%"><img src="../visual/baseline/saltwater-knock-on-the-glass.png" alt="Saltwater tank with shock waves on the glass" width="100%"><br><sub>**Knock on the glass**: shock waves, the fish dart away, the crab runs to a cave and the goby goes into the sand.</sub></td>
 </tr>
 </table>
 

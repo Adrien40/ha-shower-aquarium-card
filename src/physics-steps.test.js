@@ -22,7 +22,6 @@ import {
   FISH_SPACING,
   stepCrawler,
   SHRIMP_SPEC,
-  GOBY_SPEC,
   SNAIL_REJOIN_SPEED,
 } from "./physics.js";
 import { RIPPLE_DURATION_MS } from "./pure.js";
@@ -1071,18 +1070,9 @@ describe("stepCrawler() (shrimp, goby and a lane on the flat rock)", () => {
     expect(b.x).toBeLessThanOrEqual(REEF_PILE.ledgeTo);
   });
 
-  it("the goby stays where it is: its lane is a single point", () => {
-    expect(GOBY_SPEC.minX).toBe(GOBY_SPEC.maxX);
-    const goby = { x: 530, y: 0, targetX: 530, state: "idle", idleUntil: 0, dir: 1, deathProgress: 0 };
-    for (let t = 1000; t < 30000; t += 500) stepCrawler(goby, frame({ timestamp: t }), GOBY_SPEC, constant(0.5));
-    expect(goby.x).toBe(530);
-    expect(goby.y).toBe(565 - GOBY_SPEC.floorOffset);
-  });
-
   it.each([
     ["shrimp", SHRIMP_SPEC, 25],
     ["ledge crawler", LEDGE_SPEC, REEF_PILE.ledge + 30],
-    ["goby", GOBY_SPEC, 14],
   ])("the %s keeps the height of its place (the sand, or the flat rock of the pile)", (_name, spec, offset) => {
     const c = crawler();
     stepCrawler(c, frame(), spec, constant(0.5));
