@@ -12,6 +12,7 @@ import {
   RIPPLE_DURATION_MS,
   estimateEnergyKwh,
   createFlakes,
+  FOOD_THROW,
 } from "./pure.js";
 import { CARD_VERSION } from "./version.js";
 
@@ -513,7 +514,7 @@ describe("_onTankTap()", () => {
     const el = makeCard();
     feed(el, 0);
     tap(el, 500, 20);
-    expect(el._food).toHaveLength(6);
+    expect(el._food).toHaveLength(FOOD_THROW.count);
     expect(el._ripples).toEqual([]);
   });
 

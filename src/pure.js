@@ -627,25 +627,38 @@ export function pickFoodTarget(fx, fy, flakes, range = 360) {
   return best;
 }
 
+/** How the food is thrown: how many flakes, how far from the tap they start (units), and the sideways speed (units per frame) of the farthest one. */
+export const FOOD_THROW = { count: 10, start: 40, speed: 3.4 };
+
 /**
+ * A pinch of fish food thrown from the tips of the fingers: the flakes start
+ * close to the tap and fly sideways, the ones on the left to the left and the
+ * ones on the right to the right (see stepFood(), where that speed fades), so
+ * they are scattered along the surface before they sink.
+ *
  * @param {number} x
  * @param {number} y
  * @param {number} [count]
  * @param {() => number} [rand]
  * @returns {Flake[]}
  */
-export function createFlakes(x, y, count = 6, rand = Math.random) {
+export function createFlakes(x, y, count = FOOD_THROW.count, rand = Math.random) {
   const palette = ["#f59e0b", "#fbbf24", "#fb923c", "#facc15"];
-  return Array.from({ length: count }, () => ({
-    x: x + (rand() - 0.5) * 70,
-    y: y + rand() * 12,
-    vy: 0.45 + rand() * 0.4,
-    phase: rand() * Math.PI * 2,
-    r: 3.4 + rand() * 2,
-    color: palette[Math.floor(rand() * palette.length)],
-    landedAt: 0,
-    eaten: false,
-  }));
+  return Array.from({ length: count }, () => {
+    // -1 (the far left of the fan) to 1 (the far right).
+    const side = (rand() - 0.5) * 2;
+    return {
+      x: x + side * FOOD_THROW.start,
+      y: y + rand() * 12,
+      vx: side * FOOD_THROW.speed + (rand() - 0.5) * 0.8,
+      vy: 0.4 + rand() * 0.55,
+      phase: rand() * Math.PI * 2,
+      r: 3.4 + rand() * 2,
+      color: palette[Math.floor(rand() * palette.length)],
+      landedAt: 0,
+      eaten: false,
+    };
+  });
 }
 
 // ---------------------------------------------------------------------------
@@ -994,7 +1007,9 @@ export function formatNumber(value, lang = "en", digits = 1) {
 
 
 // Hydrao Custom (the integration this card was made for) registers its entities
-// under this platform, with one translation key per entity.
+// under this platform, with one translation key per entity: shower_volume_raw
+// (Shower Volume), shower_volume_comfort (Comfort Shower Volume), temperature,
+// threshold_4 (Threshold 4) and, for the number entity, comfort_temperature.
 const HYDRAO_PLATFORM = "hydrao_custom";
 
 /**
@@ -1044,11 +1059,11 @@ export function detectHydraoEntities(hass, ...entityIdLists) {
     // "Comfort Shower Volume", else "Shower Volume": the volume of the current shower.
     // The cumulative, wasted and threshold volumes have other ids and are not taken.
     entity:
-      find("sensor", ["comfort_shower_volume", "shower_volume_comfort", "comfort_volume", "shower_comfort_volume"], /_(comfort_shower_volume|shower_comfort_volume|volume_douche_confort|volume_confort_douche|douche_confort)(_\d+)?$/, /(total|cumul|wasted|perdu|gaspill)/) ||
+      find("sensor", ["shower_volume_comfort"], /_(comfort_shower_volume|shower_comfort_volume|volume_douche_confort|volume_confort_douche|douche_confort)(_\d+)?$/, /(total|cumul|wasted|perdu|gaspill)/) ||
       find("sensor", ["shower_volume_raw"], /_(shower_volume|volume_douche)(_\d+)?$/, otherVolume),
     temperature_entity: find("sensor", ["temperature"], /_temperature(_\d+)?$/),
     comfort_temp_entity: find("number", ["comfort_temperature"], /_(minimum_comfort_temperature|temperature_de_confort_minimum|temperature_confort_minimum)(_\d+)?$/),
     // "Threshold 4": the last level in litres of the showerhead.
-    target_budget_entity: find("sensor", ["threshold_4", "seuil_4"], /_(threshold|seuil)_4(_\d+)?$/, comfortTemperature),
+    target_budget_entity: find("sensor", ["threshold_4"], /_(threshold|seuil)_4(_\d+)?$/, comfortTemperature),
   };
 }

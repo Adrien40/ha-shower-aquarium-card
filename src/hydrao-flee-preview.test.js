@@ -35,7 +35,8 @@ describe("detectHydraoEntities()", () => {
     const hass = {
       entities: {
         "sensor.douche_vol": { platform: "hydrao_custom", translation_key: "shower_volume_raw" },
-        "sensor.douche_confort": { platform: "hydrao_custom", translation_key: "comfort_shower_volume" },
+        "sensor.douche_confort": { platform: "hydrao_custom", translation_key: "shower_volume_comfort" },
+        "sensor.douche_confort_cumule": { platform: "hydrao_custom", translation_key: "shower_volume_comfort_total" },
         "sensor.douche_temp": { platform: "hydrao_custom", translation_key: "temperature" },
         "sensor.other_temp": { platform: "other", translation_key: "temperature" },
         "number.douche_confort_min": { platform: "hydrao_custom", translation_key: "comfort_temperature" },
@@ -57,6 +58,29 @@ describe("detectHydraoEntities()", () => {
       comfort_temp_entity: "number.hydrao_ab12_minimum_comfort_temperature",
       target_budget_entity: "sensor.hydrao_ab12_threshold_4",
     });
+  });
+
+  it("never takes the cumulative comfort volume, in the registry or by its id", () => {
+    // The real ids of Hydrao Custom: the cumulative comfort volume also ends with "comfort_shower_volume".
+    const real = ["sensor.hydrao_ab12_total_cumulative_comfort_shower_volume", "sensor.hydrao_ab12_comfort_shower_volume"];
+    expect(detectHydraoEntities(null, real).entity).toBe("sensor.hydrao_ab12_comfort_shower_volume");
+    expect(detectHydraoEntities(null, [real[0]]).entity).toBe("");
+    const fr = ["sensor.hydrao_ab12_volume_douche_confort_cumule", "sensor.hydrao_ab12_volume_douche_cumule"];
+    expect(detectHydraoEntities(null, fr).entity).toBe("");
+  });
+
+  it("knows the translation keys of Hydrao Custom (shower_volume_comfort, shower_volume_raw, threshold_4)", () => {
+    const registry = {
+      "sensor.a": { platform: "hydrao_custom", translation_key: "shower_volume_raw" },
+      "sensor.b": { platform: "hydrao_custom", translation_key: "shower_volume_comfort" },
+      "sensor.c": { platform: "hydrao_custom", translation_key: "threshold_3" },
+      "sensor.d": { platform: "hydrao_custom", translation_key: "threshold_4" },
+    };
+    const out = detectHydraoEntities({ entities: registry }, []);
+    expect(out.entity).toBe("sensor.b");
+    expect(out.target_budget_entity).toBe("sensor.d");
+    delete registry["sensor.b"];
+    expect(detectHydraoEntities({ entities: registry }, []).entity).toBe("sensor.a");
   });
 
   it("never takes the cumulative or the wasted volume, nor another threshold", () => {

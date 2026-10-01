@@ -3,6 +3,12 @@
 Toutes les modifications notables du projet sont documentées dans ce fichier.
 Le format suit [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/).
 
+## [0.8.83] — 2026-10-01
+
+### Modifié
+- La nourriture des poissons est jetée comme une pincée du bout des doigts : dix flocons (au lieu de six) partent près du doigt et filent sur le côté, ceux de gauche vers la gauche et ceux de droite vers la droite, puis l'eau les ralentit et ils coulent. Un jet s'étale maintenant sur plus de 120 unités de gauche à droite au lieu de 70 environ. Le jet est le même quelle que soit la cadence d'images, et les flocons s'arrêtent à la vitre.
+- La recherche des entités Hydrao Custom utilise maintenant les clés de traduction de l'intégration elle-même (`shower_volume_comfort`, `shower_volume_raw`, `threshold_4`), et ne prend jamais le volume confort cumulé, dont l'identifiant se termine aussi par `comfort_shower_volume`.
+
 ## [0.8.82] — 2026-10-01
 
 ### Ajouté

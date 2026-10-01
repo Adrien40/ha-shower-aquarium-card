@@ -10,6 +10,7 @@ import {
   smoothFlowIntensity,
   pruneRipples,
   stepFood,
+  FOOD_DRAG,
   stepFlowBubbles,
   stepRisingBubbles,
   stepBoilingBubbles,
@@ -202,6 +203,49 @@ describe("stepFood()", () => {
     stepFood([f], frame({ delta: 2, animTime: 1 }));
     expect(f.y).toBeCloseTo(101.2, 10);
     expect(f.x).toBeCloseTo(500 + Math.sin(1.5) * 0.25 * 2, 10);
+  });
+
+  it("a thrown flake flies sideways and the water holds it back, a little more each frame", () => {
+    const f = flake({ y: 100, vy: 0.6, x: 500, phase: 0, vx: 3 });
+    stepFood([f], frame({ animTime: 0 }));
+    expect(f.x).toBeCloseTo(503, 6);
+    expect(f.vx).toBeCloseTo(3 * FOOD_DRAG.keep, 9);
+    let before = f.x;
+    let step = Infinity;
+    for (let i = 0; i < 400; i++) {
+      stepFood([f], frame({ animTime: 0 }));
+      const moved = f.x - before;
+      expect(moved).toBeLessThanOrEqual(step + 1e-9);
+      step = moved;
+      before = f.x;
+    }
+    expect(f.vx).toBeLessThan(0.001);
+    // It goes about 3 / (1 - 0.96) = 75 units farther in all.
+    expect(f.x).toBeGreaterThan(560);
+    expect(f.x).toBeLessThan(590);
+  });
+
+  it("the drag follows the time step, so a slow screen throws the same distance", () => {
+    const [a, b] = [flake({ x: 500, vx: 3, vy: 0, y: 100 }), flake({ x: 500, vx: 3, vy: 0, y: 100 })];
+    for (let i = 0; i < 40; i++) stepFood([a], frame({ delta: 1 }));
+    for (let i = 0; i < 20; i++) stepFood([b], frame({ delta: 2 }));
+    expect(b.x).toBeCloseTo(a.x, 0);
+    expect(b.vx).toBeCloseTo(a.vx, 6);
+  });
+
+  it("a flake thrown to the left goes left, and never through the glass on either side", () => {
+    const left = flake({ x: 40, vx: -9, vy: 0, y: 100 });
+    const right = flake({ x: 985, vx: 9, vy: 0, y: 100 });
+    for (let i = 0; i < 20; i++) stepFood([left, right], frame());
+    expect(left.x).toBe(FOOD_DRAG.minX);
+    expect(right.x).toBe(FOOD_DRAG.maxX);
+  });
+
+  it("a flake without a throw (an old one) just sways", () => {
+    const f = flake({ x: 500, vy: 0, y: 100, vx: undefined, phase: 0 });
+    stepFood([f], frame({ animTime: 0 }));
+    expect(f.x).toBe(500);
+    expect(f.vx).toBe(0);
   });
 
   it("holds a flake at the water surface", () => {

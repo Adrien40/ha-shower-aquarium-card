@@ -220,6 +220,7 @@
  * @typedef {object} Flake
  * @property {number} x
  * @property {number} y
+ * @property {number} [vx]  sideways speed of a flake that was thrown, fades out in the water
  * @property {number} vy
  * @property {number} phase
  * @property {number} r

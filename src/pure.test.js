@@ -658,6 +658,7 @@ import {
   computeScareKick,
   pickFoodTarget,
   createFlakes,
+  FOOD_THROW,
   FLOW_ACTIVE_WINDOW_MS,
 } from "./pure.js";
 
@@ -747,8 +748,36 @@ describe("tap interactions", () => {
     expect(flakes).toHaveLength(5);
     flakes.forEach((f) => {
       expect(f.eaten).toBe(false);
-      expect(Math.abs(f.x - 500)).toBeLessThanOrEqual(35);
+      expect(f.x).toBe(500);
+      expect(f.vx).toBeCloseTo(0, 9);
     });
+  });
+
+  it("throws a pinch of ten flakes by default, like from the tips of the fingers", () => {
+    expect(createFlakes(500, 100, undefined, () => 0.5)).toHaveLength(FOOD_THROW.count);
+    expect(FOOD_THROW.count).toBe(10);
+  });
+
+  it("throws the flakes on the left to the left and the ones on the right to the right", () => {
+    const values = [0, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 1, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5];
+    let i = 0;
+    const flakes = createFlakes(500, 100, 2, () => values[i++ % values.length]);
+    const [left, right] = flakes;
+    expect(left.x).toBeCloseTo(500 - FOOD_THROW.start, 6);
+    expect(left.vx).toBeLessThan(-FOOD_THROW.speed + 0.5);
+    expect(right.x).toBeGreaterThan(500);
+    expect(right.vx).toBeGreaterThan(0);
+  });
+
+  it("starts them within the reach of the fingers and gives each its own speed", () => {
+    const flakes = createFlakes(512, 100, 200);
+    for (const f of flakes) {
+      expect(Math.abs(f.x - 512)).toBeLessThanOrEqual(FOOD_THROW.start);
+      expect(Math.abs(f.vx)).toBeLessThanOrEqual(FOOD_THROW.speed + 0.4);
+      expect(f.vy).toBeGreaterThanOrEqual(0.4);
+      expect(f.vy).toBeLessThanOrEqual(0.95);
+    }
+    expect(new Set(flakes.map((f) => f.vx.toFixed(2))).size).toBeGreaterThan(100);
   });
 });
 
@@ -1161,5 +1190,18 @@ describe("computeCanvasHeight(): fullscreen follows the shape of the screen", ()
         { numRuns: 300 }
       );
     });
+  });
+});
+
+describe("a pinch of food scatters from left to right once it is in the water", () => {
+  it("the flakes of one throw end up spread over more than 120 units, on both sides of the tap", async () => {
+    const { stepFood } = await import("./physics.js");
+    const flakes = createFlakes(512, 100, FOOD_THROW.count, (() => { let s = 5; return () => ((s = (s * 16807) % 2147483647) / 2147483647); })());
+    const frame = { isDead: false, waterRatio: 1, delta: 1, animTime: 0, waterSurfaceY: 15, tankBottom: 20_000, nowMs: 0 };
+    for (let i = 0; i < 300; i++) stepFood(flakes, frame);
+    const xs = flakes.map((f) => f.x);
+    expect(Math.max(...xs) - Math.min(...xs)).toBeGreaterThan(120);
+    expect(Math.min(...xs)).toBeLessThan(512 - 30);
+    expect(Math.max(...xs)).toBeGreaterThan(512 + 30);
   });
 });

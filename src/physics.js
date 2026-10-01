@@ -49,6 +49,9 @@ export const DEATH_DURATION_MS = 4500;
 /** How long (ms) a flake stays on the sand before it disappears. */
 export const FOOD_LIFETIME_MS = 6000;
 
+/** How the thrown flakes slow down in the water (the share of their sideways speed kept each frame), and the walls they stop at. */
+export const FOOD_DRAG = { keep: 0.96, minX: 30, maxX: 994 };
+
 /** Time step (ms) assumed when the real one is unknown (first frame). */
 const DEFAULT_FRAME_MS = 16.66;
 
@@ -194,7 +197,14 @@ export function stepFood(food, frame) {
   food.forEach((f) => {
     if (f.landedAt) return;
     f.y += f.vy * delta;
-    f.x += Math.sin(animTime * 1.5 + f.phase) * 0.25 * delta;
+    // The throw: the flake flies sideways, then the water holds it back. The distance covered
+    // in this step is the sum of the speeds of the frames it lasts, so the throw is the same
+    // whatever the frame rate.
+    const vx = f.vx ?? 0;
+    const kept = Math.pow(FOOD_DRAG.keep, delta);
+    f.x += (vx * (1 - kept)) / (1 - FOOD_DRAG.keep) + Math.sin(animTime * 1.5 + f.phase) * 0.25 * delta;
+    f.vx = vx * kept;
+    f.x = Math.min(FOOD_DRAG.maxX, Math.max(FOOD_DRAG.minX, f.x));
     if (f.y < waterSurfaceY) f.y = waterSurfaceY;
     if (f.y >= tankBottom - 30) {
       f.y = tankBottom - 30;

@@ -7,6 +7,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import "./shower-aquarium-card.js";
 import { cardStyles } from "./styles.js";
+import { FOOD_THROW } from "./pure.js";
 import enTranslations from "../translations/en.json";
 import frTranslations from "../translations/fr.json";
 
@@ -98,9 +99,9 @@ describe("feeding with the keyboard", () => {
     const el = await mount();
     const surface = el._tankState().waterSurfaceY;
     buttons(el)[0].click();
-    expect(el._food).toHaveLength(6);
+    expect(el._food).toHaveLength(FOOD_THROW.count);
     for (const flake of el._food) {
-      expect(Math.abs(flake.x - 512)).toBeLessThanOrEqual(35);
+      expect(Math.abs(flake.x - 512)).toBeLessThanOrEqual(FOOD_THROW.start);
       // Just under the water surface (createFlakes adds 2 px and up to 12 px).
       expect(flake.y).toBeGreaterThanOrEqual(surface + 2);
       expect(flake.y).toBeLessThan(surface + 2 + 12 + 1);
@@ -233,7 +234,7 @@ describe("the mouse and touch behaviour is unchanged", () => {
   it("a tap near the surface still feeds, a tap in the water still knocks", async () => {
     const el = await mount({}, { volume: 0 });
     tap(el, 300, 20);
-    expect(el._food).toHaveLength(6);
+    expect(el._food).toHaveLength(FOOD_THROW.count);
     tap(el, 300, 300);
     expect(el._ripples).toHaveLength(1);
   });
@@ -251,7 +252,7 @@ describe("the mouse and touch behaviour is unchanged", () => {
     const byKey = await mount({}, { volume: 0 });
     byKey._onFeedButton();
     expect(byKey._food).toHaveLength(byTap._food.length);
-    expect(byKey._food.every((f) => Math.abs(f.x - 512) <= 35)).toBe(true);
+    expect(byKey._food.every((f) => Math.abs(f.x - 512) <= FOOD_THROW.start)).toBe(true);
   });
 
   it("food dropped by the keyboard sinks and is eaten like any other", async () => {

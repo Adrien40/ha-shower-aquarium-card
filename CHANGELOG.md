@@ -3,6 +3,12 @@
 All notable changes to this project are documented in this file.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.8.83] — 2026-10-01
+
+### Changed
+- The fish food is thrown like a pinch from the tips of the fingers: ten flakes (instead of six) start close to the tap and fly sideways, the ones on the left to the left and the ones on the right to the right, then the water slows them down and they sink. A throw now spreads over more than 120 units from left to right instead of about 70. The throw is the same whatever the frame rate, and the flakes stop at the glass.
+- Finding the Hydrao Custom entities now uses the translation keys of the integration itself (`shower_volume_comfort`, `shower_volume_raw`, `threshold_4`), and never takes the cumulative comfort volume, whose id also ends with `comfort_shower_volume`.
+
 ## [0.8.82] — 2026-10-01
 
 ### Added
