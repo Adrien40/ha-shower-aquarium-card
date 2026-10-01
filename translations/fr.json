@@ -67,5 +67,10 @@
   "option_creature_flat": "Plat et détaillé",
   "option_creature_cartoon": "Dessin animé",
   "option_creature_realistic": "Réaliste",
-  "helper_creature_style": "Le réaliste utilise des ombrages doux, que la qualité d'animation légère supprime"
+  "helper_creature_style": "Le réaliste utilise des ombrages doux, que la qualité d'animation légère supprime",
+  "field_swipe_biotope": "Changer de biotope en glissant le doigt",
+  "helper_swipe_biotope": "Glissez horizontalement sur l'aquarium pour passer à l'eau douce, à l'eau de mer ou à l'eau froide. Le choix est gardé sur cet appareil ; changer le biotope dans cet éditeur le remplace.",
+  "action_biotope": "Changer de biotope",
+  "aria_biotope": "Biotope : {name}.",
+  "helper_algae_age": "0 = automatique : l'âge suit le temps écoulé depuis la dernière douche. Une valeur plus grande force l'âge des algues à cet instant, pour voir leur aspect."
 }

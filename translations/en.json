@@ -67,5 +67,10 @@
   "option_creature_flat": "Flat and detailed",
   "option_creature_cartoon": "Cartoon",
   "option_creature_realistic": "Realistic",
-  "helper_creature_style": "Realistic uses soft shading, which the light animation quality leaves out"
+  "helper_creature_style": "Realistic uses soft shading, which the light animation quality leaves out",
+  "field_swipe_biotope": "Swipe to change the biotope",
+  "helper_swipe_biotope": "Swipe sideways on the aquarium to go to freshwater, saltwater or coldwater. The choice is kept on this device; changing the biotope in this editor replaces it.",
+  "action_biotope": "Change biotope",
+  "aria_biotope": "Biotope: {name}.",
+  "helper_algae_age": "0 = automatic: the age follows the time since the last shower. A higher value sets the age of the algae at this very moment, to see how they look."
 }
