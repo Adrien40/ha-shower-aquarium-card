@@ -121,7 +121,8 @@ The card is not limited to showers: it can show any consumption you want to keep
 * 🐠 **Fully animated aquarium:** Ultra-smooth SVG vector rendering, dynamic fish swimming physics with fin motion, and autonomous wandering.
 * 🌿 **Realistic algae:** A granular film creeps up from the bottom and along the side glass, and tufts of hair algae grow along the floor, thicker and thicker up to 48 hours without showers.
 * 🧹 **Ancistrus:** Seen from below with its round suction mouth, fleshy tentacles and fins swept back, it roams the whole tank in every direction and turns its head towards where it goes.
-* 🦀 **Reef life:** a crab living on the flat rock of a tall pile of live rock (at three quarters of its height), a shrimp on the sand and a goby in its burrow.
+* 🦀 **Reef life:** a crab that walks all over the reef (over the sand, up the pile of live rock to its flat rock) and hides in the caves when it feels like it or when you knock on the glass, a shrimp on the sand and a goby in its burrow.
+* 👆 **Swipe to change the biotope:** slide a finger sideways on the aquarium to go from freshwater to saltwater to coldwater.
 * 🐟 **Fish that keep their distance:** they never pile up, and every biotope has fish of very different shapes and colours (discus, angelfish, clownfish, goldfish with a hump, a hood or telescope eyes...).
 * 🐌 **Diverse fauna:** Three kinds of snail (turret, ramshorn, round pond snail) grazing along the sand floor and the glass walls. When the water goes down they may be left above it: they crawl down to rejoin it.
 * 🎛️ **Full animation controls:** Fish speed multiplier and algae age sliders for easy previewing and tuning.
@@ -177,6 +178,7 @@ The card is not limited to showers: it can show any consumption you want to keep
 | `fullscreen` | Boolean | `false` | Immersive fullscreen mode (removes borders and metric cards). The drawing takes the exact shape of your screen (portrait, 4:3, ultra-wide...): nothing is stretched. |
 | `creature_style` | Select | `flat` | Look of the fish and the other living things: `flat` (flat colours with small details), `cartoon` (outlines, big eyes, rosy cheeks) or `realistic` (soft shading, scales, translucent fins). |
 | `gauge_style` | Select | `thermometer` | Fullscreen gauges: `thermometer` (glass thermometer + volume bar) or `arc` (two open arcs with a marker dot). |
+| `swipe_biotope` | Boolean | `true` | A sideways swipe on the aquarium changes the biotope (freshwater → saltwater → coldwater). The choice is kept on the device; changing `theme` in the editor starts over from the new one. Set to `false` to turn it off. |
 | `show_budget` | Boolean | `false` | Write the target budget on the volume gauge (for example `18.0 / 50 L`). |
 | `respect_reduced_motion` | Boolean | `true` | Freeze the animation when the device asks for reduced motion (accessibility setting). Set to `false` to always animate. |
 | `animation_quality` | Select | `max` | Animation quality: `max` (display frame rate), `balanced` (30 fps), `light` (20 fps, simplified effects — for the Google Nest Hub and other low-power screens). |
@@ -204,7 +206,7 @@ The card is not limited to showers: it can show any consumption you want to keep
 | Saltwater | clownfish (a male and a slightly bigger female), blue tang, butterflyfish, yellow tang (only one), royal gramma, chromis, lyretail anthias, and a goby in its burrow in the sand |
 | Cold water | ryukin, comet, pearlscale, oranda, black moor, shubunkin (all goldfish) |
 
-They follow one another as `fish_count` grows, so ten fish show every species of their tank. The fish keep a minimum distance from each other, so they do not pile up. The Ancistrus roams the whole tank, in every direction, turning its head towards where it goes. In the reef, the crab lives on the flat rock of a tall pile of live rock in the right-hand corner, at three quarters of its height. The snails may be out of the water when it goes down: they crawl down to rejoin it.
+They follow one another as `fish_count` grows, so ten fish show every species of their tank. The fish keep a minimum distance from each other, so they do not pile up. The Ancistrus roams the whole tank, in every direction, turning its head towards where it goes. In the reef, the crab walks from a grotto in the middle of the tank, over the sand and up a tall pile of live rock in the right-hand corner, to its flat rock (at three quarters of the height of the pile), and goes into the caves to hide. The Ancistrus always stays in the water: only the tip of its tail may come out of it. The snails may be out of the water when it goes down: they crawl down to rejoin it.
 
 ---
 
@@ -230,8 +232,9 @@ Three notches mark where the green, orange and red zones begin: on the right of 
 ## 🎮 Interactions & live animations
 
 - **Tap the water** to knock on the glass: a shock wave ripples out and nearby fish dart away before resuming their swim.
+- **Swipe sideways** to change the biotope (`swipe_biotope`). The name of the biotope appears for a moment.
 - **Tap near the surface** to drop fish food: the fish rush to catch the flakes as they sink.
-- **Keyboard and screen readers**: press <kbd>Tab</kbd> to reach the **Feed the fish** and **Knock on the glass** buttons (they appear over the tank while focused) and <kbd>Enter</kbd> or <kbd>Space</kbd> to use them; a screen reader announces the result. They are disabled when the animals are dead, the tank is empty, or your system asks for reduced motion.
+- **Keyboard and screen readers**: press <kbd>Tab</kbd> to reach the **Feed the fish**, **Knock on the glass** and **Change biotope** buttons (they appear over the tank while focused) and <kbd>Enter</kbd> or <kbd>Space</kbd> to use them; a screen reader announces the result. The first two are disabled when the animals are dead, the tank is empty, or your system asks for reduced motion.
 - **Water running**: while the volume keeps growing, the surface becomes choppier and a stream of bubbles rises from the bottom. The intensity follows the flow inferred from the volume sensor.
 - **Cost** (`show_cost`): the heating energy is estimated from the volume and the water temperature (`4.186 kJ/kg/K`), then priced with the two rates above. It is an estimate, not a bill.
 

@@ -121,7 +121,8 @@ La carte n'est pas limitée aux douches : elle peut afficher toute consommation 
 * 🐠 **Aquarium entièrement animé :** Rendu vectoriel SVG haute fluidité, nage dynamique des poissons avec battement de nageoires et déplacement autonome.
 * 🌿 **Algues réalistes :** Un voile granuleux monte depuis le fond et le long des vitres latérales, et des touffes d'algues filamenteuses poussent sur le sol, de plus en plus épais jusqu'à 48 h sans douche.
 * 🧹 **Ancistrus :** Vu de dessous, avec sa bouche-ventouse ronde, ses tentacules charnus et ses nageoires rabattues, il parcourt tout l'aquarium dans toutes les directions et tourne la tête vers là où il va.
-* 🦀 **Vie du récif :** un crabe sur la pierre plate d'un grand tas de pierres vivantes (aux trois quarts de sa hauteur), une crevette sur le sable et un gobi dans son terrier.
+* 🦀 **Vie du récif :** un crabe qui parcourt tout le récif (sur le sable, puis en montant le tas de pierres vivantes jusqu'à sa pierre plate) et se cache dans les grottes quand l'envie lui prend ou quand on tape sur la vitre, une crevette sur le sable et un gobi dans son terrier.
+* 👆 **Glisser pour changer de biotope :** un glissement du doigt sur l'aquarium fait passer de l'eau douce à l'eau de mer puis à l'eau froide.
 * 🐟 **Des poissons qui gardent leurs distances :** ils ne s'entassent jamais, et chaque biotope a des poissons de formes et de couleurs très différentes (discus, scalaires, poissons-clowns, poissons rouges à bosse, à capuchon ou aux yeux télescopes...).
 * 🐌 **Faune diversifiée :** Trois sortes d'escargots (tourelle, planorbe, escargot rond) qui broutent sur le sable et sur les vitres latérales. Quand l'eau descend, ils peuvent se retrouver au-dessus : ils descendent pour la rejoindre.
 * 🎛️ **Contrôle total des animations :** Curseur de vitesse des poissons et curseur d'âge des algues pour tester et caler votre rendu idéal.
@@ -177,6 +178,7 @@ La carte n'est pas limitée aux douches : elle peut afficher toute consommation 
 | `fullscreen` | Booléen | `false` | Mode plein écran immersif (sans bordures ni cartes de métriques). Le dessin prend exactement la forme de votre écran (portrait, 4:3, ultra-large...) : rien n'est étiré. |
 | `creature_style` | Sélection | `flat` | Style des poissons et des autres êtres vivants : `flat` (aplats de couleur avec de petits détails), `cartoon` (contours, gros yeux, joues roses) ou `realistic` (ombrages doux, écailles, nageoires translucides). |
 | `gauge_style` | Sélection | `thermometer` | Jauges du plein écran : `thermometer` (thermomètre en verre + barre de volume) ou `arc` (deux arcs ouverts avec un repère). |
+| `swipe_biotope` | Booléen | `true` | Un glissement horizontal sur l'aquarium change le biotope (eau douce → eau de mer → eau froide). Le choix est gardé sur l'appareil ; changer `theme` dans l'éditeur repart du nouveau. Mettre `false` pour le désactiver. |
 | `show_budget` | Booléen | `false` | Écrit le budget cible sur la jauge de volume (par exemple `18.0 / 50 L`). |
 | `respect_reduced_motion` | Booléen | `true` | Fige l'animation quand l'appareil demande une réduction des animations (réglage d'accessibilité). Mettre `false` pour toujours animer. |
 | `animation_quality` | Sélection | `max` | Qualité d'animation : `max` (fréquence de l'écran), `balanced` (30 i/s), `light` (20 i/s, effets simplifiés — pour le Google Nest Hub et les écrans peu puissants). |
@@ -204,7 +206,7 @@ La carte n'est pas limitée aux douches : elle peut afficher toute consommation 
 | Eau de mer | poisson-clown (un mâle et une femelle un peu plus grande), chirurgien bleu, poisson-papillon, chirurgien jaune (un seul), gramma royal, chromis, anthias queue-de-lyre, et un gobi dans son terrier, dans le sable |
 | Eau froide | ryukin, comète, pearlscale, oranda, black moor, shubunkin (tous des poissons rouges) |
 
-Ils se suivent à mesure que `fish_count` augmente : dix poissons montrent toutes les espèces de leur aquarium. Les poissons gardent une distance minimale entre eux, pour ne pas s'entasser. L'ancistrus parcourt tout l'aquarium, dans toutes les directions, la tête tournée vers là où il va. En eau de mer, le crabe vit sur la pierre plate d'un grand tas de pierres vivantes, dans le coin droit, aux trois quarts de sa hauteur. Les escargots peuvent se retrouver hors de l'eau quand elle descend : ils descendent le long de la vitre pour la rejoindre.
+Ils se suivent à mesure que `fish_count` augmente : dix poissons montrent toutes les espèces de leur aquarium. Les poissons gardent une distance minimale entre eux, pour ne pas s'entasser. L'ancistrus parcourt tout l'aquarium, dans toutes les directions, la tête tournée vers là où il va. En eau de mer, le crabe part d'une grotte au milieu de l'aquarium, traverse le sable et monte un grand tas de pierres vivantes, dans le coin droit, jusqu'à sa pierre plate (aux trois quarts de la hauteur du tas), et va se cacher dans les grottes. L'ancistrus reste toujours dans l'eau : seul le bout de sa queue peut en sortir. Les escargots peuvent se retrouver hors de l'eau quand elle descend : ils descendent le long de la vitre pour la rejoindre.
 
 ---
 
@@ -230,8 +232,9 @@ Trois repères marquent le début des zones verte, orange et rouge : à droite d
 ## 🎮 Interactions et animations en direct
 
 - **Toucher l'eau** : un coup sur la vitre fait naître une onde de choc, les poissons proches s'écartent vivement puis reprennent leur nage.
+- **Glisser horizontalement** : change de biotope (`swipe_biotope`). Le nom du biotope s'affiche un instant.
 - **Toucher près de la surface** : fait tomber de la nourriture, les poissons se précipitent pour attraper les flocons pendant leur descente.
-- **Clavier et lecteurs d'écran** : appuyez sur <kbd>Tab</kbd> pour atteindre les boutons **Nourrir les poissons** et **Taper sur la vitre** (ils apparaissent sur l'aquarium quand ils ont le focus), puis sur <kbd>Entrée</kbd> ou <kbd>Espace</kbd> ; un lecteur d'écran annonce le résultat. Ils sont désactivés quand les animaux sont morts, que le bac est vide, ou que votre système demande une réduction des animations.
+- **Clavier et lecteurs d'écran** : appuyez sur <kbd>Tab</kbd> pour atteindre les boutons **Nourrir les poissons**, **Taper sur la vitre** et **Changer de biotope** (ils apparaissent sur l'aquarium quand ils ont le focus), puis sur <kbd>Entrée</kbd> ou <kbd>Espace</kbd> ; un lecteur d'écran annonce le résultat. Les deux premiers sont désactivés quand les animaux sont morts, que le bac est vide, ou que votre système demande une réduction des animations.
 - **Eau qui coule** : tant que le volume augmente, la surface s'agite et un flux de bulles remonte du fond. L'intensité suit le débit déduit du capteur de volume.
 - **Coût** (`show_cost`) : l'énergie de chauffe est estimée d'après le volume et la température de l'eau (`4,186 kJ/kg/K`), puis valorisée avec les deux tarifs ci-dessus. C'est une estimation, pas une facture.
 

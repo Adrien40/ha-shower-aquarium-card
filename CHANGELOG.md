@@ -9,8 +9,16 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - A new card is filled in automatically with the Hydrao Custom entities: shower volume, temperature and minimum comfort temperature. They are found through the entity registry (whatever the language of their ids), or by their english or french ids.
 - A knock on the glass now makes the Ancistrus, the shrimp, the crab and the goby run away, much faster than they usually move.
 - In the editor preview, the gauges of fullscreen mode are shown even when no water is consumed, so they can be adjusted. On a dashboard they stay hidden at 0 L.
+- A swipe sideways on the tank changes the biotope (freshwater, saltwater, coldwater). The choice is kept on the device, the name of the biotope is shown for a moment, and a third keyboard button does the same. It can be turned off with the new `swipe_biotope` option (also in the editor).
+- The crab walks all over the reef, from a new grotto of live rock in the middle of the tank, over the sand and up the pile of rock to its flat rock, and hides in the two caves (the grotto and a cave in the pile): it shrinks into the dark until only its eyes show. A knock on the glass sends it to the nearest cave.
+- More live rock in the reef: a grotto in the middle of the tank and a few rocks lying on the sand.
+- Explanation under the "Current algae age" option: 0 means automatic.
 
 ### Changed
+- The Ancistrus stays in the water: only the tip of its tail may come out of it. How high or low it can be depends on its heading (a long body standing up needs more room), and it is brought back in when the water goes down.
+- A knock on the glass makes the Ancistrus flee along a wall when the knock is on the other side of it (it used to move a few units only when it was against the left glass). The shrimp runs farther too.
+- The bulb of the fullscreen thermometer is smaller and joined to the tube.
+- Looking for the Hydrao Custom entities now also looks at every entity Home Assistant knows, not only at the ones offered by the card picker (those already on a dashboard are left out of it); without any, a sensor is taken rather than leaving the card without an entity.
 - "Algae age" is now "Current algae age (right now)".
 - The "Gauge style" option comes right after "Fullscreen mode" in the editor.
 - The help text of the reduced-motion option is clearer.

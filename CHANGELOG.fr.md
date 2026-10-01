@@ -9,8 +9,16 @@ Le format suit [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/).
 - Une nouvelle carte se remplit automatiquement avec les entités de Hydrao Custom : volume de la douche, température et température de confort minimum. Elles sont trouvées via le registre des entités (quelle que soit la langue de leurs identifiants), ou par leurs identifiants français ou anglais.
 - Un coup sur la vitre fait maintenant fuir l'ancistrus, la crevette, le crabe et le gobi, bien plus vite que d'habitude.
 - Dans l'aperçu de l'éditeur, les jauges du plein écran s'affichent même sans consommation, pour pouvoir les régler. Sur un tableau de bord, elles restent masquées à 0 L.
+- Un glissement horizontal sur l'aquarium change de biotope (eau douce, eau de mer, eau froide). Le choix est gardé sur l'appareil, le nom du biotope s'affiche un instant, et un troisième bouton pour le clavier fait la même chose. On peut le désactiver avec la nouvelle option `swipe_biotope` (aussi dans l'éditeur).
+- Le crabe parcourt tout le récif, depuis une nouvelle grotte de pierres vivantes au milieu de l'aquarium, sur le sable puis en montant le tas de pierres jusqu'à sa pierre plate, et se cache dans les deux grottes (la grotte du milieu et une cavité du tas) : il rétrécit dans le noir jusqu'à ne montrer que ses yeux. Un coup sur la vitre l'envoie dans la grotte la plus proche.
+- Plus de pierres vivantes dans le récif : une grotte au milieu de l'aquarium et quelques roches posées sur le sable.
+- Explication sous l'option « Âge actuel des algues » : 0 veut dire automatique.
 
 ### Modifié
+- L'ancistrus reste dans l'eau : seul le bout de sa queue peut en sortir. La hauteur qu'il peut atteindre dépend de son orientation (un long corps dressé demande plus de place), et il est ramené dans l'eau quand elle descend.
+- Un coup sur la vitre fait fuir l'ancistrus le long d'une paroi quand le coup vient de l'autre côté (il ne bougeait que de quelques unités quand il était contre la vitre de gauche). La crevette court aussi plus loin.
+- La boule du thermomètre du plein écran est plus petite et raccordée au tube.
+- La recherche des entités Hydrao Custom regarde maintenant aussi toutes les entités connues de Home Assistant, pas seulement celles que propose le sélecteur de cartes (qui écarte celles déjà sur un tableau de bord) ; à défaut, un capteur est pris plutôt que de laisser la carte sans entité.
 - « Âge des algues » devient « Âge actuel des algues (maintenant) ».
 - L'option « Style des jauges » passe juste après « Mode plein écran » dans l'éditeur.
 - Le texte d'aide de l'option de mouvement réduit est plus clair.
