@@ -1,0 +1,56 @@
+name: Tests
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: tests-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  vitest:
+    name: Unit, property and visual tests (vitest)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+
+      - name: Setup Node
+        uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      # Enforces the thresholds of vitest.config.js (100 % lines, statements
+      # and functions): untested code fails the build. The visual regression
+      # tests (visual/) run in the same vitest run, so coverage stays global.
+      - name: Run tests with coverage thresholds
+        run: npm run test:coverage
+
+      # The coverage report (lcov, json-summary) can feed a coverage badge.
+      - name: Keep the coverage report
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: coverage
+          path: coverage/
+          retention-days: 7
+          if-no-files-found: ignore
+
+      # A failing visual test writes the actual and the diff pictures here.
+      - name: Keep the pictures of failing visual tests
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: visual-diffs
+          path: visual/__output__/
+          if-no-files-found: ignore

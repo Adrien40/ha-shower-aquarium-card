@@ -1,0 +1,119 @@
+import { svg } from "lit";
+import { creatureStyle, shadingAllowed } from "./skin.js";
+import { ancistrusRedrawn, shrimpRedrawn, crabRedrawn } from "./redrawn.js";
+import { renderStressDots } from "./stress.js";
+
+/**
+ * The legs of a walking animal: where they are in their swing. Still while it is dead.
+ * @param {{ walk?: number, stride?: number }} creature
+ * @param {boolean} isDead
+ * @param {number} time
+ */
+const gaitOf = (creature, isDead, time) => ({ phase: creature.walk || 0, stride: isDead ? 0 : creature.stride || 0, time });
+
+/** White dots of stress, none on a dead animal. @param {{ stress?: number }} creature @param {boolean} isDead @param {number[]} area @param {number} time */
+const stressOf = (creature, isDead, area, time) => renderStressDots(isDead ? 0 : creature.stress || 0, area, time, 1.5);
+
+/** @typedef {import("./skin.js").CreatureStyle} CreatureStyle */
+
+/**
+ * Bottom-dwelling ancistrus (plecostomus).
+ * @param {import("../types.js").RenderHost} ctx the card element
+ * @param {boolean} isDead
+ */
+export function renderAncistrus(ctx, isDead) {
+  if (!ctx._ancistrus) return svg``;
+  const anc = ctx._ancistrus;
+  const p = anc.deathProgress || 0;
+  const bodyOpacity = (1.0 - p).toFixed(2);
+  const mouthPulse = isDead ? 1 : Number((1 + Math.sin(ctx._ambientTime * 1.6) * 0.07).toFixed(3));
+
+  const style = creatureStyle(ctx);
+  const shading = shadingAllowed(ctx);
+
+  return svg`
+    <g transform="translate(${anc.x}, ${anc.y}) rotate(${isDead ? 0 : (anc.heading ?? 0).toFixed(1)}) scale(1.5,${isDead ? -1.5 : 1.5})">
+      <g opacity="${bodyOpacity}">
+        ${ancistrusRedrawn(style, shading, mouthPulse)}
+        ${stressOf(anc, isDead, [0, 30, 11, 38], ctx._ambientTime)}
+      </g>
+
+      ${p > 0
+        ? svg`
+            <g opacity="${p.toFixed(2)}">
+              <!-- Main Ancistrus Spine -->
+              <line x1="0" y1="-15" x2="0" y2="70" stroke="#f1f5f9" stroke-width="2.5" stroke-linecap="round" />
+              <!-- Ancistrus ribs -->
+              <path d="M -12,10 L 0,16 L 12,10 M -14,24 L 0,30 L 14,24 M -12,38 L 0,44 L 12,38 M -9,52 L 0,56 L 9,52 M -6,64 L 0,66 L 6,64" stroke="#f1f5f9" stroke-width="1.8" stroke-linecap="round" fill="none" />
+              <!-- Sucker disc bone -->
+              <ellipse cx="0" cy="-6" rx="8" ry="6" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1" />
+              <circle cx="-3" cy="-7" r="1.5" fill="#0f172a" />
+              <circle cx="3" cy="-7" r="1.5" fill="#0f172a" />
+            </g>
+          `
+        : ""}
+    </g>
+  `;
+}
+
+/**
+ * Shrimp. Its head leads: it faces the way it walks or leaps (the drawing has its
+ * head to the left). In the air its nose goes from raised to lowered, and a
+ * shadow on the sand shows how high it is.
+ * @param {import("../types.js").RenderHost} ctx the card element
+ * @param {boolean} isDead
+ */
+export function renderShrimp(ctx, isDead) {
+  if (!ctx._shrimp) return svg``;
+  const s = ctx._shrimp;
+  const p = s.deathProgress || 0;
+  const bodyOpacity = (1.0 - p).toFixed(2);
+  // Walking left it faces left (the drawing as it is), walking right the drawing is mirrored.
+  const heading = s.dir === -1 ? -1 : 1;
+  const flip = -heading;
+  const pitch = isDead ? 0 : s.pitch || 0;
+  const lift = isDead ? 0 : s.lift || 0;
+
+  return svg`
+    ${lift > 1.5
+      ? svg`<ellipse cx="${s.x.toFixed(1)}" cy="${((s.floorY ?? s.y + lift) + 7).toFixed(1)}" rx="${(26 - Math.min(lift, 120) * 0.1).toFixed(1)}" ry="3.5" fill="#0f172a" opacity="${(0.22 * (1 - Math.min(lift, 120) / 160)).toFixed(2)}" />`
+      : ""}
+    <g transform="translate(${s.x}, ${s.y}) rotate(${(-pitch * heading).toFixed(1)}) scale(${flip * 1.5}, ${isDead ? -1.5 : 1.5})" opacity="${bodyOpacity}">
+      ${shrimpRedrawn(creatureStyle(ctx), shadingAllowed(ctx), gaitOf(s, isDead, ctx._ambientTime))}
+      ${stressOf(s, isDead, [-4, -3, 24, 8], ctx._ambientTime)}
+    </g>
+  `;
+}
+
+/**
+ * Crab. Hiding in a cave, it shrinks and fades into the dark of the cave until
+ * only its two eyes show.
+ * @param {import("../types.js").RenderHost} ctx the card element
+ * @param {boolean} isDead
+ */
+export function renderCrab(ctx, isDead) {
+  if (!ctx._crab) return svg``;
+  const c = ctx._crab;
+  const p = c.deathProgress || 0;
+  const hide = Math.max(0, Math.min(1, c.hide || 0));
+  const bodyOpacity = ((1.0 - p) * (1 - hide * 0.92)).toFixed(2);
+  const flip = c.dir === -1 ? -1 : 1;
+  // It backs away into the cave: smaller, and only the eyes are left at the end.
+  const size = Number((1.4 * (1 - hide * 0.6)).toFixed(3));
+  const eyes = hide > 0.85 && !isDead ? Math.min(1, (hide - 0.85) / 0.15) : 0;
+
+  return svg`
+    <g transform="translate(${c.x}, ${c.y}) scale(${flip * size}, ${isDead ? -size : size})" opacity="${bodyOpacity}">
+      ${crabRedrawn(creatureStyle(ctx), shadingAllowed(ctx), gaitOf(c, isDead, ctx._ambientTime))}
+      ${stressOf(c, isDead, [0, 2, 21, 11], ctx._ambientTime)}
+    </g>
+    ${eyes > 0
+      ? svg`
+          <g transform="translate(${c.x}, ${(c.y - 22 * size).toFixed(1)})" opacity="${eyes.toFixed(2)}">
+            <circle cx="-6" cy="0" r="3.6" fill="#f8fafc" /><circle cx="-5.4" cy="0.4" r="1.9" fill="#0f172a" />
+            <circle cx="6" cy="0" r="3.6" fill="#f8fafc" /><circle cx="6.6" cy="0.4" r="1.9" fill="#0f172a" />
+          </g>
+        `
+      : ""}
+  `;
+}
