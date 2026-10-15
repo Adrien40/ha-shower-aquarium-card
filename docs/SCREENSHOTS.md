@@ -125,7 +125,3 @@ The light animation profile is meant for weak, low-power screens: 20 images per 
 <td></td>
 </tr>
 </table>
-
-## Contributing
-
-Have a picture of the card in your own dashboard? Open a PR or an issue with the image and the options used to produce it, and it can be added here (put it in `docs/screenshots/`). The pictures of this page are not to be edited by hand: they are produced by `npm run visual:update`.
