@@ -125,7 +125,3 @@ Le profil d'animation léger est prévu pour les écrans peu puissants : 20 imag
 <td></td>
 </tr>
 </table>
-
-## Contribuer
-
-Tu as une capture de la carte dans ton propre tableau de bord ? Ouvre une PR ou une issue avec l'image et les options utilisées pour l'obtenir, et elle pourra être ajoutée ici (à mettre dans `docs/screenshots/`). Les images de cette page ne se modifient pas à la main : elles sont produites par `npm run visual:update`.
