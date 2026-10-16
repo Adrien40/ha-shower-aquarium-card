@@ -10,6 +10,8 @@
 [![Build](https://github.com/Adrien40/ha-shower-aquarium-card/actions/workflows/build.yaml/badge.svg?branch=main)](https://github.com/Adrien40/ha-shower-aquarium-card/actions/workflows/build.yaml)
 [![HACS](https://github.com/Adrien40/ha-shower-aquarium-card/actions/workflows/hacs.yaml/badge.svg?branch=main)](https://github.com/Adrien40/ha-shower-aquarium-card/actions/workflows/hacs.yaml)
 
+Une **carte personnalisée Lovelace pour Home Assistant** qui transforme le suivi du volume de votre douche (pommeau Hydrao, capteur d'impulsion, compteur d'eau connecté) en un aquarium vivant et interactif. 🛡️
+
 Si ce projet vous est utile, vous pouvez soutenir son développement 🙏
 
 <a href="https://www.buymeacoffee.com/adrien40"><img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" width="160"></a>
@@ -23,7 +25,7 @@ Si ce projet vous est utile, vous pouvez soutenir son développement 🙏
 * 🎨 **3 biotopes inclus :** Eau douce (Tropical), Eau de mer (Récif) et Eau froide (Poissons rouges), avec 6 à 7 espèces de poissons chacun.
 * 🖌️ **3 styles** pour les êtres vivants : plat et détaillé, dessin animé ou réaliste.
 * 🔌 **Conçue pour l'intégration [Hydrao Custom](https://github.com/Adrien40/ha-hydrao-custom), mais compatible avec n'importe quel capteur d'eau** (voir [Compatibilité](#-compatibilité--prérequis)).
-* 📱 **Optimisé pour tablettes et écrans muraux** (Mode Plein écran & Ratio personnalisable).
+* 📱 **Optimisée pour tablettes et écrans muraux** (Mode Plein Écran et Ratio personnalisable).
 * ⚙️ **Configuration 100 % graphique** via l'éditeur visuel (sans YAML obligatoire).
 * 📦 **Installation rapide** via HACS.
 
@@ -54,7 +56,7 @@ Si ce projet vous est utile, vous pouvez soutenir son développement 🙏
 ### 🔍 Éditeur visuel
 
 <p align="center">
-  <img src="docs/screenshots/editor_preview.png" width="600">
+  <img src="docs/screenshots/editor_preview.png" alt="Éditeur visuel de la Shower Aquarium Card" width="600">
 </p>
 
 <p align="center">
@@ -64,10 +66,6 @@ Si ce projet vous est utile, vous pouvez soutenir son développement 🙏
 ### 🖼️ Galerie
 
 Chaque biotope, chaque style, chaque état de l'aquarium, les jauges du plein écran et les formes d'écran : voir la **[galerie de captures](docs/SCREENSHOTS.fr.md)**.
-
----
-
-Une **carte personnalisée Lovelace pour Home Assistant** qui transforme le suivi du volume de votre douche (pommeau Hydrao, capteur d'impulsion, compteur d'eau connecté) en un aquarium vivant et interactif. 🛡️
 
 ---
 
@@ -85,7 +83,7 @@ Suivre sa consommation d'eau sous forme de jauges ou de chiffres peut vite deven
 
 ### Conçue pour Hydrao Custom, ouverte à tout le reste
 
-Cette carte a été développée pour **[Hydrao Custom](https://github.com/Adrien40/ha-hydrao-custom)**, une intégration Home Assistant 100 % locale (Bluetooth) pour les pommeaux de douche connectés Hydrao, du même auteur. Elle lui fournit tout ce qu'elle affiche : le volume de la douche en cours, la température de l'eau, et même la température de confort minimale et les seuils en litres du pommeau.
+Cette carte a été développée pour **[Hydrao Custom](https://github.com/Adrien40/ha-hydrao-custom)**, mon intégration Home Assistant 100 % locale (Bluetooth) pour les pommeaux de douche connectés Hydrao. Elle affiche les données qu'elle expose : le volume de la douche en cours, la température de l'eau, ainsi que la température de confort minimale et les seuils en litres du pommeau.
 
 **Elle n'y est pas liée.** La carte ne lit que des entités Home Assistant : elle fonctionne donc avec toute source qui lui donne un nombre de litres.
 
@@ -115,15 +113,17 @@ Les volumes *cumulés totaux* ne font que monter : ne les utilisez pas comme `en
 
 À savoir, d'après le fonctionnement de l'intégration :
 
-* Les capteurs de volume et de température **gardent leur dernière valeur** entre deux douches au lieu de devenir indisponibles : l'avis *Capteur indisponible* n'apparaît donc pas juste parce que l'eau est coupée.
-* Le **volume de la douche** retombe à 0 quand on appuie sur le bouton **Douche Terminée**, et repart de la nouvelle valeur à la douche suivante. Pour remettre l'aquarium plein sans attendre la prochaine douche, appuyez sur ce bouton (ou lancez-le depuis une automatisation). Après cela, la température retombe à 0 : la carte garde alors la dernière température mesurée.
-* Le pommeau ne parle en Bluetooth que pendant que l'eau coule : les valeurs ne changent donc que pendant la douche.
+* **Le pommeau n'émet en Bluetooth que lorsque l'eau coule** : les valeurs ne changent donc que pendant la douche. Les capteurs de volume et de température gardent leur dernière valeur entre deux douches au lieu de devenir indisponibles, et l'avis *Capteur indisponible* n'apparaît pas juste parce que l'eau est coupée.
+* Le **volume de la douche** retombe à 0 quand on appuie sur le bouton **Douche Terminée**, et repart de la nouvelle valeur à la douche suivante. Pour remettre l'aquarium plein sans attendre la prochaine douche, appuyez sur ce bouton (ou lancez-le depuis une automatisation).
+* Après cela, la température retombe à 0 : la carte garde alors la dernière température mesurée.
 
-La carte n'est pas limitée aux douches : elle peut afficher toute consommation que vous voulez garder sous un budget (une journée d'eau, un bain, un arrosage...).
+### Prérequis généraux
+
+La carte n'est pas limitée aux douches : elle affiche toute consommation que vous voulez garder sous un budget (une journée d'eau, un bain, un arrosage...).
 
 * 🏷️ **Entité requise :** un `sensor` numérique donnant un volume en **litres**. Il peut retomber à 0 (nouvelle douche) : la carte le remarque et repart de zéro.
 * 🌡️ **Entités optionnelles :** température de l'eau (°C), objectif de volume (`input_number`, `number` ou `sensor`) et température de confort minimale (`number`, `input_number` ou `sensor`).
-* 🖥️ **Navigateurs supportés :** Application Home Assistant Companion (Android/iOS), Chrome, Firefox, Safari.
+* 🖥️ **Navigateurs et applications supportés :** Application Home Assistant Companion (Android/iOS), Chrome, Firefox, Safari.
 
 ---
 
@@ -134,10 +134,10 @@ La carte n'est pas limitée aux douches : elle peut afficher toute consommation 
 * 🦀 **Vie du récif :** un crabe qui parcourt tout le récif (sur le sable, puis en montant le tas de pierres vivantes jusqu'à sa pierre plate) et se cache dans les grottes quand l'envie lui prend ou quand on tape sur la vitre, une crevette sur le sable et un gobi à son terrier qui plonge dans le sable quand on tape sur la vitre.
 * 👆 **Glisser pour changer de biotope :** un glissement du doigt sur l'aquarium fait passer de l'eau douce à l'eau de mer puis à l'eau froide.
 * 🐟 **Des poissons qui gardent leurs distances :** ils ne s'entassent jamais, et chaque biotope a des poissons de formes et de couleurs très différentes (discus, scalaires, poissons-clowns, poissons rouges à bosse, à capuchon ou aux yeux télescopes...).
-* 🐌 **Faune diversifiée :** Trois sortes d'escargots (tourelle, planorbe, escargot rond) qui broutent sur le sable et sur les vitres latérales. Quand l'eau descend, ils peuvent se retrouver au-dessus : ils descendent pour la rejoindre.
-* 🎛️ **Contrôle total des animations :** Curseur de vitesse des poissons pour tester et caler votre rendu idéal.
+* 🐌 **Faune diversifiée :** Trois sortes d'escargots (tourelle, planorbe, escargot rond) qui broutent sur le sable et sur les vitres latérales. Quand l'eau descend, ils peuvent se retrouver au-dessus : ils descendent le long de la vitre pour la rejoindre.
+* 🎛️ **Contrôle total des animations :** Curseur de vitesse des poissons pour caler votre rendu idéal.
 * ⚙️ **Configuration 100 % UI :** Tout se configure via l'éditeur de carte standard de Home Assistant.
-* 🌍 **Bilingue :** Interface de configuration disponible en français 🇫🇷 et anglais 🇬🇧.
+* 🌍 **Bilingue :** Interface de configuration disponible en Français 🇫🇷 et en Anglais 🇬🇧.
 
 ---
 
@@ -152,7 +152,7 @@ Cliquez sur le badge ci-dessus pour ajouter et télécharger directement le dép
 1. Ouvrez **HACS** dans votre Home Assistant.
 2. Cliquez sur les trois petits points en haut à droite > **Dépôts personnalisés**.
 3. Dans **Dépôt**, collez l'URL : `https://github.com/Adrien40/ha-shower-aquarium-card`
-4. Dans **Type**, sélectionnez **Tableau de bord** (ou *Dashboard* / *Lovelace plugin*), puis cliquez sur **Ajouter**.
+4. Dans **Type**, sélectionnez **Tableau de bord** (ou *Dashboard*), puis cliquez sur **Ajouter**.
 5. Cliquez sur **Télécharger**.
 6. Videz le cache de votre navigateur (`Ctrl + F5`).
 
@@ -172,7 +172,7 @@ Cliquez sur le badge ci-dessus pour ajouter et télécharger directement le dép
 | `entity` | Entité | **Requis** | Entité du volume d'eau consommé (L). |
 | `temperature_entity` | Entité | `-` | Entité de température de l'eau (°C). |
 | `title` | Texte | `""` | Titre de la carte (laisser vide pour masquer). |
-| `theme` | Choix | `freshwater` | Biotope : `freshwater` (Tropical), `saltwater` (Récif), `coldwater` (Poissons rouges). |
+| `theme` | Sélection | `freshwater` | Biotope : `freshwater` (Tropical), `saltwater` (Récif), `coldwater` (Poissons rouges). |
 | `fish_count` | Nombre | `4` | Nombre de poissons dans l'aquarium (1 à 10). |
 | `target_budget` | Nombre | `50` | Volume cible de la douche en litres. |
 | `target_budget_entity` | Entité | `-` | Entité dynamique pour définir le budget max. Avec Hydrao Custom, le capteur **Seuil 4** (le quatrième seuil coloré). |
@@ -183,12 +183,12 @@ Cliquez sur le badge ci-dessus pour ajouter et télécharger directement le dép
 | `temp_deadly_threshold` | Nombre | `45` | Seuil critique de température (°C). |
 | `comfort_temp_min` | Nombre | `33` | Température minimale de confort de l'eau (°C) : le thermomètre passe au vert à partir de là. Doit rester inférieure à `temp_boiling_threshold`. |
 | `comfort_temp_entity` | Entité | `-` | Entité donnant la température minimale de confort (par exemple celle d'un pommeau Hydrao). Remplace `comfort_temp_min` tant qu'elle a une valeur utilisable. |
-| `fish_speed_multiplier` | Nombre | `1.2` | Vitesse de nage des poissons (0.2 à 3.0). |
-| `show_cost` | Booléen | `false` | Affiche le coût estimé de la douche (eau + énergie de chauffe) : en carte de chiffres en mode normal, et en grand en haut de l'image, entre les deux jauges, en plein écran. |
+| `fish_speed_multiplier` | Nombre | `1.2` | Vitesse de nage des poissons (0,2 à 3,0). |
+| `show_cost` | Booléen | `false` | Affiche le coût estimé de la douche (eau + énergie de chauffe) : en tuile en mode normal, et en grand en haut de l'image, entre les deux jauges, en plein écran. |
 | `water_price_per_m3` | Nombre | `4.5` | Prix de l'eau en €/m³. |
 | `energy_price_per_kwh` | Nombre | `0.25` | Prix de l'énergie en €/kWh. |
 | `cold_water_temp` | Nombre | `15` | Température de l'eau froide (°C), pour estimer l'énergie de chauffe. |
-| `fullscreen` | Booléen | `false` | Mode plein écran immersif (sans bordures ni cartes de métriques). Le dessin prend exactement la forme de votre écran (portrait, 4:3, ultra-large...) : rien n'est étiré. |
+| `fullscreen` | Booléen | `false` | Mode plein écran immersif (sans bordures ni tuiles). Le dessin prend exactement la forme de votre écran (portrait, 4:3, ultra-large...) : rien n'est étiré. |
 | `creature_style` | Sélection | `flat` | Style des poissons et des autres êtres vivants : `flat` (aplats de couleur avec de petits détails), `cartoon` (contours, gros yeux, joues roses) ou `realistic` (ombrages doux, écailles, nageoires translucides). |
 | `show_gauges` | Booléen | `false` | Dessine aussi les jauges (température et volume) sur l'aquarium hors du plein écran, où elles sont toujours dessinées. Comme en plein écran, elles apparaissent dès le premier litre (toujours visibles dans l'aperçu de l'éditeur). Sans les tuiles, le coût s'écrit entre les jauges. |
 | `show_tiles` | Booléen | `true` | Les tuiles sous l'aquarium en mode normal (Consommé, Restant, Objectif, Température, Coût). Mettre `false` pour ne garder que l'aquarium. Le plein écran n'a pas de tuiles. |
@@ -221,13 +221,20 @@ Cliquez sur le badge ci-dessus pour ajouter et télécharger directement le dép
 | Eau de mer | poisson-clown (un mâle et une femelle un peu plus grande), chirurgien bleu, poisson-papillon, chirurgien jaune (un seul), gramma royal, chromis, anthias queue-de-lyre, et un gobi dans son terrier, dans le sable |
 | Eau froide | ryukin, comète, pearlscale, oranda, black moor, shubunkin (tous des poissons rouges) |
 
-Ils se suivent à mesure que `fish_count` augmente : dix poissons montrent toutes les espèces de leur aquarium. Les poissons gardent une distance minimale entre eux, pour ne pas s'entasser. L'ancistrus parcourt tout l'aquarium, dans toutes les directions, la tête tournée vers là où il va. En eau de mer, le crabe traverse le sable et monte un grand tas de pierres vivantes, dans le coin droit, jusqu'à sa pierre plate (aux trois quarts de la hauteur du tas), et va se cacher dans la grotte du tas. Quand l'aquarium meurt, les plantes, les coraux et l'anémone rétrécissent et s'effondrent, et les tentacules de l'anémone pendent, mous. L'ancistrus reste toujours dans l'eau : seul le bout de sa queue peut en sortir. Les escargots peuvent se retrouver hors de l'eau quand elle descend : ils descendent le long de la vitre pour la rejoindre.
+Les espèces apparaissent dans cet ordre à mesure que `fish_count` augmente : dix poissons montrent toutes les espèces de leur aquarium. Les poissons gardent une distance minimale entre eux, pour ne pas s'entasser.
+
+Les autres habitants :
+
+* **Ancistrus :** Il parcourt tout l'aquarium, dans toutes les directions, la tête tournée vers là où il va. Il reste toujours dans l'eau : seul le bout de sa queue peut en sortir.
+* **Crabe (eau de mer) :** Il traverse le sable, monte le grand tas de pierres vivantes du coin droit jusqu'à sa pierre plate (aux trois quarts de la hauteur du tas), et va se cacher dans la grotte du tas.
+
+Quand l'aquarium meurt, les plantes, les coraux et l'anémone rétrécissent et s'effondrent, et les tentacules de l'anémone pendent, mous.
 
 ---
 
 ## 🌡️ Jauges du plein écran
 
-En mode plein écran (ou avec `show_gauges` en mode normal), la température s'affiche en haut à gauche et le volume consommé en haut à droite, dans l'un des deux styles (`gauge_style`). Les jauges, et le coût s'il est activé, apparaissent dès le premier litre consommé et disparaissent quand le volume repasse à 0. Si le capteur de température retombe à 0 après une douche, le thermomètre garde la dernière température mesurée.
+En mode plein écran (ou avec `show_gauges` en mode normal), la température s'affiche en haut à gauche et le volume consommé en haut à droite, dans l'un des deux styles (`gauge_style`). Les jauges, et le coût s'il est activé, apparaissent dès le premier litre consommé et disparaissent quand le volume repasse à 0.
 
 **Température.** Le thermomètre va de 10 °C au seuil critique plus 5 °C, arrondi à la dizaine supérieure (10 à 50 °C avec les seuils par défaut). Son liquide, ou l'arc, prend la couleur de la zone :
 
@@ -239,6 +246,8 @@ En mode plein écran (ou avec `show_gauges` en mode normal), la température s'a
 | À partir de `temp_deadly_threshold` | Rouge |
 
 Trois repères marquent le début des zones verte, orange et rouge : à droite du tube dans le style thermomètre, à l'extérieur de l'arc dans le style arc.
+
+Si le capteur de température retombe à 0 après une douche, le thermomètre garde la dernière température mesurée.
 
 **Volume.** La barre (ou l'arc) se remplit jusqu'au budget cible : bleue sous 70 % du budget, ambre jusqu'à 100 %, rouge au-delà. Avec les quatre seuils colorés d'un pommeau Hydrao (`use_threshold_colors`), elle prend à la place la couleur du seuil atteint, comme le pommeau : la couleur du seuil 1 jusqu'à ses litres, puis le seuil 2, puis 3, puis 4, et une fois le seuil 4 dépassé sa couleur clignote. Le budget lui-même n'est écrit que si `show_budget` est activé.
 
@@ -293,7 +302,7 @@ Si le capteur de volume passe en `unavailable` ou `unknown` (ou disparaît), la 
 
 Poissons, nourriture, jauges et coût sont identiques dans tous les modes.
 
-Quel que soit le mode, ce qui ne bouge pas d'une image à l'autre (la forme des poissons, les rochers, les plantes, les parties fixes des animaux) est dessiné une seule fois et gardé, et la surface de l'eau et l'anémone ne sont pas recalculées entre deux rafraîchissements : sur un écran peu puissant, la carte fait environ moitié moins de travail qu'avant. Pour voir ce que fait votre propre écran, activez `show_fps` (section Affichage) : il affiche chaque seconde les images livrées par le navigateur et les images dessinées.
+Quel que soit le mode, ce qui ne bouge pas d'une image à l'autre (la forme des poissons, les rochers, les plantes, les parties fixes des animaux) est dessiné une seule fois puis gardé, et la surface de l'eau et l'anémone ne sont pas recalculées entre deux rafraîchissements : cela réduit nettement la charge sur les écrans peu puissants. Pour voir ce que fait votre propre écran, activez `show_fps` (section Affichage) : il affiche chaque seconde les images livrées par le navigateur et les images dessinées.
 
 ---
 
@@ -336,7 +345,7 @@ fullscreen: true
 ## 🐛 Dépannage
 
 ### Erreur `Custom element doesn't exist: shower-aquarium-card`
-* Vérifiez que la ressource est bien déclarée dans **Paramètres** > **Tableaux de bord** > **Ressources** avec l'URL `/local/shower-aquarium-card.js` (ou `/local/community/ha-shower-aquarium-card/shower-aquarium-card.js` si gérée par HACS) en type **Module JavaScript**.
+* Vérifiez que la ressource est bien déclarée dans **Paramètres** > **Tableaux de bord** > **Ressources** avec l'URL `/local/shower-aquarium-card.js` (ou `/local/community/ha-shower-aquarium-card/shower-aquarium-card.js` si elle est gérée par HACS) en type **Module JavaScript**.
 * Pensez à forcer le rechargement du cache (`Ctrl + F5`).
 
 ### L'aquarium ne prend pas toute la hauteur sur tablette

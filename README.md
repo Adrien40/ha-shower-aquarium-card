@@ -10,18 +10,20 @@
 [![Build](https://github.com/Adrien40/ha-shower-aquarium-card/actions/workflows/build.yaml/badge.svg?branch=main)](https://github.com/Adrien40/ha-shower-aquarium-card/actions/workflows/build.yaml)
 [![HACS](https://github.com/Adrien40/ha-shower-aquarium-card/actions/workflows/hacs.yaml/badge.svg?branch=main)](https://github.com/Adrien40/ha-shower-aquarium-card/actions/workflows/hacs.yaml)
 
+A **custom Lovelace card for Home Assistant** that turns tracking your shower water volume (Hydrao showerhead, pulse counter, smart water meter) into a lively and interactive aquarium. 🛡️
+
 If this project is useful to you, please consider supporting its development 🙏
 
 <a href="https://www.buymeacoffee.com/adrien40"><img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" width="160"></a>
 
 ---
 
-## ⚡ Overview
+## ⚡ At A Glance
 * 🚿 **Animated and engaging Lovelace card** for tracking shower water consumption.
 * 🐠 **Dynamic water level**, school of fish, snails, and ventral-view Ancistrus.
-* 🌡️ **Water temperature tracking** with visual alerts (boiling bubbles, deadly thermal thresholds).
-* 🎨 **3 built-in biotopes:** Freshwater (Tropical), Saltwater (Reef), and Coldwater (Goldfish), with 6 to 7 species of fish each.
-* 🖌️ **3 looks** for the living things: flat and detailed, cartoon, or realistic.
+* 🌡️ **Water temperature tracking** with visual alerts (boiling bubbles, critical temperature thresholds).
+* 🎨 **3 built-in biotopes:** Freshwater (Tropical), Saltwater (Reef), and Cold water (Goldfish), with 6 to 7 species of fish each.
+* 🖌️ **3 styles** for the living things: flat and detailed, cartoon, or realistic.
 * 🔌 **Made for the [Hydrao Custom](https://github.com/Adrien40/ha-hydrao-custom) integration, but works with any water sensor** (see [Compatibility](#-compatibility--prerequisites)).
 * 📱 **Optimized for tablets and wall displays** (Fullscreen mode & customizable aspect ratio).
 * ⚙️ **100% UI-based configuration** via the visual card editor (no YAML required).
@@ -31,7 +33,7 @@ If this project is useful to you, please consider supporting its development �
 
 ## 📸 Examples in Home Assistant
 
-### 🎬 In action
+### 🎬 In Action
 
 <p align="center">
   <img src="docs/screenshots/card_preview.gif" alt="Animated preview of the Shower Aquarium Card: a reef tank with fish, crab, shrimp and the gauges tiles" width="505">
@@ -54,7 +56,7 @@ If this project is useful to you, please consider supporting its development �
 ### 🔍 Visual Editor
 
 <p align="center">
-  <img src="docs/screenshots/editor_preview.png" width="600">
+  <img src="docs/screenshots/editor_preview.png" alt="Visual editor of the Shower Aquarium Card" width="600">
 </p>
 
 <p align="center">
@@ -63,15 +65,11 @@ If this project is useful to you, please consider supporting its development �
 
 ### 🖼️ Gallery
 
-Every biotope, every look, every state of the tank, fullscreen gauges and screen shapes: see the **[screenshot gallery](docs/SCREENSHOTS.md)**.
+Every biotope, every style, every state of the tank, fullscreen gauges and screen shapes: see the **[screenshot gallery](docs/SCREENSHOTS.md)**.
 
 ---
 
-A **custom Lovelace card for Home Assistant** that turns tracking your shower water volume (Hydrao showerhead, pulse counter, smart water meter) into a lively and interactive aquarium. 🛡️
-
----
-
-## 💡 Why this card?
+## 💡 Why This Card?
 
 Tracking water consumption with plain gauges or raw numbers can quickly become monotonous, especially when encouraging sustainable habits with the family:
 
@@ -85,58 +83,60 @@ Tracking water consumption with plain gauges or raw numbers can quickly become m
 
 ### Made for Hydrao Custom, open to everything
 
-This card was developed for **[Hydrao Custom](https://github.com/Adrien40/ha-hydrao-custom)**, a 100 % local (Bluetooth) Home Assistant integration for Hydrao smart showerheads, by the same author. It gives the card everything it shows: the volume of the current shower, the water temperature and even the minimum comfort temperature and the liter thresholds of the showerhead.
+This card was developed for **[Hydrao Custom](https://github.com/Adrien40/ha-hydrao-custom)**, my 100% local (Bluetooth) Home Assistant integration for Hydrao smart showerheads. It displays the data it exposes: the volume of the current shower, the water temperature, as well as the minimum comfort temperature and the liter thresholds of the showerhead.
 
-**It is not tied to it.** The card only reads Home Assistant entities, so it works with any source that gives it a number of litres:
+**It is not tied to it.** The card only reads Home Assistant entities, so it works with any source that gives it a number of liters:
 
 | Your source | What to give the card |
 | :--- | :--- |
 | Hydrao Custom | See [With Hydrao Custom](#with-hydrao-custom) below. |
-| A smart water meter, a pulse counter (ESPHome, Zigbee, Z-Wave...) | A sensor in **litres** that starts again from 0 for each shower or each day. A meter that only counts up forever needs a `utility_meter` helper (for example one that resets every day) to turn it into a volume you can compare with a budget. |
-| A flow sensor (L/min) | An `integration` helper (sum of the flow over time) then a `utility_meter`, to get litres. |
-| A sensor in m³ or gallons | A template sensor that converts it to litres: the card does not convert units. |
+| A smart water meter, a pulse counter (ESPHome, Zigbee, Z-Wave...) | A sensor in **liters** that starts again from 0 for each shower or each day. A meter that only counts up forever needs a `utility_meter` helper (for example one that resets every day) to turn it into a volume you can compare with a budget. |
+| A flow sensor (L/min) | An `integration` helper (sum of the flow over time) then a `utility_meter`, to get liters. |
+| A sensor in m³ or gallons | A template sensor that converts it to liters: the card does not convert units. |
 | No temperature sensor | Leave `temperature_entity` empty: the card works without one. |
 
 ### With Hydrao Custom
 
 The default minimum comfort temperature of the card (33 °C) is the one of Hydrao Custom, so the thermometer agrees with the showerhead even without `comfort_temp_entity`.
 
-Hydrao Custom names its entities after the device (`Hydrao` followed by the end of its Bluetooth address, or the name you chose), so their ids look like `sensor.hydrao_aloe_shower_volume`. Use the ones of your installation (the id follows the language Home Assistant had when the device was added, so on a French installation it looks like `sensor.hydrao_aloe_volume_douche`):
+Hydrao Custom names its entities after the device (`Hydrao` followed by the end of its Bluetooth address, or the name you chose), so their ids look like `sensor.hydrao_aloe_comfort_shower_volume`. Use the ones of your installation (the id follows the language Home Assistant had when the device was added, so on a French installation it looks like `sensor.hydrao_aloe_volume_douche_confort`):
 
 | Card option | Hydrao Custom entity | Note |
 | :--- | :--- | :--- |
 | `entity` | **Comfort Shower Volume** (L) | Found automatically in a new card: only the water that was warm enough counts. You can take **Shower Volume** instead to count all the water (it is also the one a new card takes when the device has no comfort volume). |
 | `temperature_entity` | **Temperature** (°C) | |
 | `comfort_temp_entity` | **Minimum Comfort Temperature** (number, 0 to 50 °C) | The green zone of the thermometer then follows the setting you change in Home Assistant. |
-| `target_budget_entity` | **Threshold 4** (L) | Found automatically in a new card: the last liter tier of the showerhead becomes the target budget, and its colour is the fourth colour of the volume. |
-| `threshold_1_entity` to `threshold_3_entity` | **Threshold 1 to 3** (L) | Found automatically in a new card: their state gives the litres and their `color_hex` attribute the colour you picked on the showerhead. |
+| `target_budget_entity` | **Threshold 4** (L) | Found automatically in a new card: the last liter tier of the showerhead becomes the target budget, and its color is the fourth color of the volume. |
+| `threshold_1_entity` to `threshold_3_entity` | **Threshold 1 to 3** (L) | Found automatically in a new card: their state gives the liters and their `color_hex` attribute the color you picked on the showerhead. |
 
 The *Total Cumulative* volumes only ever go up: do not use them as `entity`.
 
 Good to know, from how the integration works:
 
-* The volume and temperature sensors **keep their last value** between two showers instead of becoming unavailable, so the *Sensor unavailable* notice does not appear just because the water is off.
-* The **Shower Volume** goes back to 0 when the **Shower Ended** button is pressed, and starts again from the new value at the next shower. To send the aquarium back to a full tank without waiting for the next shower, press that button (or run it from an automation). After it, the temperature falls back to 0: the card then keeps the last temperature it measured.
-* The showerhead only talks over Bluetooth while the water is running, so values change during the shower only.
+* **The showerhead only talks over Bluetooth while the water is running**, so values change during the shower only. The volume and temperature sensors keep their last value between two showers instead of becoming unavailable, so the *Sensor unavailable* notice does not appear just because the water is off.
+* The **Shower Volume** goes back to 0 when the **Shower Ended** button is pressed, and starts again from the new value at the next shower. To send the aquarium back to a full tank without waiting for the next shower, press that button (or run it from an automation).
+* After that, the temperature falls back to 0: the card then keeps the last temperature it measured.
+
+### General Prerequisites
 
 The card is not limited to showers: it can show any consumption you want to keep under a budget (a day of water, a bath, a garden watering...).
 
-* 🏷️ **Required entity:** a numeric `sensor` giving a volume in **litres**. It may go back to 0 (a new shower): the card notices and starts over.
+* 🏷️ **Required entity:** a numeric `sensor` giving a volume in **liters**. It may go back to 0 (a new shower): the card notices and starts over.
 * 🌡️ **Optional entities:** water temperature (°C), target volume (`input_number`, `number` or `sensor`) and minimum comfort temperature (`number`, `input_number` or `sensor`).
-* 🖥️ **Supported clients:** Home Assistant Companion app (Android/iOS), Chrome, Firefox, Safari.
+* 🖥️ **Supported browsers and apps:** Home Assistant Companion app (Android/iOS), Chrome, Firefox, Safari.
 
 ---
 
 ## ✨ Key Features
 
 * 🐠 **Fully animated aquarium:** Ultra-smooth SVG vector rendering, dynamic fish swimming physics with fin motion, and autonomous wandering.
-* 🧹 **Ancistrus:** Seen from below with its round suction mouth, fleshy tentacles and fins swept back, it roams the whole tank in every direction and turns its head towards where it goes.
+* 🧹 **Ancistrus:** Seen from below with its round suction mouth, fleshy tentacles and fins swept back, it roams the whole tank in every direction and turns its head toward where it goes.
 * 🦀 **Reef life:** a crab that walks all over the reef (over the sand, up the pile of live rock to its flat rock) and hides in the caves when it feels like it or when you knock on the glass, a shrimp on the sand and a goby at its burrow that dives into the sand when you knock on the glass.
-* 👆 **Swipe to change the biotope:** slide a finger sideways on the aquarium to go from freshwater to saltwater to coldwater.
-* 🐟 **Fish that keep their distance:** they never pile up, and every biotope has fish of very different shapes and colours (discus, angelfish, clownfish, goldfish with a hump, a hood or telescope eyes...).
+* 👆 **Swipe to change the biotope:** slide a finger sideways on the aquarium to go from freshwater to saltwater to cold water.
+* 🐟 **Fish that keep their distance:** they never pile up, and every biotope has fish of very different shapes and colors (discus, angelfish, clownfish, goldfish with a hump, a hood or telescope eyes...).
 * 🐌 **Diverse fauna:** Three kinds of snail (turret, ramshorn, round pond snail) grazing along the sand floor and the glass walls. When the water goes down they may be left above it: they crawl down to rejoin it.
 * 🎛️ **Full animation controls:** Fish speed multiplier slider for easy previewing and tuning.
-* ⚙️ **100% UI configuration:** Complete setup via Home Assistant's standard card editor (`ha-form`).
+* ⚙️ **100% UI configuration:** Complete setup via Home Assistant's standard card editor.
 * 🌍 **Bilingual:** Card editor available in French 🇫🇷 and English 🇬🇧.
 
 ---
@@ -152,7 +152,7 @@ Click the badge above to add and download the repository directly, or follow the
 1. Open **HACS** in your Home Assistant instance.
 2. Click the three dots in the top-right corner > **Custom repositories**.
 3. In **Repository**, paste the URL: `https://github.com/Adrien40/ha-shower-aquarium-card`
-4. In **Type**, select **Dashboard** (or *Lovelace plugin*), then click **Add**.
+4. In **Type**, select **Dashboard**, then click **Add**.
 5. Click **Download**.
 6. Clear your browser cache (`Ctrl + F5`).
 
@@ -175,9 +175,9 @@ Click the badge above to add and download the repository directly, or follow the
 | `theme` | Select | `freshwater` | Biotope: `freshwater` (Tropical), `saltwater` (Reef), `coldwater` (Goldfish). |
 | `fish_count` | Number | `4` | Number of fish in the aquarium (1 to 10). |
 | `target_budget` | Number | `50` | Shower target budget in liters. |
-| `target_budget_entity` | Entity | `-` | Dynamic entity defining the target water budget. With Hydrao Custom, the **Threshold 4** sensor (the fourth coloured threshold). |
-| `threshold_1_entity`, `threshold_2_entity`, `threshold_3_entity` | Entity | `-` | The **Threshold 1 to 3** sensors of Hydrao Custom: litres (state) and colour (`color_hex` attribute). With the target entity, they give the four coloured thresholds of the showerhead. |
-| `use_threshold_colors` | Boolean | `true` | The volume gauge (bar, arc and *Consumed* tile) takes the colour of the threshold reached (the tile stays plain while it reads 0.0 L): each colour stays active until its threshold is passed, and after threshold 4 the colour of threshold 4 blinks (not with reduced motion). Needs the four thresholds above; without them, or set to `false`, the usual colours are used. |
+| `target_budget_entity` | Entity | `-` | Dynamic entity defining the target water budget. With Hydrao Custom, the **Threshold 4** sensor (the fourth colored threshold). |
+| `threshold_1_entity`, `threshold_2_entity`, `threshold_3_entity` | Entity | `-` | The **Threshold 1 to 3** sensors of Hydrao Custom: liters (state) and color (`color_hex` attribute). With the target entity, they give the four colored thresholds of the showerhead. |
+| `use_threshold_colors` | Boolean | `true` | The volume gauge (bar, arc and *Consumed* tile) takes the color of the threshold reached (the tile stays plain while it reads 0.0 L): each color stays active until its threshold is passed, and after threshold 4 the color of threshold 4 blinks (not with reduced motion). Needs the four thresholds above; without them, or set to `false`, the usual colors are used. |
 | `survival_volume` | Number | `5` | Reserve water volume before the tank runs completely dry. |
 | `temp_boiling_threshold` | Number | `40` | Threshold (°C) for hot water boiling bubble effects. |
 | `temp_deadly_threshold` | Number | `45` | Critical temperature threshold (°C). |
@@ -188,12 +188,12 @@ Click the badge above to add and download the repository directly, or follow the
 | `water_price_per_m3` | Number | `4.5` | Water price in €/m³. |
 | `energy_price_per_kwh` | Number | `0.25` | Energy price in €/kWh. |
 | `cold_water_temp` | Number | `15` | Cold water inlet temperature (°C), used to estimate the heating energy. |
-| `fullscreen` | Boolean | `false` | Immersive fullscreen mode (removes borders and metric cards). The drawing takes the exact shape of your screen (portrait, 4:3, ultra-wide...): nothing is stretched. |
-| `creature_style` | Select | `flat` | Look of the fish and the other living things: `flat` (flat colours with small details), `cartoon` (outlines, big eyes, rosy cheeks) or `realistic` (soft shading, scales, translucent fins). |
-| `show_gauges` | Boolean | `false` | Also draw the gauges (temperature and volume) on the aquarium outside fullscreen mode, where they are always drawn. Like in fullscreen, they appear with the first litre (always shown in the preview of the editor). With the tiles removed, the cost is written between the gauges. |
+| `fullscreen` | Boolean | `false` | Immersive fullscreen mode (removes borders and tiles). The drawing takes the exact shape of your screen (portrait, 4:3, ultra-wide...): nothing is stretched. |
+| `creature_style` | Select | `flat` | Style of the fish and the other living things: `flat` (flat colors with small details), `cartoon` (outlines, big eyes, rosy cheeks) or `realistic` (soft shading, scales, translucent fins). |
+| `show_gauges` | Boolean | `false` | Also draw the gauges (temperature and volume) on the aquarium outside fullscreen mode, where they are always drawn. Like in fullscreen, they appear with the first liter (always shown in the preview of the editor). With the tiles removed, the cost is written between the gauges. |
 | `show_tiles` | Boolean | `true` | The tiles under the aquarium in the normal mode (Consumed, Remaining, Target, Temperature, Cost). Set to `false` to keep only the aquarium. Fullscreen mode has no tiles. |
 | `gauge_style` | Select | `thermometer` | Gauges: `thermometer` (glass thermometer + volume bar) or `arc` (two open arcs with a marker dot). |
-| `swipe_biotope` | Boolean | `true` | A sideways swipe on the aquarium changes the biotope (freshwater → saltwater → coldwater). The choice is kept on the device; changing `theme` in the editor starts over from the new one. Set to `false` to turn it off. |
+| `swipe_biotope` | Boolean | `true` | A sideways swipe on the aquarium changes the biotope (freshwater → saltwater → cold water). The choice is kept on the device; changing `theme` in the editor starts over from the new one. Set to `false` to turn it off. |
 | `show_budget` | Boolean | `false` | Write the target budget on the volume gauge (for example `18.0 / 50 L`). |
 | `respect_reduced_motion` | Boolean | `true` | Freeze the animation when the device asks for reduced motion (accessibility setting). Set to `false` to always animate. |
 | `animation_quality` | Select | `max` | Animation quality: `max` (display frame rate), `balanced` (30 fps), `light` (20 fps, simplified effects — for low-power screens). |
@@ -203,15 +203,15 @@ Click the badge above to add and download the repository directly, or follow the
 
 ---
 
-## 🐠 Looks of the living things
+## 🐠 Styles of the living things
 
 `creature_style` changes how the fish, the Ancistrus, the shrimp, the crab, the snails and the decor (plants, corals, anemone, pebbles) are drawn, in every biotope. It is also in the visual editor.
 
-| Look | What you get |
+| Style | What you get |
 | :--- | :--- |
-| `flat` (default) | Flat colours with small details: a light belly, a gill line, fin rays, veins on the leaves, polyps on the corals. |
-| `cartoon` | A dark outline round every shape, big shiny eyes, rosy cheeks and a smile. The anemone gets a face. |
-| `realistic` | Soft shading and a shine over the shapes, scales on the fish, translucent fins. The shading is left out by the `light` animation quality (weak screens); the scales and the shine stay. |
+| `flat` (default) | Flat colors with small details: a light belly, a gill line, fin rays, veins on the leaves, polyps on the corals. |
+| `cartoon` | A dark outline around every shape, big shiny eyes, rosy cheeks and a smile. The anemone gets a face. |
+| `realistic` | Soft shading and a shine over the shapes, scales on the fish, translucent fins. The shading is left out by the `light` animation quality (low-power screens); the scales and the shine stay. |
 
 ### The fish of each biotope
 
@@ -221,17 +221,24 @@ Click the badge above to add and download the repository directly, or follow the
 | Saltwater | clownfish (a male and a slightly bigger female), blue tang, butterflyfish, yellow tang (only one), royal gramma, chromis, lyretail anthias, and a goby in its burrow in the sand |
 | Cold water | ryukin, comet, pearlscale, oranda, black moor, shubunkin (all goldfish) |
 
-They follow one another as `fish_count` grows, so ten fish show every species of their tank. The fish keep a minimum distance from each other, so they do not pile up. The Ancistrus roams the whole tank, in every direction, turning its head towards where it goes. In the reef, the crab walks over the sand and up a tall pile of live rock in the right-hand corner, to its flat rock (at three quarters of the height of the pile), and goes into the cave of the pile to hide. When the tank dies, the plants, the corals and the anemone shrink and fall over, and the tentacles of the anemone hang limp. The Ancistrus always stays in the water: only the tip of its tail may come out of it. The snails may be out of the water when it goes down: they crawl down to rejoin it.
+They follow one another as `fish_count` grows, so ten fish show every species of their tank. The fish keep a minimum distance from each other, so they do not pile up.
+
+The other inhabitants:
+
+* **Ancistrus:** it roams the whole tank, in every direction, turning its head toward where it goes. It always stays in the water: only the tip of its tail may come out of it.
+* **Crab (reef):** it walks over the sand and up a tall pile of live rock in the right-hand corner, to its flat rock (at three quarters of the height of the pile), and goes into the cave of the pile to hide.
+
+When the tank dies, the plants, the corals and the anemone shrink and fall over, and the tentacles of the anemone hang limp.
 
 ---
 
-## 🌡️ Fullscreen gauges
+## 🌡️ Fullscreen Gauges
 
-In fullscreen mode (or with `show_gauges` in the normal mode) the temperature is shown top left and the consumed volume top right, in one of two styles (`gauge_style`). The gauges, and the cost when it is enabled, appear with the first litre consumed and disappear when the volume is back to 0. If the temperature sensor falls back to 0 after a shower, the thermometer keeps the last temperature measured.
+In fullscreen mode (or with `show_gauges` in the normal mode) the temperature is shown top left and the consumed volume top right, in one of two styles (`gauge_style`). The gauges, and the cost when it is enabled, appear with the first liter consumed and disappear when the volume is back to 0.
 
-**Temperature.** The thermometer goes from 10 °C to the deadly threshold plus 5 °C, rounded up to a multiple of 10 (10 to 50 °C with the default thresholds). Its liquid, or the arc, takes the colour of the zone:
+**Temperature.** The thermometer goes from 10 °C to the critical threshold plus 5 °C, rounded up to a multiple of 10 (10 to 50 °C with the default thresholds). Its liquid, or the arc, takes the color of the zone:
 
-| Zone | Colour |
+| Zone | Color |
 | :--- | :--- |
 | Below the minimum comfort temperature | Blue |
 | From the minimum comfort temperature up to `temp_boiling_threshold` | Green |
@@ -240,7 +247,9 @@ In fullscreen mode (or with `show_gauges` in the normal mode) the temperature is
 
 Three notches mark where the green, orange and red zones begin: on the right of the tube in the thermometer style, and outside the arc in the arc style.
 
-**Volume.** The bar (or arc) fills up to the target budget: blue below 70 % of it, amber up to 100 %, red beyond. With the four coloured thresholds of a Hydrao showerhead (`use_threshold_colors`), it takes instead the colour of the threshold reached, like the showerhead does: the colour of threshold 1 up to its litres, then threshold 2, then 3, then 4, and once threshold 4 is passed its colour blinks. The budget itself is only written when `show_budget` is on.
+If the temperature sensor falls back to 0 after a shower, the thermometer keeps the last temperature measured.
+
+**Volume.** The bar (or arc) fills up to the target budget: blue below 70% of it, amber up to 100%, red beyond. With the four colored thresholds of a Hydrao showerhead (`use_threshold_colors`), it takes instead the color of the threshold reached, like the showerhead does: the color of threshold 1 up to its liters, then threshold 2, then 3, then 4, and once threshold 4 is passed its color blinks. The budget itself is only written when `show_budget` is on.
 
 ---
 
@@ -255,21 +264,21 @@ Three notches mark where the green, orange and red zones begin: on the right of 
 
 ---
 
-## ✅ Validation & accessibility
+## ✅ Validation & Accessibility
 
 - Invalid options never break the drawing: they are corrected and reported in the browser console (`[shower-aquarium-card] …`). For example an unknown `theme`, a negative `target_budget`, or a `temp_deadly_threshold` that is not above `temp_boiling_threshold`.
 - The picture is exposed to screen readers with a translated description of the volume, the temperature and the state of the tank.
-- In the **sections** view the card takes the full width by default (minimum 6 columns) and its height follows its content.
+- In the **Sections** view the card takes the full width by default (minimum 6 columns) and its height follows its content.
 
 ---
 
-## 📡 Sensor unavailable
+## 📡 Sensor Unavailable
 
-If the volume sensor becomes `unavailable` or `unknown` (or disappears), the card keeps showing the last known volume instead of an empty, healthy-looking tank. After one minute without a usable value, a **Sensor unavailable** notice appears at the top of the picture (under the row of numbers in fullscreen), and goes away as soon as the sensor answers again. The temperature entity is not frozen: without a value it counts as "no temperature".
+If the volume sensor becomes `unavailable` or `unknown` (or disappears), the card keeps showing the last known volume instead of a full, healthy-looking tank. After one minute without a usable value, a **Sensor unavailable** notice appears at the top of the picture (under the row of numbers in fullscreen), and goes away as soon as the sensor answers again. The temperature entity is not frozen: without a value it counts as "no temperature".
 
 ---
 
-## 🔋 Power saving
+## 🔋 Power Saving
 
 - The animation **pauses by itself** when the card is scrolled out of view, on a hidden dashboard tab, or when the browser tab is in the background, and resumes as soon as it is visible again.
 - Home Assistant hands the card a new state object every time *any* entity of your installation changes. The card only redraws when a value it displays (volume, temperature, target, language) actually changed.
@@ -277,23 +286,23 @@ If the volume sensor becomes `unavailable` or `unknown` (or disappears), the car
 
 ---
 
-## ⚙️ Animation quality
+## ⚙️ Animation Quality
 
 | | `max` | `balanced` | `light` (low-power screens) |
 | :--- | :--- | :--- | :--- |
 | Frames per second | display rate | 30 | 20 |
 | Water-flow bubbles | 36 | 24 | 12 |
 | Water surface | full choppy detail | full | simpler, no fine chop |
-| Dead plants and corals | gradual grey-brown wilt | gradual grey-brown wilt | gradual fade |
+| Dead plants and corals | gradual gray-brown wilt | gradual gray-brown wilt | gradual fade |
 | Knock shock wave | double ring | double ring | single ring |
 | Water surface and anemone motion | every frame | every frame | refreshed ~8 times per second |
 | Edge anti-aliasing | yes | yes | no (faster to draw) |
-| Soft shading (`realistic` look) | yes | yes | no (scales and shine stay) |
+| Soft shading (`realistic` style) | yes | yes | no (scales and shine stay) |
 | Tentacles of the anemone | 27 | 27 | 17 |
 
 Fish, food, gauges and cost are identical in every mode.
 
-Whatever the mode, what does not move from one frame to the next (the shape of the fish, the rocks, the plants, the fixed parts of the animals) is drawn once and kept, and the surface of the water and the anemone are not worked out again between two refreshes: on a weak display, the card does about half the work it used to. To see what your own screen manages, turn on `show_fps` (Display section): it prints the frames the browser delivered and the frames drawn each second.
+Whatever the mode, what does not move from one frame to the next (the shape of the fish, the rocks, the plants, the fixed parts of the animals) is drawn once and kept, and the surface of the water and the anemone are not worked out again between two refreshes: this noticeably reduces the load on low-power screens. To see what your own screen manages, turn on `show_fps` (Display section): it prints the frames the browser delivered and the frames drawn each second.
 
 ---
 
@@ -313,7 +322,7 @@ creature_style: flat
 fullscreen: false
 ```
 
-A fullscreen tablet display for Hydrao Custom, with the cartoon look, gauges and cost:
+A fullscreen tablet display for Hydrao Custom, with the cartoon style, gauges and cost:
 
 ```yaml
 type: custom:shower-aquarium-card
