@@ -6,40 +6,40 @@ A quick tour of what the card looks like in different configurations. Back to th
 
 > ℹ️ These pictures are the ones the project's visual regression tests compare against (`visual/baseline/`), so they always match the current code: they are redrawn with `npm run visual:update` whenever the drawing changes. Each one is a fixed moment of the tank (same random seed, same clock). They show the aquarium drawing only: the tiles under it in the normal mode are plain Home Assistant elements and are not in the pictures. The text in the pictures is in English.
 
-## Biotopes and looks
+## Biotopes and Styles
 
-The three biotopes (`theme`) in the three looks of the living things (`creature_style`), with 12 L consumed at 34 °C. Left to right: `flat` (the default), `cartoon` and `realistic`. See the [looks](../README.md#-looks-of-the-living-things) and the fish of each biotope in the main README.
+The three biotopes (`theme`) in the three styles of the living things (`creature_style`), with 12 L consumed at 34 °C. Left to right: `flat` (the default), `cartoon` and `realistic`. See the [styles](../README.md#-styles-of-the-living-things) and the fish of each biotope in the main README.
 
 <table>
 <tr>
-<td align="center" width="33%"><img src="../visual/baseline/freshwater-calm.png" alt="Freshwater tank, flat look" width="100%"><br><sub>**Freshwater** (`theme: freshwater`), flat. Ancistrus, discus, angelfish, neons and a pond plant.</sub></td>
-<td align="center" width="33%"><img src="../visual/baseline/freshwater-cartoon.png" alt="Freshwater tank, cartoon look" width="100%"><br><sub>**Freshwater**, `creature_style: cartoon`: outlines, big shiny eyes.</sub></td>
-<td align="center" width="33%"><img src="../visual/baseline/freshwater-realistic.png" alt="Freshwater tank, realistic look" width="100%"><br><sub>**Freshwater**, `creature_style: realistic`: soft shading, scales, translucent fins.</sub></td>
+<td align="center" width="33%"><img src="../visual/baseline/freshwater-calm.png" alt="Freshwater tank, flat style" width="100%"><br><sub>**Freshwater** (`theme: freshwater`), flat. Ancistrus, discus, angelfish, neons and a pond plant.</sub></td>
+<td align="center" width="33%"><img src="../visual/baseline/freshwater-cartoon.png" alt="Freshwater tank, cartoon style" width="100%"><br><sub>**Freshwater**, `creature_style: cartoon`: outlines, big shiny eyes.</sub></td>
+<td align="center" width="33%"><img src="../visual/baseline/freshwater-realistic.png" alt="Freshwater tank, realistic style" width="100%"><br><sub>**Freshwater**, `creature_style: realistic`: soft shading, scales, translucent fins.</sub></td>
 </tr>
 <tr>
-<td align="center" width="33%"><img src="../visual/baseline/saltwater-calm.png" alt="Saltwater reef tank, flat look" width="100%"><br><sub>**Saltwater** (`theme: saltwater`), flat. Clownfish, blue tang, a crab on its pile of live rock, a shrimp, a goby.</sub></td>
-<td align="center" width="33%"><img src="../visual/baseline/saltwater-cartoon.png" alt="Saltwater reef tank, cartoon look" width="100%"><br><sub>**Saltwater**, `creature_style: cartoon`.</sub></td>
-<td align="center" width="33%"><img src="../visual/baseline/saltwater-realistic.png" alt="Saltwater reef tank, realistic look" width="100%"><br><sub>**Saltwater**, `creature_style: realistic`.</sub></td>
+<td align="center" width="33%"><img src="../visual/baseline/saltwater-calm.png" alt="Saltwater reef tank, flat style" width="100%"><br><sub>**Saltwater** (`theme: saltwater`), flat. Clownfish, blue tang, a crab on its pile of live rock, a shrimp, a goby.</sub></td>
+<td align="center" width="33%"><img src="../visual/baseline/saltwater-cartoon.png" alt="Saltwater reef tank, cartoon style" width="100%"><br><sub>**Saltwater**, `creature_style: cartoon`.</sub></td>
+<td align="center" width="33%"><img src="../visual/baseline/saltwater-realistic.png" alt="Saltwater reef tank, realistic style" width="100%"><br><sub>**Saltwater**, `creature_style: realistic`.</sub></td>
 </tr>
 <tr>
-<td align="center" width="33%"><img src="../visual/baseline/coldwater-calm.png" alt="Coldwater goldfish tank, flat look" width="100%"><br><sub>**Coldwater** (`theme: coldwater`), flat. Six kinds of goldfish.</sub></td>
-<td align="center" width="33%"><img src="../visual/baseline/coldwater-cartoon.png" alt="Coldwater goldfish tank, cartoon look" width="100%"><br><sub>**Coldwater**, `creature_style: cartoon`.</sub></td>
-<td align="center" width="33%"><img src="../visual/baseline/coldwater-realistic.png" alt="Coldwater goldfish tank, realistic look" width="100%"><br><sub>**Coldwater**, `creature_style: realistic`.</sub></td>
+<td align="center" width="33%"><img src="../visual/baseline/coldwater-calm.png" alt="Cold water goldfish tank, flat style" width="100%"><br><sub>**Cold water** (`theme: coldwater`), flat. Six kinds of goldfish.</sub></td>
+<td align="center" width="33%"><img src="../visual/baseline/coldwater-cartoon.png" alt="Cold water goldfish tank, cartoon style" width="100%"><br><sub>**Cold water**, `creature_style: cartoon`.</sub></td>
+<td align="center" width="33%"><img src="../visual/baseline/coldwater-realistic.png" alt="Cold water goldfish tank, realistic style" width="100%"><br><sub>**Cold water**, `creature_style: realistic`.</sub></td>
 </tr>
 </table>
 
-## States of the tank
+## States of the Tank
 
 The water goes down with the volume consumed, turns red when it is too hot, and the animals do not survive an empty or boiling tank. The default budget is 50 L with 5 L of survival reserve.
 
 <table>
 <tr>
-<td align="center" width="50%"><img src="../visual/baseline/freshwater-warning.png" alt="Freshwater tank at 40 L: low water" width="100%"><br><sub>**Warning**: 40 L consumed of a 50 L budget. Above 70 % of the budget the water is low and turns a deeper blue.</sub></td>
+<td align="center" width="50%"><img src="../visual/baseline/freshwater-warning.png" alt="Freshwater tank at 40 L: low water" width="100%"><br><sub>**Warning**: 40 L consumed of a 50 L budget. Above 70% of the budget the water is low and turns a deeper blue.</sub></td>
 <td align="center" width="50%"><img src="../visual/baseline/saltwater-over-budget.png" alt="Saltwater tank at 55 L: empty and dead" width="100%"><br><sub>**Over budget**: 55 L, the budget (50 L) and the survival reserve (5 L) are used up. The tank is empty.</sub></td>
 </tr>
 <tr>
-<td align="center" width="50%"><img src="../visual/baseline/coldwater-drained.png" alt="Coldwater tank drained" width="100%"><br><sub>**Drained**: 60 L, more than the budget and the reserve together. Only the skeletons are left.</sub></td>
-<td align="center" width="50%"><img src="../visual/baseline/coldwater-boiling.png" alt="Coldwater tank with boiling water" width="100%"><br><sub>**Boiling**: water at 42 °C (`temp_boiling_threshold: 40`). The water turns red, bubbles rise and the fish are stressed.</sub></td>
+<td align="center" width="50%"><img src="../visual/baseline/coldwater-drained.png" alt="Cold water tank drained" width="100%"><br><sub>**Drained**: 60 L, more than the budget and the reserve together. Only the skeletons are left.</sub></td>
+<td align="center" width="50%"><img src="../visual/baseline/coldwater-boiling.png" alt="Cold water tank with boiling water" width="100%"><br><sub>**Boiling**: water at 42 °C (`temp_boiling_threshold: 40`). The water turns red, bubbles rise and the fish are stressed.</sub></td>
 </tr>
 <tr>
 <td align="center" width="50%"><img src="../visual/baseline/freshwater-dead-by-heat.png" alt="Freshwater tank, dead by heat" width="100%"><br><sub>**Dead by heat**: 50 °C is above `temp_deadly_threshold` (45 °C). The plants fall over, the fish sink.</sub></td>
@@ -51,7 +51,7 @@ The water goes down with the volume consumed, turns red when it is too hot, and 
 </tr>
 </table>
 
-## Live interactions
+## Live Interactions
 
 What happens when you use the card: water running, a pinch of fish food, a knock on the glass. See [Interactions](../README.md#-interactions--live-animations).
 
@@ -63,18 +63,18 @@ What happens when you use the card: water running, a pinch of fish food, a knock
 </tr>
 </table>
 
-## Sensor unavailable
+## Sensor Unavailable
 
 When the volume sensor has had no usable value for a minute, the last volume stays and a notice says so. See [Sensor unavailable](../README.md#-sensor-unavailable).
 
 <table>
 <tr>
 <td align="center" width="50%"><img src="../visual/baseline/freshwater-sensor-unavailable.png" alt="Freshwater tank with the sensor unavailable notice" width="100%"><br><sub>**Normal mode**: the notice at the top of the picture.</sub></td>
-<td align="center" width="50%"><img src="../visual/baseline/coldwater-fullscreen-sensor-unavailable.png" alt="Fullscreen coldwater tank with the sensor unavailable notice" width="100%"><br><sub>**Fullscreen**: the notice under the gauges and the cost.</sub></td>
+<td align="center" width="50%"><img src="../visual/baseline/coldwater-fullscreen-sensor-unavailable.png" alt="Fullscreen cold water tank with the sensor unavailable notice" width="100%"><br><sub>**Fullscreen**: the notice under the gauges and the cost.</sub></td>
 </tr>
 </table>
 
-## Gauges and cost
+## Gauges and Cost
 
 The gauges of fullscreen mode (`fullscreen: true`), in the two styles (`gauge_style`). See [Fullscreen gauges](../README.md).
 
@@ -85,7 +85,7 @@ The gauges of fullscreen mode (`fullscreen: true`), in the two styles (`gauge_st
 </tr>
 <tr>
 <td align="center" width="50%"><img src="../visual/baseline/saltwater-fullscreen-cost.png" alt="Fullscreen with the cost of the shower" width="100%"><br><sub>**Cost** (`show_cost: true`) between the two gauges.</sub></td>
-<td align="center" width="50%"><img src="../visual/baseline/saltwater-fullscreen-budget.png" alt="Fullscreen with the budget on the gauge, almost over" width="100%"><br><sub>**Budget** (`show_budget: true`): 42 L of 50 L at 41.5 °C. The bar is amber above 70 % and the water is hot.</sub></td>
+<td align="center" width="50%"><img src="../visual/baseline/saltwater-fullscreen-budget.png" alt="Fullscreen with the budget on the gauge, almost over" width="100%"><br><sub>**Budget** (`show_budget: true`): 42 L of 50 L at 41.5 °C. The bar is amber above 70% and the water is hot.</sub></td>
 </tr>
 <tr>
 <td align="center" width="50%"><img src="../visual/baseline/coldwater-fullscreen-no-consumption.png" alt="Fullscreen with no gauges at 0 L" width="100%"><br><sub>**Nothing consumed**: the gauges stay hidden at 0 L on a dashboard (the editor's preview shows them so they can be adjusted).</sub></td>
@@ -93,13 +93,13 @@ The gauges of fullscreen mode (`fullscreen: true`), in the two styles (`gauge_st
 </tr>
 <tr>
 <td align="center" width="50%"><img src="../visual/baseline/freshwater-gauges-no-tiles.png" alt="Normal mode with gauges and no tiles" width="100%"><br><sub>**Gauges outside fullscreen** (`show_gauges: true`) with the tiles removed (`show_tiles: false`): the cost is written between the gauges.</sub></td>
-<td align="center" width="50%"><img src="../visual/baseline/freshwater-fullscreen-threshold-pink.png" alt="Fullscreen with the volume bar in the colour of threshold 3" width="100%"><br><sub>**Thresholds of a Hydrao showerhead** (`use_threshold_colors`, on by default): the volume bar takes the colour of the threshold reached, here the pink third one at 25 L.</sub></td>
-<td align="center" width="50%"><img src="../visual/baseline/coldwater-fullscreen-arc-threshold-red.png" alt="Fullscreen arcs with the volume in the colour of threshold 4" width="100%"><br><sub>**Past threshold 4**: 45 L of 40 L. The arc has the colour of threshold 4 and blinks (the picture shows it lit).</sub></td>
+<td align="center" width="50%"><img src="../visual/baseline/freshwater-fullscreen-threshold-pink.png" alt="Fullscreen with the volume bar in the color of threshold 3" width="100%"><br><sub>**Thresholds of a Hydrao showerhead** (`use_threshold_colors`, on by default): the volume bar takes the color of the threshold reached, here the pink third one at 25 L.</sub></td>
+<td align="center" width="50%"><img src="../visual/baseline/coldwater-fullscreen-arc-threshold-red.png" alt="Fullscreen arcs with the volume in the color of threshold 4" width="100%"><br><sub>**Past threshold 4**: 45 L of 40 L. The arc has the color of threshold 4 and blinks (the picture shows it lit).</sub></td>
 <td></td>
 </tr>
 </table>
 
-## Fullscreen on every shape of screen
+## Fullscreen on Every Shape of Screen
 
 In fullscreen mode the drawing takes the exact shape of the screen: nothing is stretched. See `fullscreen` in the main README.
 
@@ -116,7 +116,7 @@ In fullscreen mode the drawing takes the exact shape of the screen: nothing is s
 
 ## Performance
 
-The light animation profile is meant for weak, low-power screens: 20 images per second, simplified effects. See [Animation quality](../README.md).
+The light animation profile is meant for low-power screens: 20 images per second, simplified effects. See [Animation quality](../README.md).
 
 <table>
 <tr>
